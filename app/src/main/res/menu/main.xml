@@ -6,4 +6,9 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/option_get_place"
+        android:title="@string/option_get_place"
+        app:showAsAction="always"/>
+
 </menu>
