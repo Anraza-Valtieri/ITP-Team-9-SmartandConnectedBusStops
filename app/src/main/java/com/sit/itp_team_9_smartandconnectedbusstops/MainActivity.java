@@ -29,6 +29,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -46,11 +47,12 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -105,6 +107,8 @@ public class MainActivity extends AppCompatActivity
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(Color.TRANSPARENT);
+        window.setNavigationBarColor(Color.WHITE);
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -390,6 +394,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onPoiClick(PointOfInterest poi) {
+        Toast.makeText(getApplicationContext(), "Clicked: " +
+                        poi.name + "\nPlace ID:" + poi.placeId +
+                        "\nLatitude:" + poi.latLng.latitude +
+                        " Longitude:" + poi.latLng.longitude,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
@@ -417,6 +430,7 @@ public class MainActivity extends AppCompatActivity
 
                 return infoWindow;
             }
+
         });
 
         // Prompt the user for permission.
@@ -447,6 +461,13 @@ public class MainActivity extends AppCompatActivity
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
             layoutParams.setMargins(0, 0, 30, 30);
         }
+
+        mMap.setOnPoiClickListener((GoogleMap.OnPoiClickListener) this);
+
+
     }
+
+
+
 
 }
