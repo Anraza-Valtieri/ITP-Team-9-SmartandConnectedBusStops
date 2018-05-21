@@ -6,12 +6,9 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -40,7 +37,6 @@ import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -127,8 +123,7 @@ public class MainActivity extends AppCompatActivity
             }
         });*/
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.disableNetwork();
+
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
              To hide this warning and ensure your app does not break, you need to add the following code to your app before calling any other Cloud Firestore methods:
@@ -144,15 +139,17 @@ public class MainActivity extends AppCompatActivity
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
+        db.disableNetwork();
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         // Construct a GeoDataClient.
@@ -173,6 +170,7 @@ public class MainActivity extends AppCompatActivity
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
 
+        PrepareData(db);
     }
 
     /**
@@ -497,6 +495,7 @@ public class MainActivity extends AppCompatActivity
 
 
     private void PrepareData(FirebaseFirestore db){
+        Log.d(TAG, "PrepareData: Start");
         // Create a new user with a first and last name
         Map<String, Object> user = new HashMap<>();
         user.put("first", "Ada");
@@ -520,5 +519,6 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+    JSONLTAParser ltaData = (JSONLTAParser) new JSONLTAParser().execute();
 
 }
