@@ -10,54 +10,54 @@ public class LTABusStopData {
     List of Results of Busstops
      */
     @SerializedName("value")
-    public List<LTABusStopResult> results;
+    public List<LTABusStopData> results;
 
     @SerializedName("BusStopCode")
-    public String BusStopCode;
+    public String busStopCode;
     @SerializedName("RoadName")
-    public String RoadName;
+    public String roadName;
     @SerializedName("Description")
-    public String Description;
+    public String description;
 
-    public String query;
+//    public String query;
 
-    public List<LTABusStopResult> getResults() {
+    public List<LTABusStopData> getResults() {
         return results;
     }
 
-    public void setResults(List<LTABusStopResult> results) {
+    public void setResults(List<LTABusStopData> results) {
         this.results = results;
     }
 
     public String getBusStopCode() {
-        return BusStopCode;
+        return busStopCode;
     }
 
     public void setBusStopCode(String busStopCode) {
-        BusStopCode = busStopCode;
+        this.busStopCode = busStopCode;
     }
 
     public String getRoadName() {
-        return RoadName;
+        return roadName;
     }
 
     public void setRoadName(String roadName) {
-        RoadName = roadName;
+        this.roadName = roadName;
     }
 
     public String getDescription() {
-        return Description;
+        return description;
     }
 
     public void setDescription(String description) {
-        Description = description;
+        this.description = description;
     }
 
-    public String getQuery() {
-        return query;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
-    }
+//    public String getQuery() {
+//        return query;
+//    }
+//
+//    public void setQuery(String query) {
+//        this.query = query;
+//    }
 }

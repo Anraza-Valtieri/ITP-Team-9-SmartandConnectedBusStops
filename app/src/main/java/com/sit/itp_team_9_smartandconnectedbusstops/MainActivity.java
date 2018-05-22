@@ -45,15 +45,12 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener {
@@ -496,29 +493,19 @@ public class MainActivity extends AppCompatActivity
 
     private void PrepareData(FirebaseFirestore db){
         Log.d(TAG, "PrepareData: Start");
-        // Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        user.put("first", "Ada");
-        user.put("last", "Lovelace");
-        user.put("born", 1815);
-
-        // Add a new document with a generated ID
-        db.collection("users")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
+        List<String> urlsList = new ArrayList<>();
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1000");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1500");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2000");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2500");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3000");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
+        JSONLTAParser ltaData = new JSONLTAParser(MainActivity.this, urlsList);
+        ltaData.execute();
     }
-
-    JSONLTAParser ltaData = (JSONLTAParser) new JSONLTAParser().execute();
 
 }
