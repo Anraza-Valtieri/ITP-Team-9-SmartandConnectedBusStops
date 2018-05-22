@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "942473979543",
+    "firebase_url": "https://itp-team9-1526286265047.firebaseio.com",
+    "project_id": "itp-team9-1526286265047",
+    "storage_bucket": "itp-team9-1526286265047.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:942473979543:android:a51bff44c4f78a8b",
+        "android_client_info": {
+          "package_name": "com.sit.itp_team_9_smartandconnectedbusstops"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "942473979543-r3v710dqbl7jbisdhunrhl66bfq6rpn8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sit.itp_team_9_smartandconnectedbusstops",
+            "certificate_hash": "60ea157dc628fd0cfc71659a27a7144264d190e2"
+          }
+        },
+        {
+          "client_id": "942473979543-go6k29udmhi0sol6epgtgnptibe356ba.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD09ahqjieYWKQPiCPwWaD9J-U66WlIvDM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "942473979543-go6k29udmhi0sol6epgtgnptibe356ba.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
