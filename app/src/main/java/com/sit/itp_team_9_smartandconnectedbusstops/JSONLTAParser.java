@@ -56,7 +56,6 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
                 if (statusCode >= 200 && statusCode < 400) {
                     Log.d(TAG, "doInBackground: statusCode >= 200 && statusCode < 400");
                     // Create an InputStream in order to extract the response object
-                    //is = urlConnection.getInputStream();
                     InputStream in = urlConnection.getInputStream();
 
                     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -66,12 +65,11 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
 
                     while ((line = reader.readLine()) != null) {
                         buffer.append(line + "\n");
-                        //Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+                        //Log.d("Response: ", "> " + line);
                     }
                     Gson gson = new Gson();
                     response = gson.fromJson(buffer.toString(), LTABusStopData.class);
                     for (LTABusStopData entry : response.getResults()) {
-                        //Toast.makeText(this, entry.busStopID, Toast.LENGTH_SHORT).show();
 //                        Log.d(TAG, "doInBackground ID: " + entry.getBusStopCode() + " Desc: " + entry.getDescription() + " Rd name: " + entry.getRoadName());
                         responseList.add(entry);
                     }
@@ -97,9 +95,7 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
     protected void onPostExecute(List<LTABusStopData> result) {
         //Do something with the JSON string
         for (LTABusStopData entry : result) {
-            //Toast.makeText(this, entry.busStopID, Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "onPostExecute ID: " + entry.getBusStopCode() + " Desc: " + entry.getDescription() + " Rd name: " + entry.getRoadName());
-
+//            Log.d(TAG, "onPostExecute ID: " + entry.getBusStopCode() + " Desc: " + entry.getDescription() + " Rd name: " + entry.getRoadName());
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             // Add a new document with a generated ID
             db.collection("BusStops")
