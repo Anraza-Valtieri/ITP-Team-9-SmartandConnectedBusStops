@@ -1,21 +1,23 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
-import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -24,6 +26,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,8 +35,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceLikelihood;
-import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -42,18 +43,32 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTALoadAll;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleBusStopData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleNearbySearchParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
+        GoogleMap.OnPoiClickListener, JSONGoogleResponse, JSONLTAResponse, JSONLTALoadAll {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -67,9 +82,9 @@ public class MainActivity extends AppCompatActivity
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
-    // A default location (Sydney, Australia) and default zoom to use when location permission is
+    // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
-    private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
+    private final LatLng mDefaultLocation = new LatLng(1.3139991, 103.7740386);
     private static final int DEFAULT_ZOOM = 18;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
@@ -82,12 +97,25 @@ public class MainActivity extends AppCompatActivity
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
 
-    // Used for selecting the current place.
-    private static final int M_MAX_ENTRIES = 5;
-    private String[] mLikelyPlaceNames;
-    private String[] mLikelyPlaceAddresses;
-    private String[] mLikelyPlaceAttributions;
-    private LatLng[] mLikelyPlaceLatLngs;
+    // FAB
+    FloatingActionButton fab;
+
+    // Bottom sheet
+    private LinearLayout llBottomSheet;
+    private BottomSheetBehavior bottomSheetBehavior;
+
+    // Bus stop
+    private Map<String, LTABusStopData> allBusStops = new HashMap<>();
+    private Map<String, BusStopCards> busStopMap = new HashMap<>();
+
+    // Bus cards
+    private ArrayList<BusStopCards> cardList = new ArrayList<>();
+    private ArrayList<BusStopCards> newcardList = new ArrayList<>();
+
+    // Recycler
+    private RecyclerView cardsLayout;
+    private CardAdapter adapter = null;
+    private View rootView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +127,7 @@ public class MainActivity extends AppCompatActivity
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
-        getSupportActionBar().setTitle("StackOverflow");
+        getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Status bar :: Transparent
@@ -111,15 +139,16 @@ public class MainActivity extends AppCompatActivity
         window.setNavigationBarColor(Color.WHITE);
         window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                FindNearbyBusStop();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
             }
-        });*/
-
+        });
+        fab.hide();
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -158,16 +187,43 @@ public class MainActivity extends AppCompatActivity
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-
-
         // Build the map.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapView);
 
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
+    }
 
-        PrepareData(db);
+    private void prepareBottomSheet(){
+        // Bottom sheet
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setAutoMeasureEnabled(true);
+        adapter = new CardAdapter(getApplicationContext(), cardList, mMap);
+        final RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(adapter);
+        FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
+        bottomSheetBehavior = BottomSheetBehavior.from(parentThatHasBottomSheetBehavior);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        if (bottomSheetBehavior != null) {
+            bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+                @Override
+                public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                    // this part hides the button immediately and waits bottom sheet
+                    // to collapse to show
+                    if (BottomSheetBehavior.STATE_DRAGGING == newState) {
+                        fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
+                    } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
+                        fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
+                    }
+                }
+
+                @Override
+                public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                }
+            });
+        }
     }
 
     /**
@@ -221,119 +277,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /**
-     * Prompts the user to select the current place from a list of likely places, and shows the
-     * current place on the map - provided the user has granted location permission.
-     */
-    private void showCurrentPlace() {
-        if (mMap == null) {
-            return;
-        }
-
-        if (mLocationPermissionGranted) {
-            // Get the likely places - that is, the businesses and other points of interest that
-            // are the best match for the device's current location.
-            @SuppressWarnings("MissingPermission") final
-            Task<PlaceLikelihoodBufferResponse> placeResult =
-                    mPlaceDetectionClient.getCurrentPlace(null);
-            placeResult.addOnCompleteListener
-                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
-                        @SuppressLint("RestrictedApi")
-                        @Override
-                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
-
-                                // Set the count, handling cases where less than 5 entries are returned.
-                                int count;
-                                if (likelyPlaces.getCount() < M_MAX_ENTRIES) {
-                                    count = likelyPlaces.getCount();
-                                } else {
-                                    count = M_MAX_ENTRIES;
-                                }
-
-                                int i = 0;
-                                mLikelyPlaceNames = new String[count];
-                                mLikelyPlaceAddresses = new String[count];
-                                mLikelyPlaceAttributions = new String[count];
-                                mLikelyPlaceLatLngs = new LatLng[count];
-
-                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                                    // Build a list of likely places to show the user.
-                                    mLikelyPlaceNames[i] = (String) placeLikelihood.getPlace().getName();
-                                    mLikelyPlaceAddresses[i] = (String) placeLikelihood.getPlace()
-                                            .getAddress();
-                                    mLikelyPlaceAttributions[i] = (String) placeLikelihood.getPlace()
-                                            .getAttributions();
-                                    mLikelyPlaceLatLngs[i] = placeLikelihood.getPlace().getLatLng();
-
-                                    i++;
-                                    if (i > (count - 1)) {
-                                        break;
-                                    }
-                                }
-
-                                // Release the place likelihood buffer, to avoid memory leaks.
-                                likelyPlaces.release();
-
-                                // Show a dialog offering the user the list of likely places, and add a
-                                // marker at the selected place.
-                                openPlacesDialog();
-
-                            } else {
-                                Log.e(TAG, "Exception: %s", task.getException());
-                            }
-                        }
-                    });
-        } else {
-            // The user has not granted permission.
-            Log.i(TAG, "The user did not grant location permission.");
-
-            // Add a default marker, because the user hasn't selected a place.
-            mMap.addMarker(new MarkerOptions()
-                    .title(getString(R.string.default_info_title))
-                    .position(mDefaultLocation)
-                    .snippet(getString(R.string.default_info_snippet)));
-
-            // Prompt the user for permission.
-            getLocationPermission();
-        }
-    }
-
-    /**
-     * Displays a form allowing the user to select a place from a list of likely places.
-     */
-    private void openPlacesDialog() {
-        // Ask the user to choose the place where they are now.
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // The "which" argument contains the position of the selected item.
-                LatLng markerLatLng = mLikelyPlaceLatLngs[which];
-                String markerSnippet = mLikelyPlaceAddresses[which];
-                if (mLikelyPlaceAttributions[which] != null) {
-                    markerSnippet = markerSnippet + "\n" + mLikelyPlaceAttributions[which];
-                }
-
-                // Add a marker for the selected place, with an info window
-                // showing information about that place.
-                mMap.addMarker(new MarkerOptions()
-                        .title(mLikelyPlaceNames[which])
-                        .position(markerLatLng)
-                        .snippet(markerSnippet));
-
-                // Position the map's camera at the location of the marker.
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng,
-                        DEFAULT_ZOOM));
-            }
-        };
-
-        // Display the dialog.
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.pick_place)
-                .setItems(mLikelyPlaceNames, listener)
-                .show();
-    }
 
     private void updateLocationUI() {
         if (mMap == null) {
@@ -342,7 +285,7 @@ public class MainActivity extends AppCompatActivity
         try {
             if (mLocationPermissionGranted) {
                 mMap.setMyLocationEnabled(true);
-                mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                mMap.getUiSettings().setMyLocationButtonEnabled(false);
             } else {
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
@@ -356,6 +299,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -384,7 +330,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -417,6 +363,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
+
+        // TODO TOuch interaction to display single card.
+
         Toast.makeText(getApplicationContext(), "Clicked: " +
                         poi.name + "\nPlace ID:" + poi.placeId +
                         "\nLatitude:" + poi.latLng.latitude +
@@ -468,7 +417,7 @@ public class MainActivity extends AppCompatActivity
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setCompassEnabled(false);
-        //mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setRotateGesturesEnabled(false);
 
         //mMap.setTrafficEnabled(true);
@@ -486,13 +435,13 @@ public class MainActivity extends AppCompatActivity
         }
 
         mMap.setOnPoiClickListener((GoogleMap.OnPoiClickListener) this);
-
-
+        prepareBottomSheet();
+        PrepareLTAData();
     }
 
 
-    private void PrepareData(FirebaseFirestore db){
-        Log.d(TAG, "PrepareData: Start");
+    private void PrepareLTAData(){
+        Log.d(TAG, "PrepareLTAData: Start");
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -504,8 +453,155 @@ public class MainActivity extends AppCompatActivity
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
-        JSONLTAParser ltaData = new JSONLTAParser(MainActivity.this, urlsList);
+        JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
+        ltaData.delegate = MainActivity.this;
         ltaData.execute();
+    }
+
+    /*
+    Nearby BusStops from Google
+     */
+    @Override
+    public void processFinish(List<GoogleBusStopData> result) {
+        if(result.size() <= 0){
+            Log.d(TAG, "processFinish: Google returned no data");
+            return;
+        }
+        for(int i=0; i< result.size(); i++) {
+            GoogleBusStopData stop = result.get(i);
+            BusStopCards newStop = new BusStopCards();
+            Log.d(TAG, "processFinish: Looking up "+stop.getName());
+            if(allBusStops.containsKey(stop.getName().toString())) {
+                String id = allBusStops.get(stop.getName().toString()).getBusStopCode();
+                newStop.setBusStopID(id);
+                newStop.setBusStopName(stop.getName());
+                newStop.setBusStopLat(stop.getLat());
+                newStop.setBusStopLong(stop.getLng());
+                busStopMap.put(newStop.getBusStopID(), newStop);
+
+                // TODO Map displaying Bus stops more Prominently
+
+                List<String> urlsList = new ArrayList<>();
+                urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
+                ltaReply.delegate = MainActivity.this;
+                ltaReply.execute();
+            }else{
+                Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+stop.getName());
+            }
+        }
+    }
+
+    /*
+    BUS TIMING from LTA
+     */
+    @Override
+    public void processFinish(Map<String, Map> result) {
+        if(result.size() < 1){
+            Log.e(TAG, "processFinish: LTA returned no data");
+            return;
+        }else{
+            for (Map.Entry<String, Map> entry : result.entrySet()) {
+                String key = entry.getKey();
+                Map value = entry.getValue();
+                BusStopCards card = busStopMap.get(key);
+                card.setBusServices(value);
+                card.setLastUpdated(Calendar.getInstance().getTime().toString());
+                Log.d(TAG, "processFinish: Bus stop ID:"+key
+                        +" Bus Stop Name: "+ card.getBusStopName()
+                        +" - "+card.getBusServices() + " - Last Updated: "
+                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+                adapter.addCard(card);
+//                cardList.add(card);
+            }
+        }
+    }
+
+    @Override
+    public void processFinishAllStops(Map<String, LTABusStopData> result) {
+        Log.d(TAG, "processFinishAllStops: Complete");
+        //allBusStops = result;
+        allBusStops.putAll(result);
+        result.clear();
+        FillBusData();
+
+    }
+
+    @Override
+    public void processFinishAllBuses(Map<String, List<LTABusStopData>> result) {
+        Log.d(TAG, "processFinishAllBuses: Complete");
+    }
+
+    private void FillBusData(){
+
+        FindNearbyBusStop();
+    }
+
+    private void FindNearbyBusStop(){
+        try {
+            if (mLocationPermissionGranted) {
+
+                Task locationResult = mFusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful()) {
+
+                            // Clear old cards
+                            adapter.Clear();
+                            // Set the map's camera position to the current location of the device.
+                            mLastKnownLocation = (Location) task.getResult();
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                    new LatLng(mLastKnownLocation.getLatitude(),
+                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            List<String> urlsList = new ArrayList<>();
+                            urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+mLastKnownLocation.getLatitude()+","+mLastKnownLocation.getLongitude()+"&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
+                            Log.d(TAG, "FindNearbyBusStop: "+urlsList.get(0));
+                            JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
+                            googleReply.delegate = MainActivity.this;
+                            googleReply.execute();
+
+//                            View peakView = findViewById(R.id.cardlist);
+                            Point size = new Point();
+                            getWindow().getWindowManager().getDefaultDisplay().getSize(size);
+                            int height = size.y;
+                            bottomSheetBehavior.setPeekHeight(height/7);
+                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//                            View peakView = findViewById(R.id.drag_me);
+//                            bottomSheetBehavior.setPeekHeight(peakView.getHeight());
+//                            peakView.requestLayout();
+                        } else {
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                            return;
+                        }
+                    }
+                });
+            }
+        } catch(SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+            return;
+        }
+        fab.show();
+    }
+
+    public static int getStateAsString(int newState) {
+        switch (newState) {
+            case BottomSheetBehavior.STATE_COLLAPSED:
+                return R.string.collapsed;
+            case BottomSheetBehavior.STATE_DRAGGING:
+                return R.string.dragging;
+            case BottomSheetBehavior.STATE_EXPANDED:
+                return R.string.expanded;
+            case BottomSheetBehavior.STATE_HIDDEN:
+                return R.string.hidden;
+            case BottomSheetBehavior.STATE_SETTLING:
+                return R.string.settling;
+        }
+        return R.string.undefined;
     }
 
 }
