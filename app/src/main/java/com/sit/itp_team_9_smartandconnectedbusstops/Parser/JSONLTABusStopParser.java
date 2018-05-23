@@ -1,30 +1,35 @@
-package com.sit.itp_team_9_smartandconnectedbusstops;
+package com.sit.itp_team_9_smartandconnectedbusstops.Parser;
 
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.gson.Gson;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>> {
+public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LTABusStopData>> {
 
-    private static final String TAG = JSONLTAParser.class.getSimpleName();
+    private static final String TAG = JSONLTABusStopParser.class.getSimpleName();
     HttpURLConnection urlConnection;
     String authKey = "jtDYtND+ToK4dtaUBnPeDg==";
     private Activity activity;
     private List<String> urls;
-    List<LTABusStopData> responseList = new ArrayList<>();
+    Map<String, LTABusStopData> finalResponse = new HashMap<>();
+    public MainActivity delegate = null;
 
-    public JSONLTAParser(Activity activity, List<String> urls){
+    public JSONLTABusStopParser(Activity activity, List<String> urls){
         this.urls = urls;
         this.activity = activity;
     }
@@ -38,9 +43,7 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
     }
 
     @Override
-    protected List<LTABusStopData> doInBackground(Void... voids) {
-        LTABusStopData response;
-
+    protected Map<String, LTABusStopData> doInBackground(Void... voids) {
         try {
             for(String url : getUrls()) {
                 URL link = new URL(url);
@@ -54,7 +57,7 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
                 if (statusCode >= 200 && statusCode < 400) {
-                    Log.d(TAG, "doInBackground: statusCode >= 200 && statusCode < 400");
+                    //Log.d(TAG, "doInBackground: statusCode >= 200 && statusCode < 400");
                     // Create an InputStream in order to extract the response object
                     InputStream in = urlConnection.getInputStream();
 
@@ -67,11 +70,15 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
                         buffer.append(line + "\n");
                         //Log.d("Response: ", "> " + line);
                     }
-                    Gson gson = new Gson();
-                    response = gson.fromJson(buffer.toString(), LTABusStopData.class);
-                    for (LTABusStopData entry : response.getResults()) {
-//                        Log.d(TAG, "doInBackground ID: " + entry.getBusStopCode() + " Desc: " + entry.getDescription() + " Rd name: " + entry.getRoadName());
-                        responseList.add(entry);
+                    JSONObject response1 = new JSONObject(buffer.toString());
+                    JSONArray jsonArray = response1.getJSONArray("value");
+                    for(int i=0; i< jsonArray.length(); i++) {
+                        JSONObject obj = jsonArray.getJSONObject(i);
+                        LTABusStopData entry = new LTABusStopData(
+                                obj.getString("BusStopCode"),
+                                obj.getString("RoadName"),
+                                obj.getString("Description"));
+                        finalResponse.put(entry.getDescription(), entry);
                     }
                     urlConnection.disconnect();
                 } else {
@@ -87,34 +94,16 @@ public class JSONLTAParser extends AsyncTask<Void, String, List<LTABusStopData>>
             e.printStackTrace();
         }
         finally {
-            return responseList;
+            return finalResponse;
         }
     }
 
     @Override
-    protected void onPostExecute(List<LTABusStopData> result) {
+    protected void onPostExecute(Map<String, LTABusStopData> result) {
         //Do something with the JSON string
-        for (LTABusStopData entry : result) {
-//            Log.d(TAG, "onPostExecute ID: " + entry.getBusStopCode() + " Desc: " + entry.getDescription() + " Rd name: " + entry.getRoadName());
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            // Add a new document with a generated ID
-            db.collection("BusStops")
-                    .document(entry.getBusStopCode())
-                    .set(entry);
-        }
-        /*
-        This stores Bus stop data locally onto device using FireStore.
-        They follow LTABusStopData's variables
-        The structure is as follows
-        Collection : BusStops
-        DocumentID : 00481
 
-        busStopCode = 00481
-        roadName = Woodlands Rd
-        description = BT PANJANG TEMP BUS PK
-
-         */
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
+        delegate.processFinishAllStops(result);
     }
 
 }

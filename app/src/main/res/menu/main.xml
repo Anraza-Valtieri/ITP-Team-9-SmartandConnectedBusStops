@@ -8,7 +8,8 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/option_get_place"
+        android:orderInCategory="200"
         android:title="@string/option_get_place"
-        app:showAsAction="always"/>
+        app:showAsAction="never"/>
 
 </menu>
