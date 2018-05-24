@@ -39,9 +39,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -398,7 +400,7 @@ public class MainActivity extends AppCompatActivity
 
             List<String> urlsList = new ArrayList<>();
             urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
             JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
             ltaReply.delegate = MainActivity.this;
             ltaReply.execute();
@@ -503,7 +505,6 @@ public class MainActivity extends AppCompatActivity
         result.clear();
         FillBusData();
     }
-
     /*
     Nearby BusStops from Google
      */
@@ -529,7 +530,7 @@ public class MainActivity extends AppCompatActivity
 
                 List<String> urlsList = new ArrayList<>();
                 urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+//                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
                 JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
                 ltaReply.delegate = MainActivity.this;
                 ltaReply.execute();
@@ -560,7 +561,35 @@ public class MainActivity extends AppCompatActivity
                         + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
                 adapter.addCard(card);
 //                cardList.add(card);
+
+                LatLng ll = new LatLng(Double.parseDouble(card.getBusStopLat()), Double.parseDouble(card.getBusStopLong()));
+                Log.d(TAG, "processFinish: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
+                Marker marker = mMap.addMarker(new MarkerOptions()
+                        .position(ll)
+                        .title(card.getBusStopName())
+                        .snippet(key)
+                        .visible(true)
+                        .alpha(0.8f)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                //marker.showInfoWindow();
+
+//                for (Map.Entry<String, BusStopCards> entry : busStopMap.entrySet()) {
+//                    String key = entry.getKey();
+//                    BusStopCards value = entry.getValue();
+//                    LatLng ll = new LatLng(Double.parseDouble(value.getBusStopLat()), Double.parseDouble(value.getBusStopLat()));
+//                    Log.d(TAG, "processFinishAllStops: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
+//                    Marker marker = mMap.addMarker(new MarkerOptions()
+//                            .position(ll)
+//                            .title(value.getBusStopName())
+//                            .snippet(key)
+//                            .visible(true)
+//                            .alpha(0.8f)
+//                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+//                    marker.showInfoWindow();
+//                }
             }
+
+
             updateBottomSheetLength();
         }
     }
