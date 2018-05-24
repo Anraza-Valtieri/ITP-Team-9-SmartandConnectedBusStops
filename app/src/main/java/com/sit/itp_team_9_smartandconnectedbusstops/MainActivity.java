@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -47,8 +48,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTALoadAll;
@@ -125,7 +124,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        rootView = findViewById(R.id.includeroot);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
@@ -165,12 +164,12 @@ public class MainActivity extends AppCompatActivity
              Timestamp timestamp = snapshot.getTimestamp("created_at");
              java.util.Date date = timestamp.toDate();
          */
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+        /*FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();
+        db.disableNetwork();*/
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -374,16 +373,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
-
-        // TODO TOuch interaction to display single card.
-
-//        Toast.makeText(getApplicationContext(), "Clicked: " +
-//                        poi.name + "\nPlace ID:" + poi.placeId +
-//                        "\nLatitude:" + poi.latLng.latitude +
-//                        " Longitude:" + poi.latLng.longitude,
-//                Toast.LENGTH_SHORT).show();
-
-
         BusStopCards newStop = new BusStopCards();
         Log.d(TAG, "processFinish: Looking up "+poi.name);
         if(allBusStops.containsKey(poi.name)) {
@@ -395,8 +384,6 @@ public class MainActivity extends AppCompatActivity
             newStop.setBusStopLat(Double.toString(poi.latLng.latitude));
             newStop.setBusStopLong(Double.toString(poi.latLng.longitude));
             busStopMap.put(newStop.getBusStopID(), newStop);
-
-            // TODO Map displaying Bus stops more Prominently
 
             List<String> urlsList = new ArrayList<>();
             urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
@@ -475,9 +462,23 @@ public class MainActivity extends AppCompatActivity
         PrepareLTAData();
     }
 
+    private void SnackbarNotice(String text){
+//        final Snackbar sb = Snackbar.make(rootView,text,Snackbar.LENGTH_SHORT)
+//                            .setAction("Dismiss", new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(View v) {
+//                                    sb.dismiss();
+//                                }
+//                            });
+        final Snackbar sb = Snackbar.make(rootView,text,Snackbar.LENGTH_SHORT);
+        sb.show();
+
+    }
+
 
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
+        SnackbarNotice("Syncing data.");
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -492,6 +493,7 @@ public class MainActivity extends AppCompatActivity
         JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
         ltaData.delegate = MainActivity.this;
         ltaData.execute();
+
     }
 
     /*
@@ -571,25 +573,34 @@ public class MainActivity extends AppCompatActivity
                         .visible(true)
                         .alpha(0.8f)
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                //marker.showInfoWindow();
+                mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker) {
+                        BusStopCards newStop = new BusStopCards();
+                        Log.d(TAG, "processFinish: Looking up "+marker.getTitle());
+                        if(allBusStops.containsKey(marker.getTitle())) {
+                            // Clear old cards
+                            adapter.Clear();
+                            String id = allBusStops.get(marker.getTitle()).getBusStopCode();
+                            newStop.setBusStopID(id);
+                            newStop.setBusStopName(marker.getTitle());
+                            newStop.setBusStopLat(Double.toString(marker.getPosition().latitude));
+                            newStop.setBusStopLong(Double.toString(marker.getPosition().latitude));
+                            busStopMap.put(newStop.getBusStopID(), newStop);
 
-//                for (Map.Entry<String, BusStopCards> entry : busStopMap.entrySet()) {
-//                    String key = entry.getKey();
-//                    BusStopCards value = entry.getValue();
-//                    LatLng ll = new LatLng(Double.parseDouble(value.getBusStopLat()), Double.parseDouble(value.getBusStopLat()));
-//                    Log.d(TAG, "processFinishAllStops: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
-//                    Marker marker = mMap.addMarker(new MarkerOptions()
-//                            .position(ll)
-//                            .title(value.getBusStopName())
-//                            .snippet(key)
-//                            .visible(true)
-//                            .alpha(0.8f)
-//                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//                    marker.showInfoWindow();
-//                }
+                            List<String> urlsList = new ArrayList<>();
+                            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+                            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
+                            ltaReply.delegate = MainActivity.this;
+                            ltaReply.execute();
+                        }else{
+                            Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+marker.getTitle());
+                        }
+                        return false;
+                    }
+                });
             }
-
-
             updateBottomSheetLength();
         }
     }
@@ -627,6 +638,7 @@ public class MainActivity extends AppCompatActivity
                             List<String> urlsList = new ArrayList<>();
                             urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+mLastKnownLocation.getLatitude()+","+mLastKnownLocation.getLongitude()+"&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
                             Log.d(TAG, "FindNearbyBusStop: "+urlsList.get(0));
+                            SnackbarNotice("Searching Nearby.");
                             JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
                             googleReply.delegate = MainActivity.this;
                             googleReply.execute();
