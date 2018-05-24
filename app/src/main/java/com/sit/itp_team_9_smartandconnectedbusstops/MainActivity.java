@@ -29,7 +29,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -103,6 +102,7 @@ public class MainActivity extends AppCompatActivity
     // Bottom sheet
     private LinearLayout llBottomSheet;
     private BottomSheetBehavior bottomSheetBehavior;
+    RecyclerView recyclerView;
 
     // Bus stop
     private Map<String, LTABusStopData> allBusStops = new HashMap<>();
@@ -144,6 +144,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 FindNearbyBusStop();
+                updateBottomSheetLength();
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -195,14 +196,22 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
     }
 
+    private void updateBottomSheetLength(){
+//        FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
+//        parentThatHasBottomSheetBehavior.setLayoutParams(new CoordinatorLayout.LayoutParams(CoordinatorLayout.LayoutParams.MATCH_PARENT,
+//                recyclerView.getHeight()));
+    }
     private void prepareBottomSheet(){
         // Bottom sheet
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setAutoMeasureEnabled(true);
         adapter = new CardAdapter(getApplicationContext(), cardList, mMap);
-        final RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
+        recyclerView.setItemViewCacheSize(20);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
         bottomSheetBehavior = BottomSheetBehavior.from(parentThatHasBottomSheetBehavior);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -366,11 +375,36 @@ public class MainActivity extends AppCompatActivity
 
         // TODO TOuch interaction to display single card.
 
-        Toast.makeText(getApplicationContext(), "Clicked: " +
-                        poi.name + "\nPlace ID:" + poi.placeId +
-                        "\nLatitude:" + poi.latLng.latitude +
-                        " Longitude:" + poi.latLng.longitude,
-                Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getApplicationContext(), "Clicked: " +
+//                        poi.name + "\nPlace ID:" + poi.placeId +
+//                        "\nLatitude:" + poi.latLng.latitude +
+//                        " Longitude:" + poi.latLng.longitude,
+//                Toast.LENGTH_SHORT).show();
+
+
+        BusStopCards newStop = new BusStopCards();
+        Log.d(TAG, "processFinish: Looking up "+poi.name);
+        if(allBusStops.containsKey(poi.name)) {
+            // Clear old cards
+            adapter.Clear();
+            String id = allBusStops.get(poi.name).getBusStopCode();
+            newStop.setBusStopID(id);
+            newStop.setBusStopName(poi.name);
+            newStop.setBusStopLat(Double.toString(poi.latLng.latitude));
+            newStop.setBusStopLong(Double.toString(poi.latLng.longitude));
+            busStopMap.put(newStop.getBusStopID(), newStop);
+
+            // TODO Map displaying Bus stops more Prominently
+
+            List<String> urlsList = new ArrayList<>();
+            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
+            ltaReply.delegate = MainActivity.this;
+            ltaReply.execute();
+        }else{
+            Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+poi.name);
+        }
     }
 
     @Override
@@ -459,6 +493,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     /*
+    ALL BUS STOPS FROM LTA
+     */
+    @Override
+    public void processFinishAllStops(Map<String, LTABusStopData> result) {
+        Log.d(TAG, "processFinishAllStops: Complete");
+        //allBusStops = result;
+        allBusStops.putAll(result);
+        result.clear();
+        FillBusData();
+    }
+
+    /*
     Nearby BusStops from Google
      */
     @Override
@@ -515,26 +561,20 @@ public class MainActivity extends AppCompatActivity
                 adapter.addCard(card);
 //                cardList.add(card);
             }
+            updateBottomSheetLength();
         }
     }
 
-    @Override
-    public void processFinishAllStops(Map<String, LTABusStopData> result) {
-        Log.d(TAG, "processFinishAllStops: Complete");
-        //allBusStops = result;
-        allBusStops.putAll(result);
-        result.clear();
-        FillBusData();
-
-    }
-
+    /*
+    ALL BUS FROM LTA
+     */
     @Override
     public void processFinishAllBuses(Map<String, List<LTABusStopData>> result) {
         Log.d(TAG, "processFinishAllBuses: Complete");
     }
 
     private void FillBusData(){
-
+        // TODO PARAS BUS SERVICE DATA INTO BUS STOP HERE
         FindNearbyBusStop();
     }
 

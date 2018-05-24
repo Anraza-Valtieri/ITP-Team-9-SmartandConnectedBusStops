@@ -58,7 +58,7 @@ public class Utils {
                 long currentTime = currentDate.getTime();
 
                 CharSequence relativetime = DateUtils.getRelativeTimeSpanString(apptTime,
-                        currentTime, DateUtils.MINUTE_IN_MILLIS,  DateUtils.FORMAT_ABBREV_TIME);
+                        currentTime, DateUtils.SECOND_IN_MILLIS,  DateUtils.FORMAT_ABBREV_RELATIVE);
                 return relativetime.toString();
             }
         };
