@@ -2,6 +2,7 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,12 +51,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
         final BusStopCards card = mCard.get(position);
         holder.busStopName.setText(card.getBusStopName());
         holder.busStopID.setText(card.getBusStopID());
+        holder.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
         View cardview = holder.itemView.findViewById(R.id.buscard);
         LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
         options_layout.setOrientation(LinearLayout.VERTICAL);
-
         Map<String, List<String>> timings = card.getBusServices();
-
+        options_layout.removeAllViewsInLayout();
         for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
             String key = entry.getKey();
             List<String> value = entry.getValue();
@@ -68,33 +69,34 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
             TextView duration = to_add.findViewById(R.id.duration1);
 
             busID.setText(key);
-            direction.setText("TODO");
+            direction.setText("DESTINATION");
             String durationText = "";
-            if(value.get(0).equals("") && value.get(1).contains("") && value.get(2).contains(""))
+            if(value.get(0).equals("") && value.get(1).equals("") && value.get(2).equals(""))
                 durationText = "No Service Available";
 
-            if(!value.get(0).equals("") && value.get(1).contains("") && value.get(2).contains(""))
+            if(!value.get(0).equals("") && value.get(1).equals("") && value.get(2).equals(""))
                 durationText = Utils.dateCheck(Utils.formatTime(value.get(0)));
 
-            if(!value.get(0).equals("") && !value.get(1).contains("") && value.get(2).contains(""))
-                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+", "+
+            if(!value.get(0).equals("") && !value.get(1).equals("") && value.get(2).equals(""))
+                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
                                 Utils.dateCheck(Utils.formatTime(value.get(1)));
 
-            if(!value.get(0).equals("") && !value.get(1).contains("") && !value.get(2).contains(""))
-                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+", "+
-                                Utils.dateCheck(Utils.formatTime(value.get(1)))+", "+
+            if(!value.get(0).equals("") && !value.get(1).equals("") && !value.get(2).equals(""))
+                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
+                                Utils.dateCheck(Utils.formatTime(value.get(1)))+" "+
                                 Utils.dateCheck(Utils.formatTime(value.get(2)));
 
             duration.setText(durationText);
             options_layout.addView(to_add);
         }
+        doAutoRefresh(holder, position);
         // TODO Touch interaction of cards.
         cardview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int DEFAULT_ZOOM = 18;
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(Double.parseDouble(card.getBusStopLat()),
+                        new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
                                 Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
             }
         });
@@ -113,13 +115,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
     public void addCard(BusStopCards card){
         mCard.add(card);
-        Refresh();
+        notifyItemInserted(mCard.size());
+//        Refresh();
         Log.d(TAG, "addCard: called adds "+mCard.size());
     }
 
     public void Clear(){
         Log.d(TAG, "Clear: called "+mCard.size());
         mCard.clear();
+        handler.removeCallbacksAndMessages(null);
         Refresh();
     }
 
@@ -127,6 +131,19 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
         Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
     }
+
+    private final Handler handler = new Handler();
+    private void doAutoRefresh(final ViewHolder holder, final int position) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Write code for your refresh logic
+                notifyItemChanged(position);
+                doAutoRefresh(holder,position);
+            }
+        }, 10000);
+    }
+
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -141,6 +158,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
         TextView busNo;
         TextView busDirection;
         TextView busDuration;
+        TextView busLastUpdated;
 
         // Create map to store
         Map<String, List<String>> busServices = new HashMap<>();
@@ -158,8 +176,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
             busNo = itemView.findViewById(R.id.busnumber);
             busDirection = itemView.findViewById(R.id.direction);
             busDuration = itemView.findViewById(R.id.duration1);
-//            appIcon = (ImageView) itemView.findViewById(R.id.app_icon);
-//            appName = (TextView) itemView.findViewById(R.id.app_name);
+            busLastUpdated = itemView.findViewById(R.id.updatedTiming);
         }
     }
 }
