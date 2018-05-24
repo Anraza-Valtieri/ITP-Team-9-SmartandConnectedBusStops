@@ -71,22 +71,23 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
             busID.setText(key);
             direction.setText("DESTINATION");
             String durationText = "";
-            if(value.get(0).equals("") && value.get(1).equals("") && value.get(2).equals(""))
+            if(value.get(0).equals("") && value.get(1).equals(""))
                 durationText = "No Service Available";
 
-            if(!value.get(0).equals("") && value.get(1).equals("") && value.get(2).equals(""))
+            if(!value.get(0).equals("") && value.get(1).equals(""))
                 durationText = Utils.dateCheck(Utils.formatTime(value.get(0)));
 
-            if(!value.get(0).equals("") && !value.get(1).equals("") && value.get(2).equals(""))
-                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
+            if(!value.get(0).equals("") && !value.get(1).equals(""))
+                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" & "+
                                 Utils.dateCheck(Utils.formatTime(value.get(1)));
 
-            if(!value.get(0).equals("") && !value.get(1).equals("") && !value.get(2).equals(""))
+            /*if(!value.get(0).equals("") && !value.get(1).equals("") && !value.get(2).equals(""))
                 durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
                                 Utils.dateCheck(Utils.formatTime(value.get(1)))+" "+
-                                Utils.dateCheck(Utils.formatTime(value.get(2)));
+                                Utils.dateCheck(Utils.formatTime(value.get(2)));*/
 
             duration.setText(durationText);
+            direction.setText(value.get(3));
             options_layout.addView(to_add);
         }
         doAutoRefresh(holder, position);

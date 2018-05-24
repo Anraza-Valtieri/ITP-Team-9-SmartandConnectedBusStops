@@ -89,6 +89,7 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
                         busTiming.add(obj.getJSONObject("NextBus").getString("EstimatedArrival"));
                         busTiming.add(obj.getJSONObject("NextBus2").getString("EstimatedArrival"));
                         busTiming.add(obj.getJSONObject("NextBus3").getString("EstimatedArrival"));
+                        busTiming.add(obj.getJSONObject("NextBus").getString("DestinationCode"));
 //                        Log.d(TAG, "doInBackground: "+busNo+ " - "+ busTiming.toString());
                         responseList.put(busNo, busTiming);
                     }

@@ -1,10 +1,12 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
@@ -106,7 +108,9 @@ public class MainActivity extends AppCompatActivity
     RecyclerView recyclerView;
 
     // Bus stop
+    // Key Roadname Value LTABusStopData
     private Map<String, LTABusStopData> allBusStops = new HashMap<>();
+    private Map<String, String> allBusByID = new HashMap<>();
     private Map<String, BusStopCards> busStopMap = new HashMap<>();
 
     // Bus cards
@@ -505,6 +509,7 @@ public class MainActivity extends AppCompatActivity
         //allBusStops = result;
         allBusStops.putAll(result);
         result.clear();
+        LinkIDtoName();
         FillBusData();
     }
     /*
@@ -555,7 +560,18 @@ public class MainActivity extends AppCompatActivity
                 String key = entry.getKey();
                 Map value = entry.getValue();
                 BusStopCards card = busStopMap.get(key);
-                card.setBusServices(value);
+
+                Map<String, List<String>> finalData = new HashMap<>();
+                finalData.putAll(value);
+                for (Map.Entry<String, List<String>> newData : finalData.entrySet()){
+                    String key2 = newData.getKey();
+                    List<String> schedule = newData.getValue();
+                    String toConvertID = schedule.get(3);
+                    Log.d(TAG, "processFinish: toConvertID "+ toConvertID);
+                    schedule.set(3, allBusByID.get(toConvertID));
+                }
+                card.setBusServices(finalData);
+//                card.setBusServices(value);
                 card.setLastUpdated(Calendar.getInstance().getTime().toString());
                 Log.d(TAG, "processFinish: Bus stop ID:"+key
                         +" Bus Stop Name: "+ card.getBusStopName()
@@ -585,7 +601,7 @@ public class MainActivity extends AppCompatActivity
                             newStop.setBusStopID(id);
                             newStop.setBusStopName(marker.getTitle());
                             newStop.setBusStopLat(Double.toString(marker.getPosition().latitude));
-                            newStop.setBusStopLong(Double.toString(marker.getPosition().latitude));
+                            newStop.setBusStopLong(Double.toString(marker.getPosition().longitude));
                             busStopMap.put(newStop.getBusStopID(), newStop);
 
                             List<String> urlsList = new ArrayList<>();
@@ -618,6 +634,26 @@ public class MainActivity extends AppCompatActivity
         FindNearbyBusStop();
     }
 
+    private void LinkIDtoName(){
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
+                    String key = newData.getKey();
+                    LTABusStopData value = newData.getValue();
+                    allBusByID.put(value.getBusStopCode(),key);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                Log.d(TAG, "onPostExecute: LinkIDtoName completed");
+            }
+        }.execute();
+    }
     private void FindNearbyBusStop(){
         try {
             if (mLocationPermissionGranted) {
