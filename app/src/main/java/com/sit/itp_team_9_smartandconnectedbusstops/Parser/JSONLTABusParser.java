@@ -78,6 +78,8 @@ public class JSONLTABusParser extends AsyncTask<Void, String, Map<String, LTABus
                                 obj.getString("BusStopCode"),
                                 obj.getString("RoadName"),
                                 obj.getString("Description"));
+                        entry.setBusStopLat(obj.getString("Latitude"));
+                        entry.setBusStopLong(obj.getString("Longitude"));
                         finalResponse.put(entry.getDescription(), entry);
                     }
                     urlConnection.disconnect();

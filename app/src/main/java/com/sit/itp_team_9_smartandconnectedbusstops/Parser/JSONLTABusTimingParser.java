@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 
 import org.json.JSONArray;
@@ -21,19 +22,20 @@ import java.util.Map;
 
 public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, Map>> {
     private static final String TAG = JSONLTABusTimingParser.class.getSimpleName();
-    HttpURLConnection urlConnection;
-    String authKey = "jtDYtND+ToK4dtaUBnPeDg==";
+    private HttpURLConnection urlConnection;
+    private String authKey = "jtDYtND+ToK4dtaUBnPeDg==";
     private Activity activity;
     private String busStopNo;
     private List<String> urls;
-    Map<String, List<String>> responseList = new HashMap<>();
-    Map<String, Map> finalResponse = new HashMap<>();
+    private Map<String, List<String>> responseList = new HashMap<>();
+    private Map<String, Map> finalResponse = new HashMap<>();
     public MainActivity delegate = null;
+    public CardAdapter delegate2 = null;
 
-    public JSONLTABusTimingParser(Activity activity, List<String> urls, String busStopNo){
+
+    public JSONLTABusTimingParser(List<String> urls, String busStopNo){
         this.urls = urls;
         this.busStopNo = busStopNo;
-        this.activity = activity;
     }
 
     public List<String> getUrls() {
@@ -89,11 +91,12 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
                         busTiming.add(obj.getJSONObject("NextBus").getString("EstimatedArrival"));
                         busTiming.add(obj.getJSONObject("NextBus2").getString("EstimatedArrival"));
                         busTiming.add(obj.getJSONObject("NextBus3").getString("EstimatedArrival"));
+                        busTiming.add(obj.getJSONObject("NextBus").getString("DestinationCode"));
 //                        Log.d(TAG, "doInBackground: "+busNo+ " - "+ busTiming.toString());
                         responseList.put(busNo, busTiming);
                     }
                     String busStopID = response1.getString("BusStopCode");
-                    Log.d(TAG, "doInBackground: "+busStopID+ " - "+ responseList.toString());
+//                    Log.d(TAG, "doInBackground: "+busStopID+ " - "+ responseList.toString());
                     finalResponse.put(busStopID, responseList);
                     urlConnection.disconnect();
                 } else {
@@ -118,6 +121,9 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        delegate.processFinish(result);
+        if(delegate != null)
+            delegate.processFinishFromLTA(result);
+        if(delegate2 != null)
+            delegate2.processFinishFromLTA(result);
     }
 }

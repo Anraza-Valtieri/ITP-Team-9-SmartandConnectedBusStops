@@ -11,7 +11,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
 import android.widget.TextView;
 
-import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 
 public class CustomBottomSheetDialogFragment extends BottomSheetDialogFragment {
@@ -22,7 +21,6 @@ public class CustomBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
         @Override
         public void onStateChanged(@NonNull View bottomSheet, int newState) {
-            setStateText(newState);
             if (newState == BottomSheetBehavior.STATE_HIDDEN) {
                 dismiss();
             }
@@ -58,9 +56,5 @@ public class CustomBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 mOffsetText.setText(getString(R.string.offset, slideOffset));
             }
         });
-    }
-
-    private void setStateText(int newState) {
-        mStateText.setText(MainActivity.getStateAsString(newState));
     }
 }
