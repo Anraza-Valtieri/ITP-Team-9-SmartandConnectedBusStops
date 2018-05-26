@@ -116,6 +116,6 @@ public class JSONGoogleNearbySearchParser extends AsyncTask<Void, String, List<G
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        delegate.processFinish(result);
+        delegate.processFinishFromGoogle(result);
     }
 }

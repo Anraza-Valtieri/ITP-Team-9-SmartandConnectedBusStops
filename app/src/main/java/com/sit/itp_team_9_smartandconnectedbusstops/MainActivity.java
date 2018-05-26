@@ -7,7 +7,9 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -21,6 +23,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -29,7 +32,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -103,24 +105,31 @@ public class MainActivity extends AppCompatActivity
     FloatingActionButton fab;
 
     // Bottom sheet
-    private LinearLayout llBottomSheet;
-    private BottomSheetBehavior bottomSheetBehavior;
+    protected BottomSheetBehavior bottomSheetBehavior;
     RecyclerView recyclerView;
 
     // Bus stop
-    // Key Roadname Value LTABusStopData
+    // Key Roadname Value LTABusStopData Object
     private Map<String, LTABusStopData> allBusStops = new HashMap<>();
+    // Key: Bus stop ID Value: Bus stop name
     private Map<String, String> allBusByID = new HashMap<>();
+    // Key: Bus stop ID Value BusStopCards Object
     private Map<String, BusStopCards> busStopMap = new HashMap<>();
 
     // Bus cards
     private ArrayList<BusStopCards> cardList = new ArrayList<>();
-    private ArrayList<BusStopCards> newcardList = new ArrayList<>();
+    public ArrayList<BusStopCards> newCardList = new ArrayList<>();
+
+    // Map Markers
+    private Map<String, Marker> markerMap = new HashMap<>();
 
     // Recycler
-    private RecyclerView cardsLayout;
     private CardAdapter adapter = null;
     private View rootView;
+
+    //Handler
+    private final Handler handler = new Handler();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,19 +151,23 @@ public class MainActivity extends AppCompatActivity
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.WHITE);
-        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        }
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.hide();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                newCardList.clear();
                 FindNearbyBusStop();
                 updateBottomSheetLength();
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
         });
-        fab.hide();
+
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -202,6 +215,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void updateBottomSheetLength(){
+        //TODO Adjust bottomsheet to card length.
+        adapter.Clear();
+        adapter.addAllCard(newCardList);
 //        FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
 //        parentThatHasBottomSheetBehavior.setLayoutParams(new CoordinatorLayout.LayoutParams(CoordinatorLayout.LayoutParams.MATCH_PARENT,
 //                recyclerView.getHeight()));
@@ -209,14 +225,19 @@ public class MainActivity extends AppCompatActivity
     private void prepareBottomSheet(){
         // Bottom sheet
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setAutoMeasureEnabled(true);
+        linearLayoutManager.setItemPrefetchEnabled(true);
         adapter = new CardAdapter(getApplicationContext(), cardList, mMap);
+        adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
         recyclerView.setItemViewCacheSize(20);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
+        if(animator instanceof SimpleItemAnimator){
+            ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
+        }
         FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
         bottomSheetBehavior = BottomSheetBehavior.from(parentThatHasBottomSheetBehavior);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -378,10 +399,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPoiClick(PointOfInterest poi) {
         BusStopCards newStop = new BusStopCards();
-        Log.d(TAG, "processFinish: Looking up "+poi.name);
+        Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
         if(allBusStops.containsKey(poi.name)) {
             // Clear old cards
             adapter.Clear();
+            newCardList.clear();
             String id = allBusStops.get(poi.name).getBusStopCode();
             newStop.setBusStopID(id);
             newStop.setBusStopName(poi.name);
@@ -392,11 +414,11 @@ public class MainActivity extends AppCompatActivity
             List<String> urlsList = new ArrayList<>();
             urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
 //            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
+            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
             ltaReply.delegate = MainActivity.this;
             ltaReply.execute();
         }else{
-            Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+poi.name);
+            Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
         }
     }
 
@@ -516,15 +538,15 @@ public class MainActivity extends AppCompatActivity
     Nearby BusStops from Google
      */
     @Override
-    public void processFinish(List<GoogleBusStopData> result) {
+    public void processFinishFromGoogle(List<GoogleBusStopData> result) {
         if(result.size() <= 0){
-            Log.d(TAG, "processFinish: Google returned no data");
+            Log.d(TAG, "processFinishFromLTA: Google returned no data");
             return;
         }
         for(int i=0; i< result.size(); i++) {
             GoogleBusStopData stop = result.get(i);
             BusStopCards newStop = new BusStopCards();
-            Log.d(TAG, "processFinish: Looking up "+stop.getName());
+            Log.d(TAG, "processFinishFromLTA: Looking up "+stop.getName());
             if(allBusStops.containsKey(stop.getName().toString())) {
                 String id = allBusStops.get(stop.getName().toString()).getBusStopCode();
                 newStop.setBusStopID(id);
@@ -533,16 +555,14 @@ public class MainActivity extends AppCompatActivity
                 newStop.setBusStopLong(stop.getLng());
                 busStopMap.put(newStop.getBusStopID(), newStop);
 
-                // TODO Map displaying Bus stops more Prominently
-
                 List<String> urlsList = new ArrayList<>();
                 urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
 //                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
+                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
                 ltaReply.delegate = MainActivity.this;
                 ltaReply.execute();
             }else{
-                Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+stop.getName());
+                Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+stop.getName());
             }
         }
     }
@@ -551,14 +571,14 @@ public class MainActivity extends AppCompatActivity
     BUS TIMING from LTA
      */
     @Override
-    public void processFinish(Map<String, Map> result) {
+    public void processFinishFromLTA(Map<String, Map> result) {
         if(result.size() < 1){
-            Log.e(TAG, "processFinish: LTA returned no data");
+            Log.e(TAG, "processFinishFromLTA: LTA returned no data");
             return;
         }else{
             for (Map.Entry<String, Map> entry : result.entrySet()) {
-                String key = entry.getKey();
-                Map value = entry.getValue();
+                String key = entry.getKey(); // Bus stop ID
+                Map value = entry.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
 
                 Map<String, List<String>> finalData = new HashMap<>();
@@ -567,55 +587,61 @@ public class MainActivity extends AppCompatActivity
                     String key2 = newData.getKey();
                     List<String> schedule = newData.getValue();
                     String toConvertID = schedule.get(3);
-                    Log.d(TAG, "processFinish: toConvertID "+ toConvertID);
+                    Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
                     schedule.set(3, allBusByID.get(toConvertID));
                 }
                 card.setBusServices(finalData);
-//                card.setBusServices(value);
                 card.setLastUpdated(Calendar.getInstance().getTime().toString());
-                Log.d(TAG, "processFinish: Bus stop ID:"+key
+                Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
                         +" Bus Stop Name: "+ card.getBusStopName()
                         +" - "+card.getBusServices() + " - Last Updated: "
                         + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-                adapter.addCard(card);
-//                cardList.add(card);
+//                adapter.addCard(card);
+                newCardList.add(card);
 
                 LatLng ll = new LatLng(Double.parseDouble(card.getBusStopLat()), Double.parseDouble(card.getBusStopLong()));
-                Log.d(TAG, "processFinish: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
-                Marker marker = mMap.addMarker(new MarkerOptions()
-                        .position(ll)
-                        .title(card.getBusStopName())
-                        .snippet(key)
-                        .visible(true)
-                        .alpha(0.8f)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                    @Override
-                    public boolean onMarkerClick(Marker marker) {
-                        BusStopCards newStop = new BusStopCards();
-                        Log.d(TAG, "processFinish: Looking up "+marker.getTitle());
-                        if(allBusStops.containsKey(marker.getTitle())) {
-                            // Clear old cards
-                            adapter.Clear();
-                            String id = allBusStops.get(marker.getTitle()).getBusStopCode();
-                            newStop.setBusStopID(id);
-                            newStop.setBusStopName(marker.getTitle());
-                            newStop.setBusStopLat(Double.toString(marker.getPosition().latitude));
-                            newStop.setBusStopLong(Double.toString(marker.getPosition().longitude));
-                            busStopMap.put(newStop.getBusStopID(), newStop);
+//                Log.d(TAG, "processFinishFromLTA: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
 
-                            List<String> urlsList = new ArrayList<>();
-                            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+                /*
+                Create Map markers!
+                 */
+                if(markerMap.get(card.getBusStopName()) == null) {
+                    Marker marker = mMap.addMarker(new MarkerOptions()
+                            .position(ll)
+                            .title(card.getBusStopName())
+                            .snippet(key)
+                            .visible(true)
+                            .alpha(0.8f)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                    mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                        @Override
+                        public boolean onMarkerClick(Marker marker) {
+                            BusStopCards newStop = new BusStopCards();
+                            Log.d(TAG, "processFinishFromLTA: Looking up " + marker.getTitle());
+                            if (allBusStops.containsKey(marker.getTitle())) {
+                                // Clear old cards
+                                adapter.Clear();
+                                newCardList.clear();
+                                String id = allBusStops.get(marker.getTitle()).getBusStopCode();
+                                newStop.setBusStopID(id);
+                                newStop.setBusStopName(marker.getTitle());
+                                newStop.setBusStopLat(Double.toString(marker.getPosition().latitude));
+                                newStop.setBusStopLong(Double.toString(marker.getPosition().longitude));
+                                busStopMap.put(newStop.getBusStopID(), newStop);
+
+                                List<String> urlsList = new ArrayList<>();
+                                urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
 //            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(MainActivity.this, urlsList, newStop.getBusStopID());
-                            ltaReply.delegate = MainActivity.this;
-                            ltaReply.execute();
-                        }else{
-                            Log.e(TAG, "processFinish: ERROR Missing data from LTA? : "+marker.getTitle());
+                                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
+                                ltaReply.delegate = MainActivity.this;
+                                ltaReply.execute();
+                            } else {
+                                Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : " + marker.getTitle());
+                            }
+                            return false;
                         }
-                        return false;
-                    }
-                });
+                    });
+                }
             }
             updateBottomSheetLength();
         }
@@ -631,7 +657,11 @@ public class MainActivity extends AppCompatActivity
 
     private void FillBusData(){
         // TODO PARAS BUS SERVICE DATA INTO BUS STOP HERE
+
+        // Once data is in we can start looking around us!
         FindNearbyBusStop();
+        adapter.Refresh();
+//        refreshCardList();
     }
 
     private void LinkIDtoName(){
@@ -665,7 +695,8 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
 
                             // Clear old cards
-                            adapter.Clear();
+                            //refreshCardList();
+                            //adapter.Clear();
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = (Location) task.getResult();
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
@@ -704,6 +735,14 @@ public class MainActivity extends AppCompatActivity
         }
         fab.show();
     }
+
+//    public void refreshCardList(){
+//        adapter.Clear();
+//        adapter.addAllCard(newCardList);
+//
+//        Log.d(TAG, "run: refreshCardList");
+//        refreshCardList();
+//    }
 
     public static int getStateAsString(int newState) {
         switch (newState) {
