@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +34,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private static final String TAG = CardAdapter.class.getSimpleName();
     private Context mContext;
     private GoogleMap mMap;
+    private BottomSheetBehavior bottomSheet;
     private ArrayList<BusStopCards> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
@@ -45,11 +47,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mCard = mCard;
     }
 
-    public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap) {
+    public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
 //        this.mApplications = mApplications;
         mContext = context;
         mCard = card;
         this.mMap = mMap;
+        this.bottomSheet = bottomSheet;
 //        mPackageManager = mContext.getPackageManager();
     }
 
@@ -125,6 +128,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                         new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
                                 Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
+                bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
         });
     }
