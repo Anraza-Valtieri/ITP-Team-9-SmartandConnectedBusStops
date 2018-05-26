@@ -1,10 +1,12 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -32,6 +34,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -69,6 +72,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
@@ -100,6 +104,11 @@ public class MainActivity extends AppCompatActivity
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
+
+    // Header
+    private NavigationView navigationView;
+    private View navHeader;
+    private LinearLayout navheaderbanner;
 
     // FAB
     FloatingActionButton fab;
@@ -138,6 +147,10 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         rootView = findViewById(R.id.includeroot);
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        navHeader = navigationView.getHeaderView(0);
+        navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
@@ -238,8 +251,8 @@ public class MainActivity extends AppCompatActivity
         if(animator instanceof SimpleItemAnimator){
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
-        FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
-        bottomSheetBehavior = BottomSheetBehavior.from(parentThatHasBottomSheetBehavior);
+//        CoordinatorLayout parentThatHasBottomSheetBehavior = (CoordinatorLayout)recyclerView.getParent();
+        bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         if (bottomSheetBehavior != null) {
             bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
@@ -714,7 +727,7 @@ public class MainActivity extends AppCompatActivity
                             Point size = new Point();
                             getWindow().getWindowManager().getDefaultDisplay().getSize(size);
                             int height = size.y;
-                            bottomSheetBehavior.setPeekHeight(height/7);
+//                            bottomSheetBehavior.setPeekHeight(height/6);
                             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
 //                            View peakView = findViewById(R.id.drag_me);
 //                            bottomSheetBehavior.setPeekHeight(peakView.getHeight());
@@ -744,20 +757,60 @@ public class MainActivity extends AppCompatActivity
 //        refreshCardList();
 //    }
 
-    public static int getStateAsString(int newState) {
-        switch (newState) {
-            case BottomSheetBehavior.STATE_COLLAPSED:
-                return R.string.collapsed;
-            case BottomSheetBehavior.STATE_DRAGGING:
-                return R.string.dragging;
-            case BottomSheetBehavior.STATE_EXPANDED:
-                return R.string.expanded;
-            case BottomSheetBehavior.STATE_HIDDEN:
-                return R.string.hidden;
-            case BottomSheetBehavior.STATE_SETTLING:
-                return R.string.settling;
+    private void tintSystemBars(int fromColorLight, int fromColorDark, int toColorLight, int toColorDark) {
+        // Initial colors of each system bar.
+        final int statusBarColor = ContextCompat.getColor(this,fromColorDark);
+        final int toolbarColor = ContextCompat.getColor(this,fromColorLight);
+
+        // Desired final colors of each bar.
+        final int statusBarToColor = ContextCompat.getColor(this,toColorDark);
+        final int toolbarToColor = ContextCompat.getColor(this,toColorLight);
+
+        ValueAnimator anim = ValueAnimator.ofFloat(0, 1);
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // Use animation position to blend colors.
+                float position = animation.getAnimatedFraction();
+
+                // Apply blended color to the status bar.
+                int blended = blendColors(statusBarColor, statusBarToColor, position);
+                getWindow().setStatusBarColor(blended);
+                getWindow().setNavigationBarColor(blended);
+                navheaderbanner.setBackgroundColor(blended);
+
+                // Apply blended color to the ActionBar.
+                int blended2 = blendColors(toolbarColor, toolbarToColor, position);
+                ColorDrawable background = new ColorDrawable(blended2);
+                getSupportActionBar().setBackgroundDrawable(background);
+            }
+        });
+
+        anim.setDuration(700).start();
+    }
+
+    private int blendColors(int from, int to, float ratio) {
+        Object[] var = {from, to, ratio};
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Integer doInBackground(Object[] objects) {
+                final float inverseRatio = 1f - ((float)objects[2]);
+
+                final float r = Color.red(((int)objects[1])) * ((float)objects[2]) + Color.red(((int)objects[0])) * inverseRatio;
+                final float g = Color.green(((int)objects[1])) * ((float)objects[2]) + Color.green(((int)objects[0])) * inverseRatio;
+                final float b = Color.blue(((int)objects[1])) * ((float)objects[2]) + Color.blue(((int)objects[0])) * inverseRatio;
+                return Color.rgb((int) r, (int) g, (int) b);
+//				return null;
+            }
+        };
+        int result = 0;
+        try {
+            result = ((int)asyncTask.execute(var).get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
-        return R.string.undefined;
+        return result;
     }
 
 }

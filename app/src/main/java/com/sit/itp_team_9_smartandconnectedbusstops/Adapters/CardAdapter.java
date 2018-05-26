@@ -211,7 +211,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 protected Object doInBackground(Object[] objects) {
                     for (int i = 0; i < mCard.size(); i++) {
                         BusStopCards updateCard = mCard.get(i);
-                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
+//                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
                         Map<String, List<String>> finalData = new HashMap<>();
                         if (result.containsKey(updateCard.getBusStopID())) {
                             Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
@@ -221,12 +221,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 String key2 = newData.getKey();
                                 List<String> schedule = newData.getValue();
 
-                                Map<String, List<String>> toUpdateService = updateCard.getBusServices();
-                                List<String> toUpdateFields = toUpdateService.get(key2);
-                                toUpdateFields.set(0, schedule.get(0));
-                                toUpdateFields.set(1, schedule.get(1));
-                                toUpdateFields.set(2, schedule.get(2));
-                                updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
+                                if (!schedule.get(0).equals("") && !schedule.get(1).equals("") && !schedule.get(2).equals("")) {
+                                    Map<String, List<String>> toUpdateService = updateCard.getBusServices();
+                                    List<String> toUpdateFields = toUpdateService.get(key2);
+                                    toUpdateFields.set(0, schedule.get(0));
+                                    toUpdateFields.set(1, schedule.get(1));
+                                    toUpdateFields.set(2, schedule.get(2));
+                                    updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
+                                }
                             }
                         }
                     }
