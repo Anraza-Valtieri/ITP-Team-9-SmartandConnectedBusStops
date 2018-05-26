@@ -3,6 +3,8 @@ package com.sit.itp_team_9_smartandconnectedbusstops;
 
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -12,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -25,6 +28,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -106,6 +110,7 @@ public class MainActivity extends AppCompatActivity
     private static final String KEY_LOCATION = "location";
 
     // Header
+    private Toolbar toolbar;
     private NavigationView navigationView;
     private View navHeader;
     private LinearLayout navheaderbanner;
@@ -144,7 +149,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -227,6 +232,26 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
     }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+
+    }
+
     private void updateBottomSheetLength(){
         //TODO Adjust bottomsheet to card length.
         adapter.Clear();
@@ -237,21 +262,6 @@ public class MainActivity extends AppCompatActivity
     }
     private void prepareBottomSheet(){
         // Bottom sheet
-        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), cardList, mMap);
-        adapter.doAutoRefresh();
-        recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setItemViewCacheSize(20);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
-        if(animator instanceof SimpleItemAnimator){
-            ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
-        }
-//        CoordinatorLayout parentThatHasBottomSheetBehavior = (CoordinatorLayout)recyclerView.getParent();
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         if (bottomSheetBehavior != null) {
@@ -264,6 +274,9 @@ public class MainActivity extends AppCompatActivity
                         fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
                         fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
+                        fab.setVisibility(View.VISIBLE);
+                    } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
+                        fab.setVisibility(View.INVISIBLE);
                     }
                 }
 
@@ -272,6 +285,23 @@ public class MainActivity extends AppCompatActivity
                 }
             });
         }
+
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setItemPrefetchEnabled(true);
+        adapter = new CardAdapter(getApplicationContext(), cardList, mMap, bottomSheetBehavior);
+        adapter.doAutoRefresh();
+        recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setItemViewCacheSize(20);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
+        if(animator instanceof SimpleItemAnimator){
+            ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
+        }
+
+
     }
 
     /**
@@ -362,6 +392,13 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(true);
+        searchView.setSubmitButtonEnabled(true);
         return true;
     }
 
@@ -373,16 +410,14 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        if (item.getItemId() == R.id.option_get_place) {
+        if (id == R.id.search) {
+            //toolbar.setBackgroundColor(Color.WHITE);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override

@@ -7,14 +7,14 @@
     tools:context=".MainActivity"
     android:fitsSystemWindows="false">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_marginTop="24dp"
-            android:background="@android:color/transparent"
-            android:elevation="4dp"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_marginTop="24dp"
+        android:background="@android:color/transparent"
+        android:elevation="4dp"
+        app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -64,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
-            android:paddingBottom="65dp"
+            android:paddingBottom="55dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

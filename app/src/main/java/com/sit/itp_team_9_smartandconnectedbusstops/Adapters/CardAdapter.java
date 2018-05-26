@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +34,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private static final String TAG = CardAdapter.class.getSimpleName();
     private Context mContext;
     private GoogleMap mMap;
+    private BottomSheetBehavior bottomSheet;
     private ArrayList<BusStopCards> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
@@ -45,11 +47,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mCard = mCard;
     }
 
-    public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap) {
+    public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
 //        this.mApplications = mApplications;
         mContext = context;
         mCard = card;
         this.mMap = mMap;
+        this.bottomSheet = bottomSheet;
 //        mPackageManager = mContext.getPackageManager();
     }
 
@@ -112,15 +115,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             options_layout.removeAllViewsInLayout();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             assert inflater != null;
-            View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
-            TextView busID = to_add.findViewById(R.id.busnumber);
-            TextView direction = to_add.findViewById(R.id.direction);
-            TextView duration = to_add.findViewById(R.id.duration1);
-            busID.setText("");
-            duration.setText("");
-            direction.setText("No service available at this time");
+            View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
             options_layout.addView(to_add);
-            busID.setVisibility(View.INVISIBLE);
             updateUI(position);
         }
 //        doDataRefresh(holder, position);
@@ -132,6 +128,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                         new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
                                 Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
+                bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
         });
     }
@@ -221,14 +218,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 String key2 = newData.getKey();
                                 List<String> schedule = newData.getValue();
 
-                                if (!schedule.get(0).equals("") && !schedule.get(1).equals("") && !schedule.get(2).equals("")) {
-                                    Map<String, List<String>> toUpdateService = updateCard.getBusServices();
-                                    List<String> toUpdateFields = toUpdateService.get(key2);
+                                Map<String, List<String>> toUpdateService = updateCard.getBusServices();
+                                List<String> toUpdateFields = toUpdateService.get(key2);
+                                if (!schedule.get(0).equals(""))
                                     toUpdateFields.set(0, schedule.get(0));
+                                if (!schedule.get(1).equals(""))
                                     toUpdateFields.set(1, schedule.get(1));
+                                if (!schedule.get(2).equals(""))
                                     toUpdateFields.set(2, schedule.get(2));
-                                    updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
-                                }
+                                updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
                             }
                         }
                     }
