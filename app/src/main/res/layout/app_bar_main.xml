@@ -2,10 +2,11 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinatorlay"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:fitsSystemWindows="false">
+    android:fitsSystemWindows="false"
+    tools:context=".MainActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -26,6 +27,7 @@
         android:layout_marginEnd="8dp"
         android:elevation="8dp"
         app:backgroundTint="@android:color/background_light"
+        app:elevation="12dp"
         app:layout_anchor="@+id/bottombar"
         app:layout_anchorGravity="top|center"
         app:layout_constraintEnd_toEndOf="parent"
@@ -34,20 +36,10 @@
     <include
         android:id="@+id/include2"
         layout="@layout/content_main"
-        android:elevation="0dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-<!--
-    <include
-        android:id="@+id/drawer"
-        layout="@layout/bottom_sheet_content_view"
-        android:layout_width="match_parent"
-        android:layout_height="350dp"
-        android:layout_gravity="bottom|center"
-        android:clipToPadding="true"
-        app:layout_anchor="@id/bottombar"
-        app:layout_behavior="@string/bottom_sheet_behavior" />
--->
+        android:layout_height="match_parent"
+        android:elevation="0dp" />
+
     <FrameLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
@@ -75,9 +67,9 @@
         android:id="@+id/bottombar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:elevation="8dp"
         app:layout_anchor="@+id/include2"
-        app:layout_anchorGravity="bottom|center"
-        android:elevation="4dp">
+        app:layout_anchorGravity="bottom|center">
 
         <android.support.design.widget.BottomNavigationView
             android:id="@+id/bottom_navigation"
@@ -86,10 +78,9 @@
             android:layout_gravity="bottom"
             android:background="@android:color/white"
             android:elevation="5dp"
-            app:itemIconTint="@color/colorPrimary"
-            app:itemTextColor="@color/colorPrimary"
+            app:itemIconTint="@android:color/darker_gray"
+            app:itemTextColor="@android:color/darker_gray"
             app:menu="@menu/bottom_navigation_menu" />
 
     </FrameLayout>
-
 </android.support.design.widget.CoordinatorLayout>

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -58,13 +59,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     private List<ApplicationInfo> mApplications;
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new ViewHolder(parent);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final BusStopCards card = mCard.get(position);
         holder.setItem(card);
 
@@ -85,27 +88,21 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 TextView busID = to_add.findViewById(R.id.busnumber);
                 TextView direction = to_add.findViewById(R.id.direction);
                 TextView duration = to_add.findViewById(R.id.duration1);
+                TextView duration2 = to_add.findViewById(R.id.duration2);
 
                 busID.setText(key);
                 direction.setText("MISSING DATA");
-
-                String durationText = "";
-                if (value.get(0).equals("") && value.get(1).equals(""))
-                    durationText = "No Service Available";
-
-                if (!value.get(0).equals("") && value.get(1).equals(""))
-                    durationText = Utils.dateCheck(Utils.formatTime(value.get(0)));
-
-                if (!value.get(0).equals("") && !value.get(1).equals(""))
-                    durationText = Utils.dateCheck(Utils.formatTime(value.get(0))) + " & " +
-                            Utils.dateCheck(Utils.formatTime(value.get(1)));
 
             /*if(!value.get(0).equals("") && !value.get(1).equals("") && !value.get(2).equals(""))
                 durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
                                 Utils.dateCheck(Utils.formatTime(value.get(1)))+" "+
                                 Utils.dateCheck(Utils.formatTime(value.get(2)));*/
+                if (!value.get(0).equals(""))
+                    duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
 
-                duration.setText(durationText);
+                if (!value.get(1).equals(""))
+                    duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+
                 direction.setText(value.get(3));
                 options_layout.addView(to_add);
             }
@@ -121,15 +118,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }
 //        doDataRefresh(holder, position);
         // TODO Touch interaction of cards.
-        cardview.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int DEFAULT_ZOOM = 18;
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
-                                Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
-                bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
-            }
+        cardview.setOnClickListener(v -> {
+            int DEFAULT_ZOOM = 18;
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                    new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
+                            Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
+            bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
     }
 
@@ -168,21 +162,26 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     
-    public void updateCardData(List<BusStopCards> cards){
+    private void updateCardData(List<BusStopCards> cards){
         for (BusStopCards card: cards) {
             List<String> urlsList = new ArrayList<>();
             urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
             Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
             JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
             ltaReply.delegate2 = CardAdapter.this;
-            ltaReply.execute();
+            @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+                @Override
+                protected Object doInBackground(Object[] objects) {
+                    ltaReply.execute();
+                    return null;
+                }
+            };
+            asyncTask.execute();
         }
     }
 
     private void updateUI(int position){
-        handler.postDelayed(() ->{
-            notifyItemChanged(position);
-        }, 1000);
+        handler.postDelayed(() -> notifyItemChanged(position), 1000);
     }
 
 
@@ -200,19 +199,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         Log.d(TAG, "processFinishFromLTA: Received");
         if(result.size() < 1){
             Log.e(TAG, "processFinishFromLTA: LTA returned no data");
-            return;
         }else {
             @SuppressLint("StaticFieldLeak")
+            @SuppressWarnings("unchecked")
             AsyncTask asyncTask = new AsyncTask() {
                 @Override
                 protected Object doInBackground(Object[] objects) {
                     for (int i = 0; i < mCard.size(); i++) {
                         BusStopCards updateCard = mCard.get(i);
 //                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
-                        Map<String, List<String>> finalData = new HashMap<>();
                         if (result.containsKey(updateCard.getBusStopID())) {
                             Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
-                            finalData.putAll(loadedData);
+                            Map<String, List<String>> finalData = new HashMap<>(loadedData);
 //                Map<String, List<String>> finalData = result.get(updateCard.getBusStopID());
                             for (Map.Entry<String, List<String>> newData : finalData.entrySet()) {
                                 String key2 = newData.getKey();
@@ -240,7 +238,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
 //        ImageView appIcon;
 //        TextView appName;
@@ -252,7 +250,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView busStopLong;
         TextView busNo;
         TextView busDirection;
-        TextView busDuration;
+        TextView busDuration1;
+        TextView busDuration2;
         TextView busLastUpdated;
 
         BusStopCards card;
@@ -262,7 +261,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         // create list one and store values
         List<String> busTiming = new ArrayList<>();
 
-        public ViewHolder(ViewGroup parent) {
+        ViewHolder(ViewGroup parent) {
             this(LayoutInflater.from(parent.getContext()).inflate(R.layout.busstopcard, parent, false));
         }
 
@@ -272,7 +271,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busStopName = itemView.findViewById(R.id.primary_text);
             busNo = itemView.findViewById(R.id.busnumber);
             busDirection = itemView.findViewById(R.id.direction);
-            busDuration = itemView.findViewById(R.id.duration1);
+            busDuration1 = itemView.findViewById(R.id.duration1);
+            busDuration2 = itemView.findViewById(R.id.duration2);
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
         }
 
