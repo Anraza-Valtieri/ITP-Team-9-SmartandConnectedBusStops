@@ -12,6 +12,7 @@ public class BusStopCards {
     String busStopLat;
     String busStopLong;
     String lastUpdated;
+    boolean isFavorite;
 
     // Create map to store
     Map<String, List<String>> busServices = new HashMap<>();
@@ -82,6 +83,14 @@ public class BusStopCards {
 
     public void setBusTiming(List<String> busTiming) {
         this.busTiming = busTiming;
+    }
+
+    public boolean isFavorite() {
+        return isFavorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        isFavorite = favorite;
     }
 
     /*

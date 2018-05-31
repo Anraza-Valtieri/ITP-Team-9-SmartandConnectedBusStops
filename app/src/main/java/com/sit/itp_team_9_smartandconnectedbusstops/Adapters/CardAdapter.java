@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -65,7 +66,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         return new ViewHolder(parent);
     }
 
-    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final BusStopCards card = mCard.get(position);
@@ -91,12 +91,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 TextView duration2 = to_add.findViewById(R.id.duration2);
 
                 busID.setText(key);
-                direction.setText("MISSING DATA");
 
-            /*if(!value.get(0).equals("") && !value.get(1).equals("") && !value.get(2).equals(""))
-                durationText = Utils.dateCheck(Utils.formatTime(value.get(0)))+" "+
-                                Utils.dateCheck(Utils.formatTime(value.get(1)))+" "+
-                                Utils.dateCheck(Utils.formatTime(value.get(2)));*/
                 if (!value.get(0).equals(""))
                     duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
 
@@ -120,9 +115,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         // TODO Touch interaction of cards.
         cardview.setOnClickListener(v -> {
             int DEFAULT_ZOOM = 18;
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
-                            Double.parseDouble(card.getBusStopLong())), DEFAULT_ZOOM));
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
+                            Double.parseDouble(card.getBusStopLong())))
+                    .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                    .build();                   // Creates a CameraPosition from the builder
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
     }
@@ -163,21 +161,22 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     
     private void updateCardData(List<BusStopCards> cards){
-        for (BusStopCards card: cards) {
-            List<String> urlsList = new ArrayList<>();
-            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-            Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
-            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
-            ltaReply.delegate2 = CardAdapter.this;
-            @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-                @Override
-                protected Object doInBackground(Object[] objects) {
+        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                for (BusStopCards card : cards) {
+                    List<String> urlsList = new ArrayList<>();
+                    urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+                    Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
+                    JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
+                    ltaReply.delegate2 = CardAdapter.this;
                     ltaReply.execute();
-                    return null;
+
                 }
-            };
-            asyncTask.execute();
-        }
+                return null;
+            }
+        };
+        asyncTask.execute();
     }
 
     private void updateUI(int position){
