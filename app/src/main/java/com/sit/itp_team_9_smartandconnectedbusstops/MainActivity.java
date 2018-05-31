@@ -171,6 +171,7 @@ public class MainActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().show();
 
         // Status bar :: Transparent
         Window window = this.getWindow();
@@ -285,10 +286,12 @@ public class MainActivity extends AppCompatActivity
 //                        fab.show();
 //                        fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
 //                        fab.setVisibility(View.VISIBLE);
+                        getSupportActionBar().show();
                         fab.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
 //                        fab.hide();
 //                        fab.setVisibility(View.INVISIBLE);
+                        getSupportActionBar().hide();
                         fab.setVisibility(View.GONE);
                     }
                 }
@@ -328,7 +331,7 @@ public class MainActivity extends AppCompatActivity
                     setPooling(true);
                     clearCardsForUpdate();
                     FindNearbyBusStop();
-                    handler.postDelayed(() -> setPooling(false), 5000);
+                    handler.postDelayed(() -> setPooling(false), 3000);
                 }
             }
             return true;
@@ -574,6 +577,7 @@ public class MainActivity extends AppCompatActivity
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
+        mClusterManager.setAnimation(false);
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
@@ -682,18 +686,17 @@ public class MainActivity extends AppCompatActivity
         if(result.size() < 1){
             Log.e(TAG, "processFinishFromLTA: LTA returned no data");
         }else{
-            for (Map.Entry<String, Map> entry : result.entrySet()) {
+            for (TreeMap.Entry<String, Map> entry : result.entrySet()) {
                 String key = entry.getKey(); // Bus stop ID
                 Map value = entry.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
 
-                Map<String, List<String>> finalData = new TreeMap<>(value);
+                TreeMap<String, List<String>> finalData = new TreeMap<>(value);
                 for (List<String> newData : finalData.values()){
                     String toConvertID = newData.get(3);
                     Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
                     newData.set(3, allBusByID.get(toConvertID));
                 }
-
                 card.setBusServices(finalData);
                 card.setLastUpdated(Calendar.getInstance().getTime().toString());
                 Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
@@ -705,41 +708,6 @@ public class MainActivity extends AppCompatActivity
 
                 LatLng ll = new LatLng(Double.parseDouble(card.getBusStopLat()), Double.parseDouble(card.getBusStopLong()));
 //                Log.d(TAG, "processFinishFromLTA: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
-
-                /*
-                Create Map markers!
-                 */
-                if(markerMap.get(card.getBusStopName()) == null){
-                MapMarkers infoWindowItem = new MapMarkers(ll.latitude, ll.longitude, card.getBusStopName(), key);
-                    if(!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-                        mClusterManager.addItem(infoWindowItem);
-                        markerMap.put(card.getBusStopName(), infoWindowItem);
-                        mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-                            if (allBusStops.containsKey(mapMarkers.getTitle())) {
-                                BusStopCards newStop = new BusStopCards();
-                                // Clear old cards
-                                adapter.Clear();
-                                newCardList.clear();
-                                String id = allBusStops.get(mapMarkers.getTitle()).getBusStopCode();
-                                newStop.setBusStopID(id);
-                                newStop.setBusStopName(mapMarkers.getTitle());
-                                newStop.setBusStopLat(Double.toString(mapMarkers.getPosition().latitude));
-                                newStop.setBusStopLong(Double.toString(mapMarkers.getPosition().longitude));
-                                busStopMap.put(newStop.getBusStopID(), newStop);
-
-                                List<String> urlsList = new ArrayList<>();
-                                urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-                                ltaReply.delegate = MainActivity.this;
-                                ltaReply.execute();
-                            } else {
-                                Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-                            }
-                            return false;
-                        });
-                    }
-                }
             }
             progressBar.setVisibility(View.GONE);
 //            updateBottomSheet();
@@ -759,9 +727,47 @@ public class MainActivity extends AppCompatActivity
 
         // Once data is in we can start looking around us!
 //        FindNearbyBusStop();
+
         adapter.Refresh();
+        /*
+        Create Map markers!
+         */
+        for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
+            String key = newData.getKey();
+            LTABusStopData value = newData.getValue();
+                MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
+                        Double.parseDouble(value.getBusStopLong()), value.getDescription(), key);
+                if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
+                    mClusterManager.addItem(infoWindowItem);
+                    markerMap.put(value.getDescription(), infoWindowItem);
+                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
+                        if (allBusStops.containsKey(mapMarkers.getTitle())) {
+                            BusStopCards newStop = new BusStopCards();
+                            // Clear old cards
+                            adapter.Clear();
+                            newCardList.clear();
+                            String id = allBusStops.get(mapMarkers.getTitle()).getBusStopCode();
+                            newStop.setBusStopID(id);
+                            newStop.setBusStopName(mapMarkers.getTitle());
+                            newStop.setBusStopLat(Double.toString(mapMarkers.getPosition().latitude));
+                            newStop.setBusStopLong(Double.toString(mapMarkers.getPosition().longitude));
+                            busStopMap.put(newStop.getBusStopID(), newStop);
+
+                            List<String> urlsList = new ArrayList<>();
+                            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+    //            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+                            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
+                            ltaReply.delegate = MainActivity.this;
+                            ltaReply.execute();
+                        } else {
+                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
+                        }
+                        return false;
+                    });
+                }
+            }
+        }
 //        refreshCardList();
-    }
 
     private void LinkIDtoName(){
         @SuppressLint("StaticFieldLeak")
@@ -806,7 +812,7 @@ public class MainActivity extends AppCompatActivity
 
                                     Point size = new Point();
                                     getWindow().getWindowManager().getDefaultDisplay().getSize(size);
-                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                     return null;
                                 }
 
