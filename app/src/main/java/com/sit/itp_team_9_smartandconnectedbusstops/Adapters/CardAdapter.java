@@ -217,11 +217,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 Map<String, List<String>> toUpdateService = updateCard.getBusServices();
                                 List<String> toUpdateFields = toUpdateService.get(key2);
-                                if (!schedule.get(0).equals(""))
+                                if (!schedule.get(0).equals("") && toUpdateFields != null)
                                     toUpdateFields.set(0, schedule.get(0));
-                                if (!schedule.get(1).equals(""))
+                                if (!schedule.get(1).equals("") && toUpdateFields != null)
                                     toUpdateFields.set(1, schedule.get(1));
-                                if (!schedule.get(2).equals(""))
+                                if (!schedule.get(2).equals("") && toUpdateFields != null)
                                     toUpdateFields.set(2, schedule.get(2));
                                 updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
                             }

@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -147,6 +148,12 @@ public class MainActivity extends AppCompatActivity
     //Handler
     private final Handler handler = new Handler();
 
+    //Pooling limit
+    private boolean pooling = false;
+
+    //Progress
+    private ProgressBar progressBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +167,7 @@ public class MainActivity extends AppCompatActivity
         navHeader = navigationView.getHeaderView(0);
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         // Toolbar :: Transparent
-        toolbar.setBackgroundColor(Color.TRANSPARENT);
+//        toolbar.setBackgroundColor(Color.TRANSPARENT);
 
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -185,6 +192,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         bottomNav = findViewById(R.id.bottom_navigation);
+        progressBar = findViewById(R.id.progressBar);
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -257,7 +265,7 @@ public class MainActivity extends AppCompatActivity
     private void updateBottomSheet(){
         //TODO Adjust bottomsheet to card length.
         adapter.Clear();
-        adapter.addAllCard(newCardList);
+//        adapter.addAllCard(newCardList);
     }
     private void prepareBottomSheet(){
         // Bottom sheet
@@ -270,12 +278,18 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
+//                        fab.hide();
+//                        fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
+                        fab.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                        fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
-                        fab.setVisibility(View.VISIBLE);
+//                        fab.show();
+//                        fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
+//                        fab.setVisibility(View.VISIBLE);
+                        fab.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
-                        fab.setVisibility(View.INVISIBLE);
+//                        fab.hide();
+//                        fab.setVisibility(View.INVISIBLE);
+                        fab.setVisibility(View.GONE);
                     }
                 }
 
@@ -309,9 +323,13 @@ public class MainActivity extends AppCompatActivity
                 fab.hide();
                 clearCardsForUpdate();
             } else if (id == R.id.action_nearby) {
-                clearCardsForUpdate();
-                fab.show();
-                FindNearbyBusStop();
+//                fab.show();
+                if(!isPooling()) {
+                    setPooling(true);
+                    clearCardsForUpdate();
+                    FindNearbyBusStop();
+                    handler.postDelayed(() -> setPooling(false), 5000);
+                }
             }
             return true;
         });
@@ -567,20 +585,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void snackbarNotice(String text){
-//        final Snackbar sb = Snackbar.make(rootView,text,Snackbar.LENGTH_SHORT)
-//                            .setAction("Dismiss", new View.OnClickListener() {
-//                                @Override
-//                                public void onClick(View v) {
-//                                    sb.dismiss();
-//                                }
-//                            });
-        final Snackbar sb = Snackbar.make(findViewById(R.id.toolbar),text,Snackbar.LENGTH_SHORT);
+        final Snackbar sb = Snackbar.make(findViewById(R.id.bottombar),text,Snackbar.LENGTH_SHORT);
         CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams)sb.getView().getLayoutParams();
         sb.getView().setLayoutParams(params);
         sb.show();
 
     }
 
+    public boolean isPooling() {
+        return pooling;
+    }
+
+    public void setPooling(boolean pooling) {
+        this.pooling = pooling;
+    }
 
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
@@ -617,34 +635,42 @@ public class MainActivity extends AppCompatActivity
     /*
     Nearby BusStops from Google
      */
+    @SuppressLint("StaticFieldLeak")
+    @SuppressWarnings("unchecked")
     @Override
     public void processFinishFromGoogle(List<GoogleBusStopData> result) {
         if(result.size() <= 0){
             Log.d(TAG, "processFinishFromLTA: Google returned no data");
             return;
         }
-        for(int i=0; i< result.size(); i++) {
-            GoogleBusStopData stop = result.get(i);
-            BusStopCards newStop = new BusStopCards();
-            Log.d(TAG, "processFinishFromLTA: Looking up "+stop.getName());
-            if(allBusStops.containsKey(stop.getName())) {
-                String id = allBusStops.get(stop.getName()).getBusStopCode();
-                newStop.setBusStopID(id);
-                newStop.setBusStopName(stop.getName());
-                newStop.setBusStopLat(stop.getLat());
-                newStop.setBusStopLong(stop.getLng());
-                busStopMap.put(newStop.getBusStopID(), newStop);
+        new AsyncTask(){
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                for(int i=0; i< result.size(); i++) {
+                    GoogleBusStopData stop = result.get(i);
+                    BusStopCards newStop = new BusStopCards();
+                    Log.d(TAG, "processFinishFromLTA: Looking up "+stop.getName());
+                    if(allBusStops.containsKey(stop.getName())) {
+                        String id = allBusStops.get(stop.getName()).getBusStopCode();
+                        newStop.setBusStopID(id);
+                        newStop.setBusStopName(stop.getName());
+                        newStop.setBusStopLat(stop.getLat());
+                        newStop.setBusStopLong(stop.getLng());
+                        busStopMap.put(newStop.getBusStopID(), newStop);
 
-                List<String> urlsList = new ArrayList<>();
-                urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+                        List<String> urlsList = new ArrayList<>();
+                        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
 //                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-                ltaReply.delegate = MainActivity.this;
-                ltaReply.execute();
-            }else{
-                Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+stop.getName());
+                        JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
+                        ltaReply.delegate = MainActivity.this;
+                        ltaReply.execute();
+                    }else{
+                        Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+stop.getName());
+                    }
+                }
+                return null;
             }
-        }
+        }.execute();
     }
 
     /*
@@ -674,7 +700,7 @@ public class MainActivity extends AppCompatActivity
                         +" Bus Stop Name: "+ card.getBusStopName()
                         +" - "+card.getBusServices() + " - Last Updated: "
                         + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-//                adapter.addCard(card);
+                adapter.addCard(card);
                 newCardList.add(card);
 
                 LatLng ll = new LatLng(Double.parseDouble(card.getBusStopLat()), Double.parseDouble(card.getBusStopLong()));
@@ -715,7 +741,8 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
             }
-            updateBottomSheet();
+            progressBar.setVisibility(View.GONE);
+//            updateBottomSheet();
         }
     }
 
@@ -756,72 +783,62 @@ public class MainActivity extends AppCompatActivity
             }
         }.execute();
     }
+    @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unchecked")
     private void FindNearbyBusStop(){
-        try {
-            if (mLocationPermissionGranted) {
+            try {
+                if (mLocationPermissionGranted) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    Task locationResult = mFusedLocationProviderClient.getLastLocation();
+                    locationResult.addOnCompleteListener(this, task -> {
+                        if (task.isSuccessful()) {
+                            mLastKnownLocation = (Location) task.getResult();
+//                            snackbarNotice("Looking around you..");
+                            new AsyncTask() {
+                                @Override
+                                protected Object doInBackground(Object[] objects) {
+                                    List<String> urlsList = new ArrayList<>();
+                                    urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
+                                    Log.d(TAG, "FindNearbyBusStop: " + urlsList.get(0));
+                                    JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
+                                    googleReply.delegate = MainActivity.this;
+                                    googleReply.execute();
 
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-
-                        // Clear old cards
-                        //refreshCardList();
-                        //adapter.Clear();
-                        // Set the map's camera position to the current location of the device.
-                        mLastKnownLocation = (Location) task.getResult();
-                        CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();                   // Creates a CameraPosition from the builder
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-                        /*ProgressDialog dialog = new ProgressDialog(this);
-                        AsyncTask asyncTask = new AsyncTask() {
-                            @Override
-                            protected void onPreExecute() {
-                                dialog.setMessage("Looking around you..");
-                                dialog.show();
-                            }
-
-                            @Override
-                            protected Object doInBackground(Object[] objects) {
-                                return null;
-                            }
-
-                            protected void onPostExecute(Void result) {
-                                // do UI work here
-                                if (dialog.isShowing()) {
-                                    dialog.dismiss();
+                                    Point size = new Point();
+                                    getWindow().getWindowManager().getDefaultDisplay().getSize(size);
+                                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                                    return null;
                                 }
-                            }
-                        }.execute();*/
-                        List<String> urlsList = new ArrayList<>();
-                        urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+mLastKnownLocation.getLatitude()+","+mLastKnownLocation.getLongitude()+"&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
-                        Log.d(TAG, "FindNearbyBusStop: "+urlsList.get(0));
-                        JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
-                        googleReply.delegate = MainActivity.this;
-                        googleReply.execute();
 
-                        Point size = new Point();
-                        getWindow().getWindowManager().getDefaultDisplay().getSize(size);
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                    } else {
-                        Log.d(TAG, "Current location is null. Using defaults.");
-                        Log.e(TAG, "Exception: %s", task.getException());
-                        CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(mDefaultLocation)      // Sets the center of the map to Mountain View
-                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();                   // Creates a CameraPosition from the builder
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                        mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                    }
-                });
+                                @Override
+                                protected void onPostExecute(Object o) {
+                                    super.onPostExecute(o);
+                                    // Set the map's camera position to the current location of the device.
+                                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                                            .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                            .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                            .build();                   // Creates a CameraPosition from the builder
+                                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                                }
+                            }.execute();
+
+                        } else {
+                            progressBar.setVisibility(View.GONE);
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            CameraPosition cameraPosition = new CameraPosition.Builder()
+                                    .target(mDefaultLocation)      // Sets the center of the map to Mountain View
+                                    .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                    .build();                   // Creates a CameraPosition from the builder
+                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    });
+                }
+            } catch (SecurityException e) {
+                Log.e("Exception: %s", e.getMessage());
+                return;
             }
-        } catch(SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
-            return;
-        }
 //        fab.show();
     }
 
