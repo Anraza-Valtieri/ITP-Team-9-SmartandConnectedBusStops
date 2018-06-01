@@ -1,11 +1,15 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class BusStopCards {
+    private static final String TAG = BusStopCards.class.getSimpleName();
     String busStopID;
     String busStopName;
     String busStopDesc;
@@ -13,6 +17,7 @@ public class BusStopCards {
     String busStopLong;
     String lastUpdated;
     boolean isFavorite;
+    ArrayList<String> sortedKeys;
 
     // Create map to store
     Map<String, List<String>> busServices = new HashMap<>();
@@ -75,6 +80,7 @@ public class BusStopCards {
 
     public void setBusServices(Map<String, List<String>> busServices) {
         this.busServices = busServices;
+        sortByKeys();
     }
 
     public List<String> getBusTiming() {
@@ -85,31 +91,19 @@ public class BusStopCards {
         this.busTiming = busTiming;
     }
 
-    public boolean isFavorite() {
-        return isFavorite;
+    public boolean isFavorite() { return isFavorite; }
+
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
+
+    public ArrayList<String> getSortedKeys() { return sortedKeys; }
+
+    public void setSortedKeys(ArrayList<String> sortedKeys) { this.sortedKeys = sortedKeys; }
+
+    public void sortByKeys(){
+        Log.d(TAG, "sortByKeys: Called");
+        sortedKeys = new ArrayList<>(busServices.keySet());
+        Collections.sort(sortedKeys);
     }
 
-    public void setFavorite(boolean favorite) {
-        isFavorite = favorite;
-    }
 
-    /*
-    So with this we will store bus timings into the list.
-    Map the bus service number to the list in Bus Services
-
-    busTiming.add("2min");
-    busTiming.add("4min");
-    busTiming.add("6min");
-    busServices.put("113", busTiming);
-
-    To read it
-    // iterate and display values
-        System.out.println("Fetching Keys and corresponding [Multiple] Values n");
-        for (Map.Entry<String, List<String>> entry : busServices.entrySet()) {
-            String key = entry.getKey();
-            List<String> values = entry.getValue();
-            System.out.println("Key = " + key);
-            System.out.println("Values = " + values + "n");
-        }
-     */
 }

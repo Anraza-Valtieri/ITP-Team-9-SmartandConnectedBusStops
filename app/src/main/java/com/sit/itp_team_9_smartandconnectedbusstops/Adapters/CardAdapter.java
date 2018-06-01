@@ -78,9 +78,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
             options_layout.setOrientation(LinearLayout.VERTICAL);
             options_layout.removeAllViewsInLayout();
-            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
-                String key = entry.getKey();
-                List<String> value = entry.getValue();
+            for(String busNo : card.getSortedKeys()){
+//            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
+                List<String> value = timings.get(busNo);
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 assert inflater != null;
                 View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
@@ -90,7 +90,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 TextView duration = to_add.findViewById(R.id.duration1);
                 TextView duration2 = to_add.findViewById(R.id.duration2);
 
-                busID.setText(key);
+                busID.setText(busNo);
 
                 if (!value.get(0).equals(""))
                     duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
@@ -190,7 +190,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //                notifyItemChanged(position);
             updateCardData(mCard);
             doAutoRefresh();
-        }, 10000);
+        }, 15000);
     }
 
     @Override
@@ -207,7 +207,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     for (int i = 0; i < mCard.size(); i++) {
                         BusStopCards updateCard = mCard.get(i);
 //                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
-                        if (result.containsKey(updateCard.getBusStopID())) {
+                        if (result.get(updateCard.getBusStopID()) != null) {
                             Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
                             Map<String, List<String>> finalData = new HashMap<>(loadedData);
 //                Map<String, List<String>> finalData = result.get(updateCard.getBusStopID());

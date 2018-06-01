@@ -76,7 +76,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
@@ -686,12 +685,12 @@ public class MainActivity extends AppCompatActivity
         if(result.size() < 1){
             Log.e(TAG, "processFinishFromLTA: LTA returned no data");
         }else{
-            for (TreeMap.Entry<String, Map> entry : result.entrySet()) {
+            for (Map.Entry<String, Map> entry : result.entrySet()) {
                 String key = entry.getKey(); // Bus stop ID
                 Map value = entry.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
 
-                TreeMap<String, List<String>> finalData = new TreeMap<>(value);
+                Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()){
                     String toConvertID = newData.get(3);
                     Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
