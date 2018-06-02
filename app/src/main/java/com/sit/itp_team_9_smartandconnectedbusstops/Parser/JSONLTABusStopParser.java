@@ -105,7 +105,6 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        delegate.processFinishAllStops(result);
     }
 
 }

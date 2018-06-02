@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse{
+public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
 //    private PackageManager mPackageManager;
     private static final String TAG = CardAdapter.class.getSimpleName();
     private Context mContext;
@@ -184,7 +184,36 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
                     ltaReply.delegate2 = CardAdapter.this;
                     ltaReply.execute();
+                    /*try {
+                        Map<String, Map> entry = ltaReply.execute().get();
+                        for (Map.Entry<String, Map> entryData : entry.entrySet()) {
+                            String key = entryData.getKey(); // Bus stop ID
+                            Map value = entryData.getValue(); // Map with Bus to Timings
 
+                            Map<String, List<String>> finalData = new HashMap<>(value);
+                            for (Map.Entry<String, List<String>> newData : finalData.entrySet()) {
+                                String key2 = newData.getKey(); // Bus
+                                List<String> schedule = newData.getValue(); // Timing
+
+                                Map<String, List<String>> toUpdateService = card.getBusServices();
+                                List<String> toUpdateFields = toUpdateService.get(key2);
+                                if (!schedule.get(0).equals("") && toUpdateFields != null)
+                                    toUpdateFields.set(0, schedule.get(0));
+                                if (!schedule.get(1).equals("") && toUpdateFields != null)
+                                    toUpdateFields.set(1, schedule.get(1));
+                                if (!schedule.get(2).equals("") && toUpdateFields != null)
+                                    toUpdateFields.set(2, schedule.get(2));
+                                card.setLastUpdated(Calendar.getInstance().getTime().toString());
+                            }
+
+                            Log.d(TAG, "updateCardData: Bus stop ID:" + key
+                                    + " Bus Stop Name: " + card.getBusStopName()
+                                    + " - " + card.getBusServices() + " - Last Updated: "
+                                    + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }*/
                 }
                 return null;
             }
@@ -198,6 +227,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
 
     public void doAutoRefresh() {
+        handler2.removeCallbacksAndMessages(null);
         handler2.postDelayed(() -> {
             // Write code for your refresh logic
 //                notifyItemChanged(position);
