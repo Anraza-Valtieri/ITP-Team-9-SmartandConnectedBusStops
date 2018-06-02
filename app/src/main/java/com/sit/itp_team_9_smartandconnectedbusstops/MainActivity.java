@@ -491,21 +491,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
         if(allBusStops.containsKey(poi.name)) {
             String id = allBusStops.get(poi.name).getBusStopCode();
-            /*
-            List<String> urlsList = new ArrayList<>();
-            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, id);
-            ltaReply.delegate = MainActivity.this;
-            @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-                @Override
-                protected Object doInBackground(Object[] objects) {
-                    ltaReply.execute();
-                    return null;
-                }
-            };
-            asyncTask.execute();
-            */
             BusStopCards card = getBusStopData(id);
             singleCardList.clear();
             singleCardList.add(card);
@@ -643,6 +628,12 @@ public class MainActivity extends AppCompatActivity
         }.execute();
     }
 
+    /**
+     * <p>
+     * This method creates and fills busStopMap with BusStopCard objects
+     * busStopMap should be used to obtain the object you require.
+     * DO NOT create more busstopcard objects
+     */
     private void FillBusData(){
         // TODO PARAS BUS SERVICE DATA INTO BUS STOP HERE
 
@@ -694,6 +685,15 @@ public class MainActivity extends AppCompatActivity
         }.execute();
     }
 
+    /**
+     * Returns an BusStopCard object
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     *
+     * @param  id busstopID
+     * @return BusStopCards - BusStopCard object or null
+     */
     private BusStopCards getBusStopData(String id){
         BusStopCards result = busStopMap.get(id);
         if(result == null){
@@ -734,6 +734,13 @@ public class MainActivity extends AppCompatActivity
         return result;
     }
 
+    /**
+     * Creates and fills up nearbyCardList array
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     * nearbyCardList array is used to swap into adapter to display nearby bus stop
+     */
     private void lookUpNearbyBusStops(){
         List<String> urlsList = new ArrayList<>();
         urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
@@ -760,6 +767,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Clears and adds the list into the adapter to be displayed
+     * <p>
+     * This method returns nothing
+     *
+     * @param list ArrayList<BusStopCards>
+     */
     private void updateAdapterList(ArrayList<BusStopCards> list){
         clearCardsForUpdate();
         adapter.addAllCard(list);
