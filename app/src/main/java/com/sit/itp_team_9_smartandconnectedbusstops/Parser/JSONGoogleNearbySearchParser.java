@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleBusStopData;
 
 import org.json.JSONArray;
@@ -24,7 +23,6 @@ public class JSONGoogleNearbySearchParser extends AsyncTask<Void, String, List<G
     private Activity activity;
     private List<String> urls;
     private List<GoogleBusStopData> responseList = new ArrayList<>();
-    public JSONGoogleResponse delegate = null;
 
 
     public JSONGoogleNearbySearchParser(Activity activity, List<String> urls){
@@ -116,6 +114,5 @@ public class JSONGoogleNearbySearchParser extends AsyncTask<Void, String, List<G
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        delegate.processFinishFromGoogle(result);
     }
 }

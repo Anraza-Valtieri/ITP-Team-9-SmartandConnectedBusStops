@@ -16,9 +16,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, Map>> {
     private static final String TAG = JSONLTABusTimingParser.class.getSimpleName();
@@ -27,8 +27,8 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
     private Activity activity;
     private String busStopNo;
     private List<String> urls;
-    private Map<String, List<String>> responseList = new HashMap<>();
-    private Map<String, Map> finalResponse = new HashMap<>();
+    private TreeMap<String, List<String>> responseList = new TreeMap<>();
+    private TreeMap<String, Map> finalResponse = new TreeMap<>();
     public MainActivity delegate = null;
     public CardAdapter delegate2 = null;
 
@@ -84,6 +84,7 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
                     }
                     JSONObject response1 = new JSONObject(buffer.toString());
                     JSONArray jsonArray = response1.getJSONArray("Services");
+
                     for(int i=0; i< jsonArray.length(); i++) {
                         JSONObject obj = jsonArray.getJSONObject(i);
                         String busNo = (obj.getString("ServiceNo"));
@@ -121,8 +122,6 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        if(delegate != null)
-            delegate.processFinishFromLTA(result);
         if(delegate2 != null)
             delegate2.processFinishFromLTA(result);
     }
