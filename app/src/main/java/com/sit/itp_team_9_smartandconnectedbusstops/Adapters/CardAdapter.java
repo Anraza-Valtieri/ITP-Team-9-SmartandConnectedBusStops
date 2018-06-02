@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -73,6 +74,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
         // This part creates layout for bus services
         final View cardview = holder.itemView.findViewById(R.id.buscard);
+        ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
         Map<String, List<String>> timings = card.getBusServices();
         if(timings.size() > 0) {
             LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
@@ -112,7 +114,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             updateUI(position);
         }
 //        doDataRefresh(holder, position);
-        // TODO Touch interaction of cards.
+        favorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(card.isFavorite()){
+                    card.setFavorite(false);
+                    favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                }else{
+                    card.setFavorite(true);
+                    favorite.setImageResource(R.drawable.ic_favorite_red);
+                }
+            }
+        });
         cardview.setOnClickListener(v -> {
             int DEFAULT_ZOOM = 18;
             CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -252,6 +265,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView busDuration1;
         TextView busDuration2;
         TextView busLastUpdated;
+        ImageButton favorite;
 
         BusStopCards card;
 
@@ -273,12 +287,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busDuration1 = itemView.findViewById(R.id.duration1);
             busDuration2 = itemView.findViewById(R.id.duration2);
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
+            favorite = itemView.findViewById(R.id.favoritebtn);
         }
 
         private void setItem(BusStopCards card){
             this.busStopName.setText(card.getBusStopName());
             this.busStopID.setText(card.getBusStopID());
             this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+            if(card.isFavorite())
+                this.favorite.setImageResource(R.drawable.ic_favorite_red);
         }
 
 

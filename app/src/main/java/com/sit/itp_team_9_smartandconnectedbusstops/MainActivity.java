@@ -318,6 +318,7 @@ public class MainActivity extends AppCompatActivity
 
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
                 fab.hide();
                 clearCardsForUpdate();
