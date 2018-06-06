@@ -70,6 +70,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     private List<ApplicationInfo> mApplications;
 
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -239,15 +240,35 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         handler.postDelayed(() -> notifyItemChanged(position), 1000);
     }
 
+    public void pauseHandlers(){
+        handler.removeCallbacksAndMessages(null);
+        handler2.removeCallbacksAndMessages(null);
+    }
+
+    public void resumeHandlers(){
+        for(int i = 0; i < mCard.size(); i++){
+            updateUI(i);
+        }
+        doAutoRefresh();
+    }
+
+    Runnable runnable2 = new Runnable() {
+        @Override
+        public void run() {
+            updateCardData(mCard);
+            doAutoRefresh();
+        }
+    };
 
     public void doAutoRefresh() {
         handler2.removeCallbacksAndMessages(null);
-        handler2.postDelayed(() -> {
-            // Write code for your refresh logic
-//                notifyItemChanged(position);
-            updateCardData(mCard);
-            doAutoRefresh();
-        }, 15000);
+        handler2.postDelayed(runnable2, 15000);
+//        handler2.postDelayed(() -> {
+//            // Write code for your refresh logic
+////                notifyItemChanged(position);
+//            updateCardData(mCard);
+//            doAutoRefresh();
+//        }, 15000);
     }
 
     @Override
