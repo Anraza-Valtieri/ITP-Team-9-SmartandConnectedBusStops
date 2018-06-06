@@ -6,8 +6,8 @@ import com.google.maps.android.clustering.ClusterItem;
 public class MapMarkers implements ClusterItem {
 
     private final LatLng mPosition;
-    private final String mTitle;
-    private final String mSnippet;
+    private String mTitle;
+    private String mSnippet;
 
     public MapMarkers(double lat, double lng, String title, String snippet) {
         mPosition = new LatLng(lat, lng);
@@ -28,5 +28,13 @@ public class MapMarkers implements ClusterItem {
     @Override
     public String getSnippet() {
         return mSnippet;
+    }
+
+    public void setmTitle(String mTitle) {
+        this.mTitle = mTitle;
+    }
+
+    public void setmSnippet(String mSnippet) {
+        this.mSnippet = mSnippet;
     }
 }

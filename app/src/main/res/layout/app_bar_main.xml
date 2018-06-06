@@ -40,6 +40,13 @@
         android:layout_height="match_parent"
         android:elevation="0dp" />
 
+    <View
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#bd424242"
+        android:visibility="gone" />
+
     <FrameLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
@@ -47,18 +54,9 @@
         android:background="@android:color/transparent"
         android:clipToPadding="true"
         android:fitsSystemWindows="true"
-        app:behavior_hideable="false"
+        app:behavior_hideable="true"
         app:behavior_peekHeight="200dp"
         app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|center_vertical|center"
-            android:paddingBottom="60dp"
-            android:visibility="visible" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerview"
@@ -68,7 +66,18 @@
             android:paddingBottom="55dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+        </android.support.v7.widget.RecyclerView>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_vertical|center"
+            android:paddingBottom="60dp"
+            android:visibility="visible" />
 
     </FrameLayout>
 
@@ -92,4 +101,5 @@
             app:menu="@menu/bottom_navigation_menu" />
 
     </FrameLayout>
+
 </android.support.design.widget.CoordinatorLayout>

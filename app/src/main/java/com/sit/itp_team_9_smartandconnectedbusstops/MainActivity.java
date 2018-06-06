@@ -16,10 +16,8 @@ import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -31,6 +29,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,6 +56,8 @@ import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
+import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -77,7 +78,7 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        GoogleMap.OnPoiClickListener {
+        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener{
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -95,6 +96,8 @@ public class MainActivity extends AppCompatActivity
     // not granted.
     private final LatLng mDefaultLocation = new LatLng(1.3139991, 103.7740386);
     private static final int DEFAULT_ZOOM = 18;
+    private static final float MAX_ZOOM = 20.0f;
+    private static final float MIN_ZOOM = 15.0f;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
@@ -118,6 +121,7 @@ public class MainActivity extends AppCompatActivity
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
     RecyclerView recyclerView;
+    View layer;
 
     // Bus stop
     // Key Roadname Value LTABusStopData Object
@@ -148,6 +152,11 @@ public class MainActivity extends AppCompatActivity
     private final Runnable runnable = () -> {
         setPooling(false);
     };
+
+    private final Runnable runnable2 = () -> {
+        bottomNav.setSelectedItemId(R.id.action_nearby);
+    };
+
     //Pooling limit
     private boolean pooling = false;
     private int receivedCards = 0;
@@ -196,6 +205,7 @@ public class MainActivity extends AppCompatActivity
 
         bottomNav = findViewById(R.id.bottom_navigation);
         progressBar = findViewById(R.id.progressBar);
+        layer = findViewById(R.id.bg);
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -299,6 +309,7 @@ public class MainActivity extends AppCompatActivity
 //                        fab.setVisibility(View.VISIBLE);
                         getSupportActionBar().show();
                         fab.setVisibility(View.GONE);
+                        layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
 //                        fab.hide();
 //                        fab.setVisibility(View.INVISIBLE);
@@ -309,6 +320,9 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                    layer.setVisibility(View.VISIBLE);
+                    layer.setAlpha(slideOffset);
+                    getSupportActionBar().hide();
                 }
             });
         }
@@ -330,7 +344,6 @@ public class MainActivity extends AppCompatActivity
 
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            progressBar.setVisibility(View.VISIBLE);
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
                 fab.hide();
@@ -339,23 +352,29 @@ public class MainActivity extends AppCompatActivity
                     setFavBusStopID(adapter.getFavBusStopID());
 
                 clearCardsForUpdate();
+                progressBar.setVisibility(View.VISIBLE);
                 prepareFavoriteCards(getFavBusStopID());
             } else if (id == R.id.action_nav) {
                 fab.hide();
                 clearCardsForUpdate();
             } else if (id == R.id.action_nearby) {
 //                fab.show();
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                        .build();                   // Creates a CameraPosition from the builder
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 if(!isPooling()) {
                     setPooling(true);
+
                     clearCardsForUpdate();
+                    progressBar.setVisibility(View.VISIBLE);
                     updateAdapterList(nearbyCardList);
                     handler.postDelayed(runnable, 3000);
                 }
             }
             return true;
         });
-        bottomNav.setSelectedItemId(R.id.action_nearby);
-
 
     }
 
@@ -407,8 +426,12 @@ public class MainActivity extends AppCompatActivity
                                 .build();                   // Creates a CameraPosition from the builder
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                         mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        getDeviceLocation();
                     }
                 });
+            }
+            else{
+                getLocationPermission();
             }
         } catch(SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
@@ -508,7 +531,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
-        BusStopCards newStop = new BusStopCards();
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
         if(allBusStops.containsKey(poi.name)) {
             String id = allBusStops.get(poi.name).getBusStopCode();
@@ -516,6 +538,7 @@ public class MainActivity extends AppCompatActivity
             singleCardList.clear();
             singleCardList.add(card);
             updateAdapterList(singleCardList);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }else{
             Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
         }
@@ -572,28 +595,32 @@ public class MainActivity extends AppCompatActivity
         mMap.setIndoorEnabled(false);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
-        //mMap.setTrafficEnabled(true);
+        mMap.setTrafficEnabled(true);
 
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
         mClusterManager.setAnimation(false);
+        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnCameraMoveListener(this);
         mMap.setOnMarkerClickListener(mClusterManager);
+
+        mMap.setMaxZoomPreference(MAX_ZOOM);
+        mMap.setMinZoomPreference(MIN_ZOOM);
         prepareBottomSheet();
         PrepareLTAData();
     }
 
-    private void snackbarNotice(String text){
-        final Snackbar sb = Snackbar.make(findViewById(R.id.bottombar),text,Snackbar.LENGTH_SHORT);
-        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams)sb.getView().getLayoutParams();
-        sb.getView().setLayoutParams(params);
-        sb.show();
-
+    @Override
+    public void onCameraMove() {
+//        layer.animate().alpha(0).setDuration(1000);
     }
 
     public boolean isPooling() {
@@ -635,6 +662,7 @@ public class MainActivity extends AppCompatActivity
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=5000");
         JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
         try {
             allBusStops.putAll(ltaData.execute().get());
@@ -706,7 +734,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected Object doInBackground(Object[] objects) {
                 for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
-                    String key = newData.getKey();
+//                    String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
 
                     BusStopCards newStop = new BusStopCards();
@@ -719,26 +747,29 @@ public class MainActivity extends AppCompatActivity
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
-                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-                        mClusterManager.addItem(infoWindowItem);
-                        markerMap.put(value.getDescription(), infoWindowItem);
-                        mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-                            if (allBusStops.containsKey(mapMarkers.getTitle())) {
-                                Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
-                                BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-                                singleCardList.clear();
-                                singleCardList.add(card);
-                                updateAdapterList(singleCardList);
-                            } else {
-                                Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-                            }
-                            return false;
-                        });
-                    }
+//                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
+                    mClusterManager.addItem(infoWindowItem);
+                    markerMap.put(value.getDescription(), infoWindowItem);
+                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
+                        if (allBusStops.containsKey(mapMarkers.getTitle())) {
+                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+                            BusStopCards card = getBusStopData(mapMarkers.getSnippet());
+                            singleCardList.clear();
+                            singleCardList.add(card);
+                            updateAdapterList(singleCardList);
+                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                        } else {
+                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
+                        }
+                        return false;
+                    });
+//                    }
                 }
+
                 return null;
             }
         }.execute();
+//        handler.postDelayed(runnable2, 5000);
     }
 
     /**
@@ -814,6 +845,8 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
                 return;
             }
+
+            // Limit to 10 result
             int k = result.size();
             if(result.size() > 10)
                 result.subList(10, k).clear();
@@ -864,6 +897,10 @@ public class MainActivity extends AppCompatActivity
         }
         updateAdapterList(favCardList);
     }
+
+
+
+
     /*
     ALL BUS STOPS FROM LTA
 

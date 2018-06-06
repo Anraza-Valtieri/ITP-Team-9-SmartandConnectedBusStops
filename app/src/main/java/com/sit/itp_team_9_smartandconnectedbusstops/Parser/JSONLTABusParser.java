@@ -52,7 +52,7 @@ public class JSONLTABusParser extends AsyncTask<Void, String, Map<String, LTABus
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.setRequestProperty("AccountKey", authKey);
                 urlConnection.connect();
-                Log.d(TAG, "Sent : " + authKey);
+//                Log.d(TAG, "Sent : " + authKey);
 
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
