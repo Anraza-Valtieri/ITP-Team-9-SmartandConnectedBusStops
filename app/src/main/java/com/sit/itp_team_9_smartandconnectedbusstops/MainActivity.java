@@ -145,7 +145,9 @@ public class MainActivity extends AppCompatActivity
 
     //Handler
     private final Handler handler = new Handler();
-
+    private final Runnable runnable = () -> {
+        setPooling(false);
+    };
     //Pooling limit
     private boolean pooling = false;
     private int receivedCards = 0;
@@ -242,8 +244,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onRestart() {
+        adapter.resumeHandlers();
         super.onRestart();
     }
+
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(runnable);
+        adapter.pauseHandlers();
+        super.onPause();
+    }
+
 
     @Override
     protected void onStop() {
@@ -338,7 +349,7 @@ public class MainActivity extends AppCompatActivity
                     setPooling(true);
                     clearCardsForUpdate();
                     updateAdapterList(nearbyCardList);
-                    handler.postDelayed(() -> setPooling(false), 3000);
+                    handler.postDelayed(runnable, 3000);
                 }
             }
             return true;
