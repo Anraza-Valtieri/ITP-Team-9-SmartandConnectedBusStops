@@ -41,6 +41,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<BusStopCards> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
+    public ArrayList<String> favBusStopID = new ArrayList<>();
+
+    public ArrayList<String> getFavBusStopID() {
+        return favBusStopID;
+    }
+
+    public void setFavBusStopID(ArrayList<String> favBusStopID) {
+        this.favBusStopID = favBusStopID;
+    }
 
     public ArrayList<BusStopCards> getmCard() {
         return mCard;
@@ -53,7 +62,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
 //        this.mApplications = mApplications;
         mContext = context;
-        mCard = card;
+        this.mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
 //        mPackageManager = mContext.getPackageManager();
@@ -69,7 +78,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        final BusStopCards card = mCard.get(position);
+        BusStopCards card = mCard.get(position);
         holder.setItem(card);
 
         // This part creates layout for bus services
@@ -113,6 +122,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             options_layout.addView(to_add);
             updateUI(position);
         }
+        if(card.isFavorite())
+            favorite.setImageResource(R.drawable.ic_favorite_red);
+
 //        doDataRefresh(holder, position);
         favorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,9 +132,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 if(card.isFavorite()){
                     card.setFavorite(false);
                     favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                    favBusStopID.remove(card.getBusStopID());
                 }else{
                     card.setFavorite(true);
                     favorite.setImageResource(R.drawable.ic_favorite_red);
+                    favBusStopID.add(card.getBusStopID());
                 }
             }
         });
@@ -147,7 +161,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void addAllCard(ArrayList<BusStopCards> card){
-        mCard.addAll(card);
+        this.mCard.addAll(card);
         Refresh();
         Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
@@ -161,7 +175,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void Clear(){
         Log.d(TAG, "Clear: called "+mCard.size());
-        mCard.clear();
+        this.mCard.clear();
         Refresh();
     }
 
@@ -279,7 +293,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }
     }
 
-
     static class ViewHolder extends RecyclerView.ViewHolder {
 
 //        ImageView appIcon;
@@ -326,6 +339,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
             if(card.isFavorite())
                 this.favorite.setImageResource(R.drawable.ic_favorite_red);
+            else
+                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
         }
 
 
