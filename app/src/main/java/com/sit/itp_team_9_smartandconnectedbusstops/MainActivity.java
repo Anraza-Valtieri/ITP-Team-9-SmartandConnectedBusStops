@@ -2,6 +2,7 @@ package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -54,6 +55,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -128,6 +131,7 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<BusStopCards> favCardList = new ArrayList<>(); // Favorite cards
     private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
     public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
+    public ArrayList<String> favBusStopID;
 
     // Map Markers
     private ClusterManager<MapMarkers> mClusterManager;
@@ -150,8 +154,10 @@ public class MainActivity extends AppCompatActivity
     private ProgressBar progressBar;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
@@ -162,7 +168,7 @@ public class MainActivity extends AppCompatActivity
         navHeader = navigationView.getHeaderView(0);
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         // Toolbar :: Transparent
-//        toolbar.setBackgroundColor(Color.TRANSPARENT);
+        toolbar.setBackgroundColor(Color.TRANSPARENT);
 
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -201,12 +207,12 @@ public class MainActivity extends AppCompatActivity
              Timestamp timestamp = snapshot.getTimestamp("created_at");
              java.util.Date date = timestamp.toDate();
          */
-        /*FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();*/
+        db.disableNetwork();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -317,8 +323,12 @@ public class MainActivity extends AppCompatActivity
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
                 fab.hide();
+
+                if(adapter != null)
+                    setFavBusStopID(adapter.getFavBusStopID());
+
                 clearCardsForUpdate();
-                updateAdapterList(favCardList);
+                prepareFavoriteCards(getFavBusStopID());
             } else if (id == R.id.action_nav) {
                 fab.hide();
                 clearCardsForUpdate();
@@ -491,21 +501,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
         if(allBusStops.containsKey(poi.name)) {
             String id = allBusStops.get(poi.name).getBusStopCode();
-            /*
-            List<String> urlsList = new ArrayList<>();
-            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, id);
-            ltaReply.delegate = MainActivity.this;
-            @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-                @Override
-                protected Object doInBackground(Object[] objects) {
-                    ltaReply.execute();
-                    return null;
-                }
-            };
-            asyncTask.execute();
-            */
             BusStopCards card = getBusStopData(id);
             singleCardList.clear();
             singleCardList.add(card);
@@ -598,6 +593,23 @@ public class MainActivity extends AppCompatActivity
         this.pooling = pooling;
     }
 
+    public ArrayList<BusStopCards> getFavCardList() {
+        return favCardList;
+    }
+
+    public void setFavCardList(ArrayList<BusStopCards> favCardList) {
+        this.favCardList = favCardList;
+    }
+
+    public ArrayList<String> getFavBusStopID() {
+        return favBusStopID;
+    }
+
+    public void setFavBusStopID(ArrayList<String> favBusStopID) {
+        this.favCardList.clear();
+        this.favBusStopID = favBusStopID;
+    }
+
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
 //        snackbarNotice("Syncing data.");
@@ -643,19 +655,43 @@ public class MainActivity extends AppCompatActivity
         }.execute();
     }
 
+    /**
+     * <p>
+     * This method creates and fills busStopMap with BusStopCard objects
+     * busStopMap should be used to obtain the object you require.
+     * DO NOT create more busstopcard objects
+     */
     private void FillBusData(){
         // TODO PARAS BUS SERVICE DATA INTO BUS STOP HERE
 
         // Once data is in we can start looking around us!
 //        FindNearbyBusStop();
 
-        adapter.Refresh();
+        //adapter.Refresh();
+        ProgressDialog dialog = new ProgressDialog(this);
         /*
         Create Map markers!
          */
         @SuppressLint("StaticFieldLeak")
         @SuppressWarnings("unchecked")
         AsyncTask asyncTask = new AsyncTask() {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog.setMessage("Loading..");
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                dialog.dismiss();
+            }
+
             @Override
             protected Object doInBackground(Object[] objects) {
                 for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
@@ -694,12 +730,27 @@ public class MainActivity extends AppCompatActivity
         }.execute();
     }
 
+    /**
+     * Returns an BusStopCard object
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     *
+     * @param  id busstopID
+     * @return BusStopCards - BusStopCard object or null
+     */
     private BusStopCards getBusStopData(String id){
         BusStopCards result = busStopMap.get(id);
         if(result == null){
             Log.e(TAG, "getBusStopData: No busStopMap!");
             return null;
         }
+
+        // Bus stop favorites
+        if(favBusStopID != null && favBusStopID.size() > 0 &&favBusStopID.contains(result.getBusStopID()))
+            result.setFavorite(true);
+        else
+            result.setFavorite(false);
 
         // Pull bus stop data
         List<String> urlsList = new ArrayList<>();
@@ -734,6 +785,13 @@ public class MainActivity extends AppCompatActivity
         return result;
     }
 
+    /**
+     * Creates and fills up nearbyCardList array
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     * nearbyCardList array is used to swap into adapter to display nearby bus stop
+     */
     private void lookUpNearbyBusStops(){
         List<String> urlsList = new ArrayList<>();
         urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
@@ -745,6 +803,10 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
                 return;
             }
+            int k = result.size();
+            if(result.size() > 10)
+                result.subList(10, k).clear();
+
             nearbyCardList.clear();
             for(int i=0; i< result.size(); i++) {
                 GoogleBusStopData stop = result.get(i);
@@ -760,11 +822,36 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Clears and adds the list into the adapter to be displayed
+     * <p>
+     * This method returns nothing
+     *
+     * @param list ArrayList<BusStopCards>
+     */
     private void updateAdapterList(ArrayList<BusStopCards> list){
         clearCardsForUpdate();
+        adapter.notifyDataSetChanged();
         adapter.addAllCard(list);
         adapter.doAutoRefresh();
         progressBar.setVisibility(View.GONE);
+    }
+
+    private void prepareFavoriteCards(ArrayList<String> list){
+        if(list.size() < 1){
+            Log.e(TAG, "prepareFavoriteCards: list is empty!");
+            return;
+        }
+
+        for(int i=0; i< list.size(); i++) {
+            if(allBusByID.containsKey(list.get(i))) {
+                String id = allBusStops.get(allBusByID.get(list.get(i))).getBusStopCode();
+                BusStopCards card = getBusStopData(id);
+                favCardList.add(card);
+                Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
+            }
+        }
+        updateAdapterList(favCardList);
     }
     /*
     ALL BUS STOPS FROM LTA
