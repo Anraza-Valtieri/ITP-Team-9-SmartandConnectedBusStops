@@ -53,7 +53,10 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
@@ -63,6 +66,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
@@ -141,6 +145,9 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
     public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID;
+
+    // UserData
+    UserData userData;
 
     // Map Markers
     private ClusterManager<MapMarkers> mClusterManager;
@@ -230,6 +237,8 @@ public class MainActivity extends AppCompatActivity
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
         db.disableNetwork();
+
+        userData = new UserData();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -347,6 +356,7 @@ public class MainActivity extends AppCompatActivity
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
 
+        loadFavoritesFromDB();
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
 //            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
@@ -655,6 +665,31 @@ public class MainActivity extends AppCompatActivity
     public void setFavBusStopID(ArrayList<String> favBusStopID) {
         this.favCardList.clear();
         this.favBusStopID = favBusStopID;
+        userData.setFavBusStopID(favBusStopID);
+        db.collection("user").document("userdata").set(userData);
+    }
+
+    private void loadFavoritesFromDB(){
+        DocumentReference docRef = db.collection("user").document("userdata");
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                        userData = document.toObject(UserData.class);
+                        favBusStopID = userData.getFavBusStopID();
+                        adapter.setFavBusStopID(favBusStopID);
+//                        favBusStopID = (ArrayList) document.getData().get("favBusStopID");
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
     }
 
     private void PrepareLTAData(){
