@@ -56,21 +56,21 @@ import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
 import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
-import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleBusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
-import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleNearbySearchParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +123,9 @@ public class MainActivity extends AppCompatActivity
     RecyclerView recyclerView;
     View layer;
 
+    //Database
+    FirebaseFirestore db;
+
     // Bus stop
     // Key Roadname Value LTABusStopData Object
     private Map<String, LTABusStopData> allBusStops = new HashMap<>();
@@ -130,6 +133,8 @@ public class MainActivity extends AppCompatActivity
     private Map<String, String> allBusByID = new HashMap<>();
     // Key: Bus stop ID Value BusStopCards Object
     private Map<String, BusStopCards> busStopMap = new HashMap<>();
+    // Sorted LTABusStopData
+    private List<LTABusStopData> sortedLTABusStopData = new ArrayList<>();
 
     // Bus cards
     private ArrayList<BusStopCards> favCardList = new ArrayList<>(); // Favorite cards
@@ -222,7 +227,7 @@ public class MainActivity extends AppCompatActivity
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
         db.disableNetwork();
 
@@ -344,16 +349,17 @@ public class MainActivity extends AppCompatActivity
 
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
-                fab.hide();
-
-                if(adapter != null)
+                if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
-                clearCardsForUpdate();
-                progressBar.setVisibility(View.VISIBLE);
-                prepareFavoriteCards(getFavBusStopID());
+                if(favBusStopID.size() > 0) {
+                    clearCardsForUpdate();
+                    progressBar.setVisibility(View.VISIBLE);
+                    prepareFavoriteCards(getFavBusStopID());
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                }
             } else if (id == R.id.action_nav) {
                 fab.hide();
                 clearCardsForUpdate();
@@ -368,8 +374,11 @@ public class MainActivity extends AppCompatActivity
                     setPooling(true);
 
                     clearCardsForUpdate();
+//                    if(adapter != null)
+//                        adapter.setFavBusStopID(getFavBusStopID());
                     progressBar.setVisibility(View.VISIBLE);
                     updateAdapterList(nearbyCardList);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -538,7 +547,7 @@ public class MainActivity extends AppCompatActivity
             singleCardList.clear();
             singleCardList.add(card);
             updateAdapterList(singleCardList);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }else{
             Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
         }
@@ -650,7 +659,9 @@ public class MainActivity extends AppCompatActivity
 
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
-//        snackbarNotice("Syncing data.");
+
+//        CollectionReference citiesRef = db.collection("data");
+
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -671,6 +682,13 @@ public class MainActivity extends AppCompatActivity
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+
+//        for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
+//            LTABusStopData value = newData.getValue();
+//            db.collection("data").document(value.getBusStopCode()).set(value)
+//                    .addOnSuccessListener(aVoid -> Log.d(TAG, "DocumentSnapshot successfully written!"))
+//                    .addOnFailureListener(e -> Log.w(TAG, "Error writing document", e));
+//        }
     }
 
     private void LinkIDtoName(){
@@ -683,6 +701,8 @@ public class MainActivity extends AppCompatActivity
                     String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
                     allBusByID.put(value.getBusStopCode(),key);
+                    sortedLTABusStopData.add(value);
+                    Log.d(TAG, "doInBackground: LinkIDtoName");
                 }
                 return null;
             }
@@ -757,7 +777,7 @@ public class MainActivity extends AppCompatActivity
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
-                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                         } else {
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
                         }
@@ -835,7 +855,7 @@ public class MainActivity extends AppCompatActivity
      * nearbyCardList array is used to swap into adapter to display nearby bus stop
      */
     private void lookUpNearbyBusStops(){
-        List<String> urlsList = new ArrayList<>();
+        /*List<String> urlsList = new ArrayList<>();
         urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
         JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
         try {
@@ -863,7 +883,37 @@ public class MainActivity extends AppCompatActivity
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
+        }*/
+        List<LTABusStopData> result = sortLocations(sortedLTABusStopData, mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+        if(result.size() <= 0){
+            Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+            return;
         }
+
+        for(int i=0; i< 10; i++) {
+            BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
+            nearbyCardList.add(card);
+//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
+            Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+        }
+    }
+
+    public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
+
+        Comparator comp = (Comparator<LTABusStopData>) (o, o2) -> {
+            float[] result1 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
+            Float distance1 = result1[0];
+
+            float[] result2 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o2.getBusStopLat()), Double.parseDouble(o2.getBusStopLong()), result2);
+            Float distance2 = result2[0];
+
+            return distance1.compareTo(distance2);
+        };
+
+        Collections.sort(locations, comp);
+        return locations;
     }
 
     /**

@@ -105,5 +105,19 @@ public class BusStopCards {
         Collections.sort(sortedKeys);
     }
 
-
+    @Override
+    public String toString() {
+        return "BusStopCards{" +
+                "busStopID='" + busStopID + '\'' +
+                ", busStopName='" + busStopName + '\'' +
+                ", busStopDesc='" + busStopDesc + '\'' +
+                ", busStopLat='" + busStopLat + '\'' +
+                ", busStopLong='" + busStopLong + '\'' +
+                ", lastUpdated='" + lastUpdated + '\'' +
+                ", isFavorite=" + isFavorite +
+                ", sortedKeys=" + sortedKeys +
+                ", busServices=" + busServices +
+                ", busTiming=" + busTiming +
+                '}';
+    }
 }
