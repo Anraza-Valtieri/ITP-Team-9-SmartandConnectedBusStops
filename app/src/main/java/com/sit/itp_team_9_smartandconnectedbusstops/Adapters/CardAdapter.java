@@ -48,6 +48,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavBusStopID(ArrayList<String> favBusStopID) {
+        this.favBusStopID.clear();
         this.favBusStopID = favBusStopID;
     }
 

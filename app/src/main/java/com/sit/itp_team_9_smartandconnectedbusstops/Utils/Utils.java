@@ -1,6 +1,8 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Utils;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.text.format.DateUtils;
 
 import java.text.ParseException;
@@ -35,17 +37,29 @@ public class Utils {
         if (cal1.get(Calendar.YEAR) > cal2.get(Calendar.YEAR)) return false;
         return cal1.get(Calendar.DAY_OF_YEAR) < cal2.get(Calendar.DAY_OF_YEAR);
     }
-
+    @SuppressLint("SimpleDateFormat")
     public static Date formatTime(String datetime){
         Date result = Calendar.getInstance().getTime();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        format.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        if (Build.VERSION.SDK_INT >= 24) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+            format.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+            try {
+                Date newdate = format.parse(datetime);
+                result = newdate;
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }else
+        {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            format.setTimeZone(TimeZone.getTimeZone("GMT+8"));
 
-        try {
-            Date newdate = format.parse(datetime);
-            result = newdate;
-        } catch (ParseException e) {
-            e.printStackTrace();
+            try {
+                Date newdate = format.parse(datetime);
+                result = newdate;
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
         return result;
 
