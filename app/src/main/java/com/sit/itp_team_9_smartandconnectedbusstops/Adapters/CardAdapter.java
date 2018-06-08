@@ -274,7 +274,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     @Override
     public void processFinishFromLTA(Map<String, Map> result) {
-        Log.d(TAG, "processFinishFromLTA: Received");
+//        Log.d(TAG, "processFinishFromLTA: Received");
         if(result.size() < 1){
             Log.e(TAG, "processFinishFromLTA: LTA returned no data");
         }else {
@@ -309,9 +309,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     return null;
                 }
             }.execute();
-
-
-            Log.d(TAG, "processFinishFromLTA: END looking at "+mCard.size());
+//            Log.d(TAG, "processFinishFromLTA: END looking at "+mCard.size());
         }
     }
 

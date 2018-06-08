@@ -52,7 +52,7 @@ public class JSONGoogleNearbySearchParser extends AsyncTask<Void, String, List<G
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.connect();
                 String authKey = "AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
-                Log.d(TAG, "Sent : " + authKey);
+//                Log.d(TAG, "Sent : " + authKey);
 
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();

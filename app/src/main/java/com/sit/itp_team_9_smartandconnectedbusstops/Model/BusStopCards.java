@@ -1,7 +1,5 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -100,7 +98,7 @@ public class BusStopCards {
     public void setSortedKeys(ArrayList<String> sortedKeys) { this.sortedKeys = sortedKeys; }
 
     public void sortByKeys(){
-        Log.d(TAG, "sortByKeys: Called");
+//        Log.d(TAG, "sortByKeys: Called");
         sortedKeys = new ArrayList<>(busServices.keySet());
         Collections.sort(sortedKeys);
     }
