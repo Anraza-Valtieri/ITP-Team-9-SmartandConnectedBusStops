@@ -9,8 +9,12 @@
     <!-- Your product logo - 144dp color version of your app icon -->
     <item>
 
+        <!--
         <bitmap
-            android:src="@drawable/powered_by_google_light"
+            android:src="@drawable/ic_directions_bus_black_24dp"
+            android:gravity="center"/>
+            -->
+        <bitmap android:src="@drawable/powered_by_google_light"
             android:gravity="center"/>
 
     </item>

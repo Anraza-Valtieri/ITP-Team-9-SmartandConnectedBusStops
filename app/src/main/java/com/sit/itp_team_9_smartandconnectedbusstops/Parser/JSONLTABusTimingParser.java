@@ -64,7 +64,7 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.setRequestProperty("AccountKey", authKey);
                 urlConnection.connect();
-                Log.d(TAG, "Sent : " + authKey);
+//                Log.d(TAG, "Sent : " + authKey);
 
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
