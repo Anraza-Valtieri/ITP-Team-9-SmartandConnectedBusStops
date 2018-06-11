@@ -52,7 +52,7 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.setRequestProperty("AccountKey", authKey);
                 urlConnection.connect();
-                Log.d(TAG, "Sent : " + authKey);
+//                Log.d(TAG, "Sent : " + authKey);
 
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
@@ -80,7 +80,8 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
                                 obj.getString("Description"));
                         entry.setBusStopLat(obj.getString("Latitude"));
                         entry.setBusStopLong(obj.getString("Longitude"));
-                        finalResponse.put(entry.getDescription(), entry);
+//                        finalResponse.put(entry.getDescription(), entry);
+                        finalResponse.put(obj.getString("BusStopCode"), entry);
                     }
                     urlConnection.disconnect();
                 } else {
@@ -105,7 +106,6 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
         //Do something with the JSON string
 
         Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
-        delegate.processFinishAllStops(result);
     }
 
 }

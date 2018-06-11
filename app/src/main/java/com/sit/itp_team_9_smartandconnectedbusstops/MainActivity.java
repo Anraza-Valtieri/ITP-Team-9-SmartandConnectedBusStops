@@ -1,26 +1,25 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -32,6 +31,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,11 +39,21 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.Places;
@@ -51,27 +61,34 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
+import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
-import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponse;
-import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTALoadAll;
-import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleBusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
-import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleNearbySearchParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +96,7 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        GoogleMap.OnPoiClickListener, JSONGoogleResponse, JSONLTAResponse, JSONLTALoadAll {
+        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener{
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -97,12 +114,25 @@ public class MainActivity extends AppCompatActivity
     // not granted.
     private final LatLng mDefaultLocation = new LatLng(1.3139991, 103.7740386);
     private static final int DEFAULT_ZOOM = 18;
+    private static final float MAX_ZOOM = 20.0f;
+    private static final float MIN_ZOOM = 15.0f;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
-    private Location mLastKnownLocation;
+    private LocationRequest mLocationRequest;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationCallback mLocationCallback;
+    private Location mCurrentLocation = null;
+    // Location updates interval - 10sec
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    // Fastest updates interval - 5 sec
+    // Location updates will be received if another app is requesting the locations
+    // than your app can handle
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
+    private static final int REQUEST_CHECK_SETTINGS = 100;
+    private boolean firstLocationUpdate = false;
 
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
@@ -120,6 +150,10 @@ public class MainActivity extends AppCompatActivity
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
     RecyclerView recyclerView;
+    View layer;
+
+    //Database
+    FirebaseFirestore db;
 
     // Bus stop
     // Key Roadname Value LTABusStopData Object
@@ -128,24 +162,50 @@ public class MainActivity extends AppCompatActivity
     private Map<String, String> allBusByID = new HashMap<>();
     // Key: Bus stop ID Value BusStopCards Object
     private Map<String, BusStopCards> busStopMap = new HashMap<>();
+    // Sorted LTABusStopData
+    private List<LTABusStopData> sortedLTABusStopData = new ArrayList<>();
 
     // Bus cards
-    private ArrayList<BusStopCards> cardList = new ArrayList<>();
-    public ArrayList<BusStopCards> newCardList = new ArrayList<>();
+    private ArrayList<BusStopCards> favCardList = new ArrayList<>(); // Favorite cards
+    private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
+    public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
+    public ArrayList<String> favBusStopID;
+
+    // UserData
+    UserData userData;
 
     // Map Markers
-    private Map<String, Marker> markerMap = new HashMap<>();
+    private ClusterManager<MapMarkers> mClusterManager;
+    private Map<String, MapMarkers> markerMap = new HashMap<>();
 
     // Recycler
     private CardAdapter adapter = null;
     private View rootView;
 
+    private BottomNavigationView bottomNav;
+
     //Handler
     private final Handler handler = new Handler();
+    private final Runnable runnable = () -> {
+        setPooling(false);
+    };
+
+    private final Runnable runnable2 = () -> {
+        bottomNav.setSelectedItemId(R.id.action_fav);
+    };
+
+    //Pooling limit
+    private boolean pooling = false;
+    private int receivedCards = 0;
+
+    //Progress
+    private ProgressBar progressBar;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
@@ -160,6 +220,7 @@ public class MainActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().show();
 
         // Status bar :: Transparent
         Window window = this.getWindow();
@@ -175,11 +236,13 @@ public class MainActivity extends AppCompatActivity
         fab = findViewById(R.id.fab);
         fab.hide();
         fab.setOnClickListener(view -> {
-            newCardList.clear();
-            FindNearbyBusStop();
-            updateBottomSheetLength();
+            nearbyCardList.clear();
+            updateBottomSheet();
         });
 
+        bottomNav = findViewById(R.id.bottom_navigation);
+        progressBar = findViewById(R.id.progressBar);
+        layer = findViewById(R.id.bg);
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -193,12 +256,14 @@ public class MainActivity extends AppCompatActivity
              Timestamp timestamp = snapshot.getTimestamp("created_at");
              java.util.Date date = timestamp.toDate();
          */
-        /*FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();*/
+        db.disableNetwork();
+
+        userData = new UserData();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -228,8 +293,29 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onRestart() {
+        if(adapter != null)
+            adapter.resumeHandlers();
         super.onRestart();
+        // Resuming location updates depending on button state and
+        // allowed permissions
+        if (mLocationPermissionGranted) {
+            getDeviceLocation();
+        }
     }
+
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(runnable);
+        if(adapter != null)
+            adapter.pauseHandlers();
+        super.onPause();
+
+        if (mLocationPermissionGranted) {
+            // pausing location updates
+            stopLocationUpdates();
+        }
+    }
+
 
     @Override
     protected void onStop() {
@@ -246,13 +332,13 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void updateBottomSheetLength(){
+    private void clearCardsForUpdate(){
+        adapter.Clear();
+    }
+    private void updateBottomSheet(){
         //TODO Adjust bottomsheet to card length.
         adapter.Clear();
-        adapter.addAllCard(newCardList);
-//        FrameLayout parentThatHasBottomSheetBehavior = (FrameLayout) recyclerView.getParent().getParent();
-//        parentThatHasBottomSheetBehavior.setLayoutParams(new CoordinatorLayout.LayoutParams(CoordinatorLayout.LayoutParams.MATCH_PARENT,
-//                recyclerView.getHeight()));
+//        adapter.addAllCard(nearbyCardList);
     }
     private void prepareBottomSheet(){
         // Bottom sheet
@@ -265,24 +351,29 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
+                        fab.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                        fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
-                        fab.setVisibility(View.VISIBLE);
+                        getSupportActionBar().show();
+                        fab.setVisibility(View.GONE);
+                        layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
-                        fab.setVisibility(View.INVISIBLE);
+                        getSupportActionBar().hide();
+                        fab.setVisibility(View.GONE);
                     }
                 }
 
                 @Override
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                    layer.setVisibility(View.VISIBLE);
+                    layer.setAlpha(slideOffset);
+                    getSupportActionBar().hide();
                 }
             });
         }
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), cardList, mMap, bottomSheetBehavior);
+        adapter = new CardAdapter(getApplicationContext(), new ArrayList<>(), mMap, bottomSheetBehavior);
         adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -295,6 +386,47 @@ public class MainActivity extends AppCompatActivity
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
 
+        loadFavoritesFromDB();
+        bottomNav.setOnNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+//            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            if (id == R.id.action_fav) {
+                if (adapter != null)
+                    setFavBusStopID(adapter.getFavBusStopID());
+
+                if(favBusStopID.size() > 0) {
+                    clearCardsForUpdate();
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    progressBar.setVisibility(View.VISIBLE);
+                    prepareFavoriteCards(getFavBusStopID());
+                }
+            } else if (id == R.id.action_nav) {
+                fab.hide();
+                clearCardsForUpdate();
+            } else if (id == R.id.action_nearby) {
+//                fab.show();
+                if(mCurrentLocation==null){
+                    getDeviceLocation();
+                    getLocationPermission();
+                    return false;
+                }
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                        .build();                   // Creates a CameraPosition from the builder
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                if(!isPooling()) {
+                    setPooling(true);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    lookUpNearbyBusStops();
+                    clearCardsForUpdate();
+                    progressBar.setVisibility(View.VISIBLE);
+                    updateAdapterList(nearbyCardList);
+                    handler.postDelayed(runnable, 3000);
+                }
+            }
+            return true;
+        });
 
     }
 
@@ -318,33 +450,121 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        for(int i=0; i<permissions.length; i++) {
+            String permission = permissions[i];
+            int grantedResult = grantResults[i];
+            if (permission.equals(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                if (grantedResult == PackageManager.PERMISSION_GRANTED) {
+                    getLocationPermission();
+                }
+            }
+        }
+    }
     @SuppressWarnings("unchecked")
     private void getDeviceLocation() {
         /*
          * Get the best and most recent location of the device, which may be null in rare
          * cases when a location is not available.
          */
-        try {
-            if (mLocationPermissionGranted) {
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        // Set the map's camera position to the current location of the device.
-                        mLastKnownLocation = (Location) task.getResult();
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(mLastKnownLocation.getLatitude(),
-                                        mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                    } else {
-                        Log.d(TAG, "Current location is null. Using defaults.");
-                        Log.e(TAG, "Exception: %s", task.getException());
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        SettingsClient mSettingsClient = LocationServices.getSettingsClient(this);
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                // location is received
+                mCurrentLocation = locationResult.getLastLocation();
+                if(!firstLocationUpdate){
+                    if(mCurrentLocation!=null){
+                        firstLocationUpdate = true;
+                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();                   // Creates a CameraPosition from the builder
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                     }
-                });
+                }
+                try {
+                    if (mLocationPermissionGranted) {
+                        mMap.setMyLocationEnabled(true);
+                    } else {
+                        mMap.setMyLocationEnabled(false);
+                    }
+                } catch (SecurityException e)  {
+                    Log.e("Exception: %s", e.getMessage());
+                }
+//                updateLocationUI();
+                lookUpNearbyBusStops();
             }
-        } catch(SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
+        };
+
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        LocationSettingsRequest mLocationSettingsRequest = builder.build();
+        if (mLocationPermissionGranted) {
+            mSettingsClient
+                    .checkLocationSettings(mLocationSettingsRequest)
+                    .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                        @SuppressLint("MissingPermission")
+                        @Override
+                        public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                            Log.i(TAG, "All location settings are satisfied.");
+
+//                            Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+
+                            //noinspection MissingPermission
+                            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                    mLocationCallback, Looper.myLooper());
+
+                        }
+                    })
+                    .addOnFailureListener(this, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            int statusCode = ((ApiException) e).getStatusCode();
+                            switch (statusCode) {
+                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                    Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                            "location settings ");
+                                    try {
+                                        // Show the dialog by calling startResolutionForResult(), and check the
+                                        // result in onActivityResult().
+                                        ResolvableApiException rae = (ResolvableApiException) e;
+                                        rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                    } catch (IntentSender.SendIntentException sie) {
+                                        Log.i(TAG, "PendingIntent unable to execute request.");
+                                    }
+                                    break;
+                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                    String errorMessage = "Location settings are inadequate, and cannot be " +
+                                            "fixed here. Fix in Settings.";
+                                    Log.e(TAG, errorMessage);
+
+                                    Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            }
+
+                        }
+                    });
+
         }
+    }
+
+    public void stopLocationUpdates() {
+        // Removing location updates
+        mFusedLocationClient
+                .removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, task ->
+                        Log.d(TAG, "stopLocationUpdates: called")
+                );
     }
 
 
@@ -359,7 +579,6 @@ public class MainActivity extends AppCompatActivity
             } else {
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                mLastKnownLocation = null;
                 getLocationPermission();
             }
         } catch (SecurityException e)  {
@@ -369,14 +588,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+        }else{
+            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -439,36 +659,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
-        BusStopCards newStop = new BusStopCards();
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
-        if(allBusStops.containsKey(poi.name)) {
-            // Clear old cards
-            adapter.Clear();
-            newCardList.clear();
+        /*if(allBusStops.containsKey(poi.name)) {
             String id = allBusStops.get(poi.name).getBusStopCode();
-            newStop.setBusStopID(id);
-            newStop.setBusStopName(poi.name);
-            newStop.setBusStopLat(Double.toString(poi.latLng.latitude));
-            newStop.setBusStopLong(Double.toString(poi.latLng.longitude));
-            busStopMap.put(newStop.getBusStopID(), newStop);
-
-            List<String> urlsList = new ArrayList<>();
-            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-            ltaReply.delegate = MainActivity.this;
-            @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-                @Override
-                protected Object doInBackground(Object[] objects) {
-                    ltaReply.execute();
-                    return null;
-                }
-            };
-            asyncTask.execute();
-
+            BusStopCards card = getBusStopData(id);
+            singleCardList.clear();
+            singleCardList.add(card);
+            updateAdapterList(singleCardList);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }else{
             Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
-        }
+        }*/
     }
 
     @Override
@@ -506,56 +707,105 @@ public class MainActivity extends AppCompatActivity
         getLocationPermission();
 
         // Turn on the My Location layer and the related control on the map.
-        updateLocationUI();
+//        updateLocationUI();
 
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
 
         //Disable Map Toolbar:
+        mMap.getUiSettings().setTiltGesturesEnabled(false);
+        mMap.getUiSettings().setIndoorLevelPickerEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setCompassEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setRotateGesturesEnabled(false);
+        mMap.setIndoorEnabled(false);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
-        //mMap.setTrafficEnabled(true);
+        mMap.setTrafficEnabled(true);
 
-        if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null) {
-            // Get the button view
-            View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-            // and next place it, on bottom right (as Google Maps app)
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
-                    locationButton.getLayoutParams();
-            // position on right bottom
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            layoutParams.setMargins(0, 0, 30, 30);
-        }
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<>(this, mMap);
+        mClusterManager.setAnimation(false);
+        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
 
-        mMap.setOnPoiClickListener((GoogleMap.OnPoiClickListener) this);
+        mMap.setOnPoiClickListener(this);
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnCameraMoveListener(this);
+        mMap.setOnMarkerClickListener(mClusterManager);
+
+        mMap.setMaxZoomPreference(MAX_ZOOM);
+        mMap.setMinZoomPreference(MIN_ZOOM);
         prepareBottomSheet();
         PrepareLTAData();
     }
 
-    private void snackbarNotice(String text){
-//        final Snackbar sb = Snackbar.make(rootView,text,Snackbar.LENGTH_SHORT)
-//                            .setAction("Dismiss", new View.OnClickListener() {
-//                                @Override
-//                                public void onClick(View v) {
-//                                    sb.dismiss();
-//                                }
-//                            });
-        final Snackbar sb = Snackbar.make(findViewById(R.id.toolbar),text,Snackbar.LENGTH_SHORT);
-        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams)sb.getView().getLayoutParams();
-        sb.getView().setLayoutParams(params);
-        sb.show();
-
+    @Override
+    public void onCameraMove() {
+//        layer.animate().alpha(0).setDuration(1000);
     }
 
+    public boolean isPooling() {
+        return pooling;
+    }
+
+    public void setPooling(boolean pooling) {
+        this.pooling = pooling;
+    }
+
+    public ArrayList<BusStopCards> getFavCardList() {
+        return favCardList;
+    }
+
+    public void setFavCardList(ArrayList<BusStopCards> favCardList) {
+        this.favCardList = favCardList;
+    }
+
+    public ArrayList<String> getFavBusStopID() {
+        return favBusStopID;
+    }
+
+    public void setFavBusStopID(ArrayList<String> favBusStopID) {
+        this.favCardList.clear();
+        this.favBusStopID = favBusStopID;
+        userData.setFavBusStopID(favBusStopID);
+        db.collection("user").document("userdata").set(userData);
+    }
+
+    private void loadFavoritesFromDB(){
+        DocumentReference docRef = db.collection("user").document("userdata");
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                        userData = document.toObject(UserData.class);
+                        favBusStopID = userData.getFavBusStopID();
+                        adapter.setFavBusStopID(favBusStopID);
+//                        favBusStopID = (ArrayList) document.getData().get("favBusStopID");
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
+    }
 
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
-//        snackbarNotice("Syncing data.");
+
+//        CollectionReference citiesRef = db.collection("data");
+
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -567,148 +817,18 @@ public class MainActivity extends AppCompatActivity
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=5000");
         JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
-        ltaData.delegate = MainActivity.this;
-        ltaData.execute();
-
-    }
-
-    /*
-    ALL BUS STOPS FROM LTA
-     */
-    @Override
-    public void processFinishAllStops(Map<String, LTABusStopData> result) {
-        Log.d(TAG, "processFinishAllStops: Complete");
-        //allBusStops = result;
-        allBusStops.putAll(result);
-        result.clear();
-        LinkIDtoName();
-        FillBusData();
-    }
-    /*
-    Nearby BusStops from Google
-     */
-    @Override
-    public void processFinishFromGoogle(List<GoogleBusStopData> result) {
-        if(result.size() <= 0){
-            Log.d(TAG, "processFinishFromLTA: Google returned no data");
-            return;
-        }
-        for(int i=0; i< result.size(); i++) {
-            GoogleBusStopData stop = result.get(i);
-            BusStopCards newStop = new BusStopCards();
-            Log.d(TAG, "processFinishFromLTA: Looking up "+stop.getName());
-            if(allBusStops.containsKey(stop.getName())) {
-                String id = allBusStops.get(stop.getName()).getBusStopCode();
-                newStop.setBusStopID(id);
-                newStop.setBusStopName(stop.getName());
-                newStop.setBusStopLat(stop.getLat());
-                newStop.setBusStopLong(stop.getLng());
-                busStopMap.put(newStop.getBusStopID(), newStop);
-
-                List<String> urlsList = new ArrayList<>();
-                urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//                Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-                ltaReply.delegate = MainActivity.this;
-                ltaReply.execute();
-            }else{
-                Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+stop.getName());
+        try {
+            allBusStops.putAll(ltaData.execute().get());
+            for (Map.Entry<String,LTABusStopData> newData : allBusStops.entrySet()){
+                sortedLTABusStopData.add(newData.getValue());
             }
+//            LinkIDtoName();
+            FillBusData();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
-    }
-
-    /*
-    BUS TIMING from LTA
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void processFinishFromLTA(Map<String, Map> result) {
-        if(result.size() < 1){
-            Log.e(TAG, "processFinishFromLTA: LTA returned no data");
-        }else{
-            for (Map.Entry<String, Map> entry : result.entrySet()) {
-                String key = entry.getKey(); // Bus stop ID
-                Map value = entry.getValue(); // Map with Bus to Timings
-                BusStopCards card = busStopMap.get(key);
-
-                Map<String, List<String>> finalData = new HashMap<>(value);
-                for (List<String> newData : finalData.values()){
-                    String toConvertID = newData.get(3);
-                    Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
-                    newData.set(3, allBusByID.get(toConvertID));
-                }
-                card.setBusServices(finalData);
-                card.setLastUpdated(Calendar.getInstance().getTime().toString());
-                Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
-                        +" Bus Stop Name: "+ card.getBusStopName()
-                        +" - "+card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-//                adapter.addCard(card);
-                newCardList.add(card);
-
-                LatLng ll = new LatLng(Double.parseDouble(card.getBusStopLat()), Double.parseDouble(card.getBusStopLong()));
-//                Log.d(TAG, "processFinishFromLTA: "+Double.toString(ll.latitude)+","+Double.toString(ll.longitude));
-
-                /*
-                Create Map markers!
-                 */
-                if(markerMap.get(card.getBusStopName()) == null) {
-                    Marker marker = mMap.addMarker(new MarkerOptions()
-                            .position(ll)
-                            .title(card.getBusStopName())
-                            .snippet(key)
-                            .visible(true)
-                            .alpha(0.8f)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
-                    markerMap.put(card.getBusStopName(), marker);
-                    mMap.setOnMarkerClickListener(marker1 -> {
-                        BusStopCards newStop = new BusStopCards();
-                        Log.d(TAG, "processFinishFromLTA: Looking up " + marker1.getTitle());
-                        if (allBusStops.containsKey(marker1.getTitle())) {
-                            // Clear old cards
-                            adapter.Clear();
-                            newCardList.clear();
-                            String id = allBusStops.get(marker1.getTitle()).getBusStopCode();
-                            newStop.setBusStopID(id);
-                            newStop.setBusStopName(marker1.getTitle());
-                            newStop.setBusStopLat(Double.toString(marker1.getPosition().latitude));
-                            newStop.setBusStopLong(Double.toString(marker1.getPosition().longitude));
-                            busStopMap.put(newStop.getBusStopID(), newStop);
-
-                            List<String> urlsList = new ArrayList<>();
-                            urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-//            Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-                            JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-                            ltaReply.delegate = MainActivity.this;
-                            ltaReply.execute();
-                        } else {
-                            Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : " + marker1.getTitle());
-                        }
-                        return false;
-                    });
-                }
-            }
-            updateBottomSheetLength();
-        }
-    }
-
-    /*
-    ALL BUS FROM LTA
-     */
-    @Override
-    public void processFinishAllBuses(Map<String, List<LTABusStopData>> result) {
-        Log.d(TAG, "processFinishAllBuses: Complete");
-    }
-
-    private void FillBusData(){
-        // TODO PARAS BUS SERVICE DATA INTO BUS STOP HERE
-
-        // Once data is in we can start looking around us!
-        FindNearbyBusStop();
-        adapter.Refresh();
-//        refreshCardList();
     }
 
     private void LinkIDtoName(){
@@ -721,6 +841,8 @@ public class MainActivity extends AppCompatActivity
                     String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
                     allBusByID.put(value.getBusStopCode(),key);
+                    sortedLTABusStopData.add(value);
+                    Log.d(TAG, "doInBackground: LinkIDtoName");
                 }
                 return null;
             }
@@ -731,115 +853,272 @@ public class MainActivity extends AppCompatActivity
             }
         }.execute();
     }
-    @SuppressWarnings("unchecked")
-    private void FindNearbyBusStop(){
-        try {
-            if (mLocationPermissionGranted) {
 
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-
-                        // Clear old cards
-                        //refreshCardList();
-                        //adapter.Clear();
-                        // Set the map's camera position to the current location of the device.
-                        mLastKnownLocation = (Location) task.getResult();
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(mLastKnownLocation.getLatitude(),
-                                        mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                        List<String> urlsList = new ArrayList<>();
-                        urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+mLastKnownLocation.getLatitude()+","+mLastKnownLocation.getLongitude()+"&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
-                        Log.d(TAG, "FindNearbyBusStop: "+urlsList.get(0));
-//                        snackbarNotice("Searching Nearby.");
-                        JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
-                        googleReply.delegate = MainActivity.this;
-                        googleReply.execute();
-
-//                            View peakView = findViewById(R.id.cardlist);
-                        Point size = new Point();
-                        getWindow().getWindowManager().getDefaultDisplay().getSize(size);
-//                        int height = size.y;
-//                            bottomSheetBehavior.setPeekHeight(height/6);
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-//                            View peakView = findViewById(R.id.drag_me);
-//                            bottomSheetBehavior.setPeekHeight(peakView.getHeight());
-//                            peakView.requestLayout();
-                    } else {
-                        Log.d(TAG, "Current location is null. Using defaults.");
-                        Log.e(TAG, "Exception: %s", task.getException());
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                        mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                    }
-                });
-            }
-        } catch(SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
-            return;
-        }
-        fab.show();
-    }
-
-//    public void refreshCardList(){
-//        adapter.Clear();
-//        adapter.addAllCard(newCardList);
-//
-//        Log.d(TAG, "run: refreshCardList");
-//        refreshCardList();
-//    }
-
-    private void tintSystemBars(int fromColorLight, int fromColorDark, int toColorLight, int toColorDark) {
-        // Initial colors of each system bar.
-        final int statusBarColor = ContextCompat.getColor(this,fromColorDark);
-        final int toolbarColor = ContextCompat.getColor(this,fromColorLight);
-
-        // Desired final colors of each bar.
-        final int statusBarToColor = ContextCompat.getColor(this,toColorDark);
-        final int toolbarToColor = ContextCompat.getColor(this,toColorLight);
-
-        ValueAnimator anim = ValueAnimator.ofFloat(0, 1);
-        anim.addUpdateListener(animation -> {
-            // Use animation position to blend colors.
-            float position = animation.getAnimatedFraction();
-
-            // Apply blended color to the status bar.
-            int blended = blendColors(statusBarColor, statusBarToColor, position);
-            getWindow().setStatusBarColor(blended);
-            getWindow().setNavigationBarColor(blended);
-            navheaderbanner.setBackgroundColor(blended);
-
-            // Apply blended color to the ActionBar.
-            int blended2 = blendColors(toolbarColor, toolbarToColor, position);
-            ColorDrawable background = new ColorDrawable(blended2);
-            getSupportActionBar().setBackgroundDrawable(background);
-        });
-
-        anim.setDuration(700).start();
-    }
-
-    @SuppressWarnings("unchecked")
-    private int blendColors(int from, int to, float ratio) {
-        Object[] var = {from, to, ratio};
+    /**
+     * <p>
+     * This method creates and fills busStopMap with BusStopCard objects
+     * busStopMap should be used to obtain the object you require.
+     * DO NOT create more busstopcard objects
+     */
+    private void FillBusData(){
+        ProgressDialog dialog = new ProgressDialog(this);
+        /*
+        Create Map markers!
+         */
         @SuppressLint("StaticFieldLeak")
+        @SuppressWarnings("unchecked")
         AsyncTask asyncTask = new AsyncTask() {
-            @Override
-            protected Integer doInBackground(Object[] objects) {
-                final float inverseRatio = 1f - ((float)objects[2]);
 
-                final float r = Color.red(((int)objects[1])) * ((float)objects[2]) + Color.red(((int)objects[0])) * inverseRatio;
-                final float g = Color.green(((int)objects[1])) * ((float)objects[2]) + Color.green(((int)objects[0])) * inverseRatio;
-                final float b = Color.blue(((int)objects[1])) * ((float)objects[2]) + Color.blue(((int)objects[0])) * inverseRatio;
-                return Color.rgb((int) r, (int) g, (int) b);
-//				return null;
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                dialog.setMessage("Loading..");
+                dialog.setIndeterminate(false);
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                dialog.setCancelable(false);
+                dialog.show();
             }
-        };
-        int result = 0;
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                dialog.dismiss();
+                bottomNav.setSelectedItemId(R.id.action_fav);
+//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
+//                    String key = newData.getKey();
+                    LTABusStopData value = newData.getValue();
+
+                    BusStopCards newStop = new BusStopCards();
+                    String id = newData.getKey();
+//                    String id = allBusStops.get(value.getDescription()).getBusStopCode();
+                    newStop.setBusStopID(id);
+                    newStop.setBusStopName(value.getDescription());
+                    newStop.setBusStopLat(value.getBusStopLat());
+                    newStop.setBusStopLong(value.getBusStopLong());
+                    busStopMap.put(newStop.getBusStopID(), newStop);
+
+                    MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
+                            Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
+//                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
+                    mClusterManager.addItem(infoWindowItem);
+                    markerMap.put(value.getDescription(), infoWindowItem);
+                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
+                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
+                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+                            BusStopCards card = getBusStopData(mapMarkers.getSnippet());
+                            singleCardList.clear();
+                            singleCardList.add(card);
+                            updateAdapterList(singleCardList);
+                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                        } else {
+                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
+                        }
+                        return false;
+                    });
+//                    }
+                }
+
+                return null;
+            }
+        }.execute();
+//        handler.postDelayed(runnable2, 5000);
+    }
+
+    /**
+     * Returns an BusStopCard object
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     *
+     * @param  id busstopID
+     * @return BusStopCards - BusStopCard object or null
+     */
+    private BusStopCards getBusStopData(String id){
+        BusStopCards result = busStopMap.get(id);
+        if(result == null){
+            Log.e(TAG, "getBusStopData: No busStopMap!");
+            return null;
+        }
+
+        // Bus stop favorites
+        if(favBusStopID != null && favBusStopID.size() > 0 &&favBusStopID.contains(result.getBusStopID()))
+            result.setFavorite(true);
+        else
+            result.setFavorite(false);
+
+        // Pull bus stop data
+        List<String> urlsList = new ArrayList<>();
+        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+        Log.d(TAG, "Look up bus timings for : " + result.getBusStopID());
+        JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, result.getBusStopID());
+        Map<String, Map> entry;
         try {
-            result = ((int)asyncTask.execute(var).get());
+            entry = ltaReply.execute().get();
+            for (Map.Entry<String, Map> entryData : entry.entrySet()) {
+                String key = entryData.getKey(); // Bus stop ID
+                Map value = entryData.getValue(); // Map with Bus to Timings
+                BusStopCards card = busStopMap.get(key);
+
+                Map<String, List<String>> finalData = new HashMap<>(value);
+                for (List<String> newData : finalData.values()) {
+                    String toConvertID = newData.get(3);
+                    Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
+                    if(allBusStops.get(toConvertID).getRoadName() != null)
+                        newData.set(3, allBusStops.get(toConvertID).getRoadName());
+                }
+                result.setBusServices(finalData);
+                result.setLastUpdated(Calendar.getInstance().getTime().toString());
+
+                Log.d(TAG, "getBusStopData: Bus stop ID:" + key
+                        + " Bus Stop Name: " + card.getBusStopName()
+                        + " - " + card.getBusServices() + " - Last Updated: "
+                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+            }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
         return result;
     }
+
+    /**
+     * Creates and fills up nearbyCardList array
+     * <p>
+     * This method always returns immediately, whether or not the
+     * card exists.
+     * nearbyCardList array is used to swap into adapter to display nearby bus stop
+     */
+    private void lookUpNearbyBusStops(){
+        List<LTABusStopData> result = sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        if(result.size() <= 0){
+            Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+            return;
+        }
+        nearbyCardList.clear();
+        for(int i=0; i< 10; i++) {
+            BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
+            nearbyCardList.add(card);
+//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
+            Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+        }
+    }
+
+    public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
+
+        Comparator comp = (Comparator<LTABusStopData>) (o, o2) -> {
+            float[] result1 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
+            Float distance1 = result1[0];
+
+            float[] result2 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o2.getBusStopLat()), Double.parseDouble(o2.getBusStopLong()), result2);
+            Float distance2 = result2[0];
+            return distance1.compareTo(distance2);
+        };
+        long start = System.currentTimeMillis();
+        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+        Collections.sort(locations, comp);
+        long elapsedTime = System.currentTimeMillis() - start;
+        Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
+        return locations;
+    }
+
+    /**
+     * Clears and adds the list into the adapter to be displayed
+     * <p>
+     * This method returns nothing
+     *
+     * @param list ArrayList<BusStopCards>
+     */
+    private void updateAdapterList(ArrayList<BusStopCards> list){
+        clearCardsForUpdate();
+        adapter.notifyDataSetChanged();
+        adapter.addAllCard(list);
+        adapter.doAutoRefresh();
+        progressBar.setVisibility(View.GONE);
+    }
+
+    private void prepareFavoriteCards(ArrayList<String> list){
+        if(list.size() < 1){
+            Log.e(TAG, "prepareFavoriteCards: list is empty!");
+            return;
+        }
+
+        for(int i=0; i< list.size(); i++) {
+                BusStopCards card = getBusStopData(list.get(i));
+                favCardList.add(card);
+                Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
+//            }
+        }
+        updateAdapterList(favCardList);
+    }
+
+
+
+
+    /*
+    ALL BUS STOPS FROM LTA
+
+    // Pull bus stop data
+    List<String> urlsList = new ArrayList<>();
+    urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
+    Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
+    JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
+    ltaReply.delegate = MainActivity.this;
+    ltaReply.execute();
+
+
+
+    //Update bus time
+    for (Map.Entry<String, Map> entry : result.entrySet()) {
+                String key = entry.getKey(); // Bus stop ID
+                Map value = entry.getValue(); // Map with Bus to Timings
+                BusStopCards card = busStopMap.get(key);
+
+                Map<String, List<String>> finalData = new HashMap<>(value);
+                for (List<String> newData : finalData.values()){
+                    String toConvertID = newData.get(3);
+                    Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
+                    newData.set(3, allBusByID.get(toConvertID));
+                }
+                card.setBusServices(finalData);
+                card.setLastUpdated(Calendar.getInstance().getTime().toString());
+
+    Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
+                        +" Bus Stop Name: "+ card.getBusStopName()
+                        +" - "+card.getBusServices() + " - Last Updated: "
+                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+
+
+    // Get nearby
+    List<GoogleBusStopData> result = new AsyncTask() {
+    @Override
+    protected Object doInBackground(Object[] objects) {
+        List<String> urlsList = new ArrayList<>();
+        urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
+        Log.d(TAG, "FindNearbyBusStop: " + urlsList.get(0));
+        JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
+        googleReply.execute();
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
+        // Set the map's camera position to the current location of the device.
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                .build();                   // Creates a CameraPosition from the builder
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+    }
+}.execute().get();
+     */
+
+
 
 }
