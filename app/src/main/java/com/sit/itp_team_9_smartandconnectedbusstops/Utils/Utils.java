@@ -1,6 +1,12 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Utils;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.text.format.DateUtils;
@@ -106,4 +112,34 @@ public class Utils {
         }
         return null;
     }
+
+    public static boolean haveNetworkConnection(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+        return isConnected;
+    }
+
+    public static void showNoNetworkDialog(Context context){
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(context, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(context);
+        }
+        builder.setTitle("No network detected")
+                .setMessage("Internet not available, Please check your internet connectivity and try again")
+                .setPositiveButton("Settings", (dialog, id) -> {
+                    Intent dialogIntent = new Intent(android.provider.Settings.ACTION_SETTINGS);
+                    dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(dialogIntent);
+                })
+                .setNegativeButton(" Cancel ", (dialog, id) -> ((Activity) context).finish())
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setCancelable(false)
+                .show();
+    }
+
 }

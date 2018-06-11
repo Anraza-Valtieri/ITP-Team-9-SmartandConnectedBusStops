@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,6 +32,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
 //    private PackageManager mPackageManager;
@@ -190,6 +193,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     
     private void updateCardData(List<BusStopCards> cards){
+        if(!haveNetworkConnection(mContext)){
+            Toast.makeText(mContext,
+                    "No Network detected, failed to refresh data!",
+                    Toast.LENGTH_SHORT).show();
+//            showNoNetworkDialog(mContext);
+            return;
+        }
         @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
