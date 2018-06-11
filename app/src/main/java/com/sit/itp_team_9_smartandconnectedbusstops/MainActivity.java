@@ -937,7 +937,7 @@ public class MainActivity extends AppCompatActivity
                     newStop.setBusStopLong(value.getBusStopLong());
                     busStopMap.put(newStop.getBusStopID(), newStop);
 
-                    /*MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
+                    MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
 //                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
                     mClusterManager.addItem(infoWindowItem);
@@ -954,7 +954,7 @@ public class MainActivity extends AppCompatActivity
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
                         }
                         return false;
-                    });*/
+                    });
 //                    }
                 }
 
@@ -1056,26 +1056,6 @@ public class MainActivity extends AppCompatActivity
                 nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                 Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
-
-                if (!markerMap.containsKey(card.getBusStopID())) {
-                    MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(card.getBusStopLat()),
-                            Double.parseDouble(card.getBusStopLong()), card.getBusStopDesc(), card.getBusStopID());
-                    mClusterManager.addItem(infoWindowItem);
-                    markerMap.put(card.getBusStopDesc(), infoWindowItem);
-                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-                            Log.d(TAG, "FillBusData: Get Bus stop Data for " + mapMarkers.getTitle() + " " + mapMarkers.getSnippet());
-                            BusStopCards card2 = getBusStopData(mapMarkers.getSnippet());
-                            singleCardList.clear();
-                            singleCardList.add(card2);
-                            updateAdapterList(singleCardList);
-                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                        } else {
-                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-                        }
-                        return false;
-                    });
-                }
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1132,9 +1112,6 @@ public class MainActivity extends AppCompatActivity
         }
         updateAdapterList(favCardList);
     }
-
-
-
 
     /*
     ALL BUS STOPS FROM LTA
