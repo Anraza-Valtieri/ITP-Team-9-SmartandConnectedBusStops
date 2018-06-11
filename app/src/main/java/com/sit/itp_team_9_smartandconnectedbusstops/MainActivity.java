@@ -4,7 +4,11 @@ package com.sit.itp_team_9_smartandconnectedbusstops;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -16,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -83,6 +88,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
@@ -93,6 +99,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
+import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
@@ -289,6 +298,7 @@ public class MainActivity extends AppCompatActivity
 
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
+        scheduleJob();
     }
 
     @Override
@@ -316,10 +326,31 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
+        startService(startServiceIntent);
+    }
 
     @Override
     protected void onStop() {
         super.onStop();
+        stopService(new Intent(this, NetworkSchedulerService.class));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void scheduleJob() {
+        JobInfo myJob = new JobInfo.Builder(0, new ComponentName(this, NetworkSchedulerService.class))
+                .setRequiresCharging(true)
+                .setMinimumLatency(1000)
+                .setOverrideDeadline(2000)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true)
+                .build();
+
+        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.schedule(myJob);
     }
 
     @Override
@@ -404,7 +435,6 @@ public class MainActivity extends AppCompatActivity
                 fab.hide();
                 clearCardsForUpdate();
             } else if (id == R.id.action_nearby) {
-//                fab.show();
                 if(mCurrentLocation==null){
                     getDeviceLocation();
                     getLocationPermission();
@@ -498,7 +528,7 @@ public class MainActivity extends AppCompatActivity
                     Log.e("Exception: %s", e.getMessage());
                 }
 //                updateLocationUI();
-                lookUpNearbyBusStops();
+//                lookUpNearbyBusStops();
             }
         };
 
@@ -554,7 +584,7 @@ public class MainActivity extends AppCompatActivity
 
                         }
                     });
-
+//            lookUpNearbyBusStops();
         }
     }
 
@@ -742,8 +772,13 @@ public class MainActivity extends AppCompatActivity
 
         mMap.setMaxZoomPreference(MAX_ZOOM);
         mMap.setMinZoomPreference(MIN_ZOOM);
+
         prepareBottomSheet();
-        PrepareLTAData();
+        if(haveNetworkConnection(this)) {
+            PrepareLTAData();
+        }else{
+            showNoNetworkDialog(this);
+        }
     }
 
     @Override
@@ -926,6 +961,8 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
         }.execute();
+
+        lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
     }
 
@@ -969,7 +1006,7 @@ public class MainActivity extends AppCompatActivity
                     String toConvertID = newData.get(3);
                     Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
                     if(allBusStops.get(toConvertID).getRoadName() != null)
-                        newData.set(3, allBusStops.get(toConvertID).getRoadName());
+                        newData.set(3, allBusStops.get(toConvertID).getDescription());
                 }
                 result.setBusServices(finalData);
                 result.setLastUpdated(Calendar.getInstance().getTime().toString());
@@ -993,18 +1030,37 @@ public class MainActivity extends AppCompatActivity
      * nearbyCardList array is used to swap into adapter to display nearby bus stop
      */
     private void lookUpNearbyBusStops(){
-        List<LTABusStopData> result = sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-        if(result.size() <= 0){
-            Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+        if(mCurrentLocation==null)
             return;
-        }
-        nearbyCardList.clear();
-        for(int i=0; i< 10; i++) {
-            BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
-            nearbyCardList.add(card);
+
+        try {
+            List<LTABusStopData> result;
+            @SuppressLint("StaticFieldLeak")
+            AsyncTask asyncTask = new AsyncTask() {
+                @Override
+                protected Object doInBackground(Object[] objects) {
+//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                }
+            };
+
+            result = (List<LTABusStopData>) asyncTask.execute().get();
+
+            if(result.size() <= 0){
+                Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+                return;
+            }
+            nearbyCardList.clear();
+            for(int i=0; i< 16; i++) {
+                BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
+                nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-            Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
+
     }
 
     public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
@@ -1056,9 +1112,6 @@ public class MainActivity extends AppCompatActivity
         }
         updateAdapterList(favCardList);
     }
-
-
-
 
     /*
     ALL BUS STOPS FROM LTA
