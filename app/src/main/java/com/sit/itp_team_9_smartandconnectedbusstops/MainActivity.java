@@ -78,9 +78,15 @@ import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
 import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
@@ -170,6 +176,10 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
     public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID;
+
+    //Route cards
+    private ArrayList<NavigateTransitCard> transitCardList = new ArrayList<>(); // Public transport cards
+    private ArrayList<NavigateWalkingCard> walkingCardList = new ArrayList<>(); // Walking cards
 
     // UserData
     UserData userData;
@@ -402,7 +412,20 @@ public class MainActivity extends AppCompatActivity
                 }
             } else if (id == R.id.action_nav) {
                 fab.hide();
-                clearCardsForUpdate();
+                //TODO toolbar to have Starting Point and Destination
+                /*if (adapter != null){
+                    transitCardList.clear();
+                }*/
+                if(walkingCardList.size() > 0 || transitCardList.size() > 0) {
+                    clearCardsForUpdate();
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                    //progressBar.setVisibility(View.VISIBLE);
+                    //prepareFavoriteCards(getFavBusStopID());
+                    //TODO prepare routes cards
+                    lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=FarrerPark&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
+                    //TODO default is transitCardList (childFragmentManager also here?)
+                    updateAdapterList(transitCardList);
+                }
             } else if (id == R.id.action_nearby) {
 //                fab.show();
                 if(mCurrentLocation==null){
@@ -1034,7 +1057,7 @@ public class MainActivity extends AppCompatActivity
      *
      * @param list ArrayList<BusStopCards>
      */
-    private void updateAdapterList(ArrayList<BusStopCards> list){
+    private void updateAdapterList(ArrayList<Card> list){
         clearCardsForUpdate();
         adapter.notifyDataSetChanged();
         adapter.addAllCard(list);
@@ -1057,6 +1080,55 @@ public class MainActivity extends AppCompatActivity
         updateAdapterList(favCardList);
     }
 
+    private void lookUpRoutes(String query){
+        List<String> directionsQuery = null;
+        directionsQuery.add(query);
+        JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
+        List<GoogleRoutesData> result = null; //result from parser
+        try {
+            result = directionsParser.execute().get();
+            if(result.size() <= 0){
+                Log.d(TAG, "lookUpRoute: Google returned no data");
+                return;
+            }
+            transitCardList.clear();
+            for(int i=0; i< transitCardList.size(); i++) {
+                NavigateTransitCard card = getRouteData(result.get(i));
+                transitCardList.add(card);
+//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
+                Log.d(TAG, "lookUpRoute: "+card.toString());
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData){
+        //TODO set card details here (route ID?)
+        NavigateTransitCard card = null;
+        card.setTotalDistance(googleRoutesData.getTotalDistance());
+        card.setTotalTime(googleRoutesData.getTotalDuration());
+        //need loop to get
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+        for(int i=0; i< routeSteps.size(); i++) {
+            if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
+                    (!routeSteps.get(i-1).getTravelMode().equals("TRANSIT") ||
+                            routeSteps.get(i-1) == null)){
+                //first public transport station
+                card.setStartingStation(routeSteps.get(i).getDepartureStop());
+            }
+            if (routeSteps.get(i).getTravelMode().equals("TRANSIT")){
+                //last public transport station
+                card.setEndingStation(routeSteps.get(i).getArrivalStop());
+            }
+            card.setCost("X.XX");
+        }
+        return card;
+    }
+    //TODO getRouteData for NavigateWalkingCard
 
 
 
