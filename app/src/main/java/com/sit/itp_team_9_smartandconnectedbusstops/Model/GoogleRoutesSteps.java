@@ -6,6 +6,10 @@ public class GoogleRoutesSteps {
     private List<String> steps;
 
     //within steps
+    private double startLocationLat;
+    private double startLocationLng;
+    private double endLocationLat;
+    private double endLocationLng;
     private String distance;
     private String duration;
     private String htmlInstructions;
@@ -25,6 +29,38 @@ public class GoogleRoutesSteps {
 
     public void setSteps(List<String> steps) {
         this.steps = steps;
+    }
+
+    public double getStartLocationLat() {
+        return startLocationLat;
+    }
+
+    public void setStartLocationLat(double startLocationLat) {
+        this.startLocationLat = startLocationLat;
+    }
+
+    public double getStartLocationLng() {
+        return startLocationLng;
+    }
+
+    public void setStartLocationLng(double startLocationLng) {
+        this.startLocationLng = startLocationLng;
+    }
+
+    public double getEndLocationLat() {
+        return endLocationLat;
+    }
+
+    public void setEndLocationLat(double endLocationLat) {
+        this.endLocationLat = endLocationLat;
+    }
+
+    public double getEndLocationLng() {
+        return endLocationLng;
+    }
+
+    public void setEndLocationLng(double endLocationLng) {
+        this.endLocationLng = endLocationLng;
     }
 
     public String getDistance() {

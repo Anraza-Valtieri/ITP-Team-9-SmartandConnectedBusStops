@@ -55,8 +55,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                 urlConnection.setRequestMethod("GET");
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.connect();
-                String authKey = "AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
-                Log.i(TAG, "Sent : " + authKey);
+                //String authKey = "AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                //Log.i(TAG, "Sent : " + authKey);
 
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
@@ -80,11 +80,12 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                     for(int i=0; i < jsonArray.length(); i++) {
                         JSONObject obj = jsonArray.getJSONObject(i);
                         GoogleRoutesData entry = new GoogleRoutesData();
+                        entry.setID(i);
                         entry.setCopyrights(obj.getString("copyrights"));
                         entry.setWarnings(obj.getJSONArray("warnings"));
                         JSONArray legsArray = obj.getJSONArray("legs");
                         for(int j=0; j < legsArray.length(); j++) {
-                            JSONObject legsObject = legsArray.getJSONObject(j); //TODO not sure if always only 0?
+                            JSONObject legsObject = legsArray.getJSONObject(j);
                             entry.setTotalDistance(legsObject.getJSONObject("distance").getString("text"));
                             entry.setTotalDuration(legsObject.getJSONObject("duration").getString("text"));
                             JSONArray stepsArray = legsObject.getJSONArray("steps");
@@ -92,6 +93,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                             for(int k=0; k < stepsArray.length(); k++) {
                                 GoogleRoutesSteps steps = new GoogleRoutesSteps();
                                 JSONObject stepsObject = stepsArray.getJSONObject(k);
+                                steps.setEndLocationLat(stepsObject.getJSONObject("end_location").getDouble("lat"));
+                                steps.setEndLocationLng(stepsObject.getJSONObject("end_location").getDouble("lng"));
+                                steps.setStartLocationLat(stepsObject.getJSONObject("start_location").getDouble("lat"));
+                                steps.setStartLocationLng(stepsObject.getJSONObject("start_location").getDouble("lng"));
                                 steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                 steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                 steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
@@ -103,18 +108,24 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setNumStops(stepsObject.getJSONObject("transit_details")
                                             .getInt("num_stops"));
                                     Log.i(TAG,"NUMSTOPS: "+ steps.getNumStops().toString());
-
-                                    //Train
-                                    steps.setTrainLine(stepsObject.getJSONObject("transit_details")
-                                            .getJSONObject("line").optString("name"));
-                                    steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
-                                            .getJSONObject("departure_stop").optString("name"));
-                                    steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
-                                            .getJSONObject("arrival_stop").optString("name"));
-
-                                    //Bus
-                                    steps.setBusNum(stepsObject.getJSONObject("transit_details")
-                                            .getJSONObject("line").optString("short_name"));
+                                    String vehicle = stepsObject.getJSONObject("transit_details")
+                                            .getJSONObject("line").getJSONObject("vehicle").getString("type");
+                                    if(vehicle.equals("SUBWAY")){
+                                        steps.setTrainLine(stepsObject.getJSONObject("transit_details")
+                                                .getJSONObject("line").optString("name"));
+                                        steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
+                                                .getJSONObject("departure_stop").optString("name"));
+                                        steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
+                                                .getJSONObject("arrival_stop").optString("name"));
+                                        Double newTrainDistance = entry.getTotalTrainDistance() + Double.valueOf(steps.getDistance());
+                                        entry.setTotalTrainDistance(newTrainDistance);
+                                    }
+                                    else if(vehicle.equals("BUS")) {
+                                        steps.setBusNum(stepsObject.getJSONObject("transit_details")
+                                                .getJSONObject("line").optString("short_name"));
+                                        Double newBusDistance = entry.getTotalBusDistance() + Double.valueOf(steps.getDistance());
+                                        entry.setTotalBusDistance(newBusDistance);
+                                    }
                                 }
                                 else if (steps.getTravelMode().matches("WALKING")){
                                     JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");

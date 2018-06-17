@@ -6,11 +6,9 @@ import java.util.List;
 
 public class GoogleRoutesData {
     public List<GoogleRoutesData> routes;
-
+    private int ID;
     private String copyrights;
-
     private JSONArray warnings;
-
     //public JSONArray legs;
 
     //within legs
@@ -18,6 +16,9 @@ public class GoogleRoutesData {
     private String totalDuration;
     //end_address, start_address of whole journey?
     private List<GoogleRoutesSteps> steps;
+
+    private double totalBusDistance;
+    private double totalTrainDistance;
 
     public List<GoogleRoutesData> getRoutes() {
         return routes;
@@ -35,6 +36,14 @@ public class GoogleRoutesData {
     public void setLegs(JSONArray legs) {
         this.legs = legs;
     }*/
+
+    public int getID() {
+        return ID;
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
 
     public String getCopyrights() {
         return copyrights;
@@ -74,5 +83,21 @@ public class GoogleRoutesData {
 
     public void setSteps(List<GoogleRoutesSteps> steps) {
         this.steps = steps;
+    }
+
+    public double getTotalBusDistance() {
+        return totalBusDistance;
+    }
+
+    public void setTotalBusDistance(double totalBusDistance) {
+        this.totalBusDistance = totalBusDistance;
+    }
+
+    public double getTotalTrainDistance() {
+        return totalTrainDistance;
+    }
+
+    public void setTotalTrainDistance(double totalTrainDistance) {
+        this.totalTrainDistance = totalTrainDistance;
     }
 }
