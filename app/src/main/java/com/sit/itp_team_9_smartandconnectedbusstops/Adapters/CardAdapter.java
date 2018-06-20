@@ -98,18 +98,22 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         View v;
         Context context = parent.getContext();
         switch(viewType){
+            default:
             case BUS_STOP_CARD:
                 v = LayoutInflater.from(context)
                         .inflate(R.layout.busstopcard, parent, false);
-                holder = new ViewHolder(v);
+                holder = new ViewHolder(v, BUS_STOP_CARD);
+                break;
             case NAVIGATE_TRANSIT_CARD:
                 v = LayoutInflater.from(context)
                         .inflate(R.layout.navigate_transit_card, parent, false);
-                holder = new ViewHolder(v);
-            default:
+                holder = new ViewHolder(v, NAVIGATE_TRANSIT_CARD);
+                break;
+            case NAVIGATE_WALKING_CARD:
                 v = LayoutInflater.from(context)
                         .inflate(R.layout.navigate_walking_card, parent, false);
-                holder = new ViewHolder(v);
+                holder = new ViewHolder(v, NAVIGATE_WALKING_CARD);
+                break;
         }
         return holder;
     }
@@ -120,78 +124,88 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         /*switch (holder.lay){
             case
         }*/
-        BusStopCards card = (BusStopCards) mCard.get(position);
-        holder.setItem(card);
 
-        // This part creates layout for bus services
-        final View cardview = holder.itemView.findViewById(R.id.buscard);
-        ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
-        Map<String, List<String>> timings = card.getBusServices();
-        if(timings.size() > 0) {
-            LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-            options_layout.setOrientation(LinearLayout.VERTICAL);
-            options_layout.removeAllViewsInLayout();
-            for(String busNo : card.getSortedKeys()){
+        Card cards = mCard.get(position);
+        switch (cards.getType()) {
+            case BUS_STOP_CARD:
+                BusStopCards card = (BusStopCards) mCard.get(position);
+                holder.setItem(card);
+//                holder.setBusItem(card);
+                // This part creates layout for bus services
+                final View cardview = holder.itemView.findViewById(R.id.buscard);
+                ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
+                Map<String, List<String>> timings = card.getBusServices();
+                if(timings.size() > 0) {
+                    LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
+                    options_layout.setOrientation(LinearLayout.VERTICAL);
+                    options_layout.removeAllViewsInLayout();
+                    for(String busNo : card.getSortedKeys()){
 //            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
-                List<String> value = timings.get(busNo);
-                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                assert inflater != null;
-                View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
+                        List<String> value = timings.get(busNo);
+                        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        assert inflater != null;
+                        View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
 
-                TextView busID = to_add.findViewById(R.id.busnumber);
-                TextView direction = to_add.findViewById(R.id.direction);
-                TextView duration = to_add.findViewById(R.id.duration1);
-                TextView duration2 = to_add.findViewById(R.id.duration2);
+                        TextView busID = to_add.findViewById(R.id.busnumber);
+                        TextView direction = to_add.findViewById(R.id.direction);
+                        TextView duration = to_add.findViewById(R.id.duration1);
+                        TextView duration2 = to_add.findViewById(R.id.duration2);
 
-                busID.setText(busNo);
+                        busID.setText(busNo);
 
-                if (!value.get(0).equals(""))
-                    duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
+                        if (!value.get(0).equals(""))
+                            duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
 
-                if (!value.get(1).equals(""))
-                    duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+                        if (!value.get(1).equals(""))
+                            duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
 
-                direction.setText(value.get(3));
-                options_layout.addView(to_add);
-            }
-            updateUI(position);
-        }else{
-            LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-            options_layout.removeAllViewsInLayout();
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            assert inflater != null;
-            View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
-            options_layout.addView(to_add);
-            updateUI(position);
-        }
-        if(card.isFavorite())
-            favorite.setImageResource(R.drawable.ic_favorite_red);
+                        direction.setText(value.get(3));
+                        options_layout.addView(to_add);
+                    }
+                    updateUI(position);
+                }else{
+                    LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
+                    options_layout.removeAllViewsInLayout();
+                    LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    assert inflater != null;
+                    View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
+                    options_layout.addView(to_add);
+                    updateUI(position);
+                }
+                if(card.isFavorite())
+                    favorite.setImageResource(R.drawable.ic_favorite_red);
 
 //        doDataRefresh(holder, position);
-        favorite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(card.isFavorite()){
-                    card.setFavorite(false);
-                    favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                    favBusStopID.remove(card.getBusStopID());
-                }else{
-                    card.setFavorite(true);
-                    favorite.setImageResource(R.drawable.ic_favorite_red);
-                    favBusStopID.add(card.getBusStopID());
-                }
-            }
-        });
-        cardview.setOnClickListener(v -> {
-            int DEFAULT_ZOOM = 18;
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
-                            Double.parseDouble(card.getBusStopLong())))
-                    .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                    .build();                   // Creates a CameraPosition from the builder
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        });
+                favorite.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(card.isFavorite()){
+                            card.setFavorite(false);
+                            favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                            favBusStopID.remove(card.getBusStopID());
+                        }else{
+                            card.setFavorite(true);
+                            favorite.setImageResource(R.drawable.ic_favorite_red);
+                            favBusStopID.add(card.getBusStopID());
+                        }
+                    }
+                });
+                cardview.setOnClickListener(v -> {
+                    int DEFAULT_ZOOM = 18;
+                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                            .target(new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
+                                    Double.parseDouble(card.getBusStopLong())))
+                            .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                            .build();                   // Creates a CameraPosition from the builder
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                });
+                break;
+            case NAVIGATE_TRANSIT_CARD:
+                break;
+            case NAVIGATE_WALKING_CARD:
+                break;
+        }
     }
 
 
@@ -247,36 +261,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
                     ltaReply.delegate2 = CardAdapter.this;
                     ltaReply.execute();
-                    /*try {
-                        Map<String, Map> entry = ltaReply.execute().get();
-                        for (Map.Entry<String, Map> entryData : entry.entrySet()) {
-                            String key = entryData.getKey(); // Bus stop ID
-                            Map value = entryData.getValue(); // Map with Bus to Timings
-
-                            Map<String, List<String>> finalData = new HashMap<>(value);
-                            for (Map.Entry<String, List<String>> newData : finalData.entrySet()) {
-                                String key2 = newData.getKey(); // Bus
-                                List<String> schedule = newData.getValue(); // Timing
-
-                                Map<String, List<String>> toUpdateService = card.getBusServices();
-                                List<String> toUpdateFields = toUpdateService.get(key2);
-                                if (!schedule.get(0).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(0, schedule.get(0));
-                                if (!schedule.get(1).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(1, schedule.get(1));
-                                if (!schedule.get(2).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(2, schedule.get(2));
-                                card.setLastUpdated(Calendar.getInstance().getTime().toString());
-                            }
-
-                            Log.d(TAG, "updateCardData: Bus stop ID:" + key
-                                    + " Bus Stop Name: " + card.getBusStopName()
-                                    + " - " + card.getBusServices() + " - Last Updated: "
-                                    + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-                        }
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }*/
                 }
                 return null;
             }
@@ -303,9 +287,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     Runnable runnable2 = new Runnable() {
         @Override
         public void run() {
-            List<BusStopCards> busStopCards = null;
+            List<BusStopCards> busStopCards = new ArrayList<>();
+            Log.d(TAG, "run: "+mCard.size());
             for (int i = 0; i < mCard.size(); i++){
-                busStopCards.add((BusStopCards) mCard.get(i));
+                Card cards = mCard.get(i);
+                if(cards.getType() == BUS_STOP_CARD)
+                    busStopCards.add((BusStopCards)mCard.get(i));
             }
             updateCardData(busStopCards);
             doAutoRefresh();
@@ -315,12 +302,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void doAutoRefresh() {
         handler2.removeCallbacksAndMessages(null);
         handler2.postDelayed(runnable2, 15000);
-//        handler2.postDelayed(() -> {
-//            // Write code for your refresh logic
-////                notifyItemChanged(position);
-//            updateCardData(mCard);
-//            doAutoRefresh();
-//        }, 15000);
     }
 
     @Override
@@ -335,25 +316,28 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 @Override
                 protected Object doInBackground(Object[] objects) {
                     for (int i = 0; i < mCard.size(); i++) {
-                        BusStopCards updateCard = (BusStopCards) mCard.get(i);
+                        Card cards = mCard.get(i);
+                        if(cards.getType() == BUS_STOP_CARD) {
+                            BusStopCards updateCard = (BusStopCards) cards;
 //                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
-                        if (result.get(updateCard.getBusStopID()) != null) {
-                            Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
-                            Map<String, List<String>> finalData = new HashMap<>(loadedData);
+                            if (result.get(updateCard.getBusStopID()) != null) {
+                                Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
+                                Map<String, List<String>> finalData = new HashMap<>(loadedData);
 //                Map<String, List<String>> finalData = result.get(updateCard.getBusStopID());
-                            for (Map.Entry<String, List<String>> newData : finalData.entrySet()) {
-                                String key2 = newData.getKey();
-                                List<String> schedule = newData.getValue();
+                                for (Map.Entry<String, List<String>> newData : finalData.entrySet()) {
+                                    String key2 = newData.getKey();
+                                    List<String> schedule = newData.getValue();
 
-                                Map<String, List<String>> toUpdateService = updateCard.getBusServices();
-                                List<String> toUpdateFields = toUpdateService.get(key2);
-                                if (!schedule.get(0).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(0, schedule.get(0));
-                                if (!schedule.get(1).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(1, schedule.get(1));
-                                if (!schedule.get(2).equals("") && toUpdateFields != null)
-                                    toUpdateFields.set(2, schedule.get(2));
-                                updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
+                                    Map<String, List<String>> toUpdateService = updateCard.getBusServices();
+                                    List<String> toUpdateFields = toUpdateService.get(key2);
+                                    if (!schedule.get(0).equals("") && toUpdateFields != null)
+                                        toUpdateFields.set(0, schedule.get(0));
+                                    if (!schedule.get(1).equals("") && toUpdateFields != null)
+                                        toUpdateFields.set(1, schedule.get(1));
+                                    if (!schedule.get(2).equals("") && toUpdateFields != null)
+                                        toUpdateFields.set(2, schedule.get(2));
+                                    updateCard.setLastUpdated(Calendar.getInstance().getTime().toString());
+                                }
                             }
                         }
                     }
@@ -369,7 +353,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
 //        ImageView appIcon;
 //        TextView appName;
-
+        int holderType = 0;
         TextView busStopID;
         TextView busStopName;
         TextView busStopDesc;
@@ -389,11 +373,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         // create list one and store values
         List<String> busTiming = new ArrayList<>();
 
-        ViewHolder(ViewGroup parent) {
-            this(LayoutInflater.from(parent.getContext()).inflate(R.layout.busstopcard, parent, false));
-        }
+//        ViewHolder(ViewGroup parent, int type) {
+//            this(LayoutInflater.from(parent.getContext()).inflate(R.layout.busstopcard, parent, false), type);
+//        }
 
-        private ViewHolder(View itemView) {
+
+        public ViewHolder(View itemView, int type) {
             super(itemView);
             busStopID = itemView.findViewById(R.id.sub_text);
             busStopName = itemView.findViewById(R.id.primary_text);
@@ -403,16 +388,29 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busDuration2 = itemView.findViewById(R.id.duration2);
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
             favorite = itemView.findViewById(R.id.favoritebtn);
+            holderType = type;
         }
 
-        private void setItem(BusStopCards card){
-            this.busStopName.setText(card.getBusStopName());
-            this.busStopID.setText(card.getBusStopID());
-            this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-            if(card.isFavorite())
-                this.favorite.setImageResource(R.drawable.ic_favorite_red);
-            else
-                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+        private void setBusItem(BusStopCards card){
+
+        }
+
+        private void setItem(Card card){
+            switch (holderType) {
+                case BUS_STOP_CARD:
+                    BusStopCards cards = (BusStopCards)card;
+                    this.busStopName.setText(cards.getBusStopName());
+                    this.busStopID.setText(cards.getBusStopID());
+                    this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(cards.getLastUpdated())));
+                    if(cards.isFavorite())
+                        this.favorite.setImageResource(R.drawable.ic_favorite_red);
+                    else
+                        this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                    break;
+                case NAVIGATE_TRANSIT_CARD:
+                case NAVIGATE_WALKING_CARD:
+                    break;
+            }
         }
 
         private void setItem(NavigateTransitCard card){

@@ -89,7 +89,6 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
@@ -181,14 +180,14 @@ public class MainActivity extends AppCompatActivity
     private List<LTABusStopData> sortedLTABusStopData = new ArrayList<>();
 
     // Bus cards
-    private ArrayList<BusStopCards> favCardList = new ArrayList<>(); // Favorite cards
-    private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
-    public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
+    private ArrayList<Card> favCardList = new ArrayList<>(); // Favorite cards
+    private ArrayList<Card> singleCardList = new ArrayList<>(); // single cards (POI)
+    public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID;
 
     //Route cards
-    private ArrayList<NavigateTransitCard> transitCardList = new ArrayList<>(); // Public transport cards
-    private ArrayList<NavigateWalkingCard> walkingCardList = new ArrayList<>(); // Walking cards
+    private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
+    private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
 
     // UserData
     UserData userData;
@@ -429,7 +428,7 @@ public class MainActivity extends AppCompatActivity
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), new ArrayList<>(), mMap, bottomSheetBehavior);
+        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior);
         adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -845,11 +844,11 @@ public class MainActivity extends AppCompatActivity
         this.pooling = pooling;
     }
 
-    public ArrayList<BusStopCards> getFavCardList() {
+    public ArrayList<Card> getFavCardList() {
         return favCardList;
     }
 
-    public void setFavCardList(ArrayList<BusStopCards> favCardList) {
+    public void setFavCardList(ArrayList<Card> favCardList) {
         this.favCardList = favCardList;
     }
 
@@ -997,6 +996,7 @@ public class MainActivity extends AppCompatActivity
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
                             Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
+                            card.setType(card.BUS_STOP_CARD);
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
@@ -1051,7 +1051,7 @@ public class MainActivity extends AppCompatActivity
                 String key = entryData.getKey(); // Bus stop ID
                 Map value = entryData.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
-
+                card.setType(card.BUS_STOP_CARD);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(3);
@@ -1110,6 +1110,7 @@ public class MainActivity extends AppCompatActivity
                 nearbyCardList.clear();
                 for(int i=0; i< 16; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
+                    card.setType(card.BUS_STOP_CARD);
                     nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     assert card != null;
@@ -1164,6 +1165,7 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
                 BusStopCards card = getBusStopData(list.get(i));
+                card.setType(card.BUS_STOP_CARD);
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
 //            }
