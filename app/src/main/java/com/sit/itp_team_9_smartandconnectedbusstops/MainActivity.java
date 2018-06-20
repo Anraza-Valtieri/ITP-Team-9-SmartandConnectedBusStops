@@ -242,6 +242,10 @@ public class MainActivity extends AppCompatActivity
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            window.setSustainedPerformanceMode(true);
+        }
+
         fab = findViewById(R.id.fab);
         fab.hide();
         fab.setOnClickListener(view -> {
@@ -311,6 +315,11 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             getDeviceLocation();
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Window window = this.getWindow();
+            window.setSustainedPerformanceMode(true);
+        }
     }
 
     @Override
@@ -323,6 +332,11 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             // pausing location updates
             stopLocationUpdates();
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Window window = this.getWindow();
+            window.setSustainedPerformanceMode(false);
         }
     }
 
@@ -382,14 +396,15 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
+                        getSupportActionBar().hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
                         getSupportActionBar().show();
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
                         getSupportActionBar().hide();
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
                     }
                 }
 
@@ -397,7 +412,7 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-                    getSupportActionBar().hide();
+//                    getSupportActionBar().hide();
                 }
             });
         }
@@ -440,18 +455,31 @@ public class MainActivity extends AppCompatActivity
                     getLocationPermission();
                     return false;
                 }
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                        .build();                   // Creates a CameraPosition from the builder
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                @SuppressLint("StaticFieldLeak")
+                AsyncTask asyncTask = new AsyncTask() {
+                    @Override
+                    protected Object doInBackground(Object[] objects) {
+                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();                   // Creates a CameraPosition from the builder
+                        return cameraPosition;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        super.onPostExecute(o);
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition)o));
+                    }
+                };
+
+                asyncTask.execute();
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 if(!isPooling()) {
                     setPooling(true);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
                     lookUpNearbyBusStops();
-                    clearCardsForUpdate();
-                    progressBar.setVisibility(View.VISIBLE);
-                    updateAdapterList(nearbyCardList);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -1033,34 +1061,41 @@ public class MainActivity extends AppCompatActivity
         if(mCurrentLocation==null)
             return;
 
-        try {
-            List<LTABusStopData> result;
-            @SuppressLint("StaticFieldLeak")
-            AsyncTask asyncTask = new AsyncTask() {
-                @Override
-                protected Object doInBackground(Object[] objects) {
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressBar.setVisibility(View.VISIBLE);
+                clearCardsForUpdate();
+            }
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
 //                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                    return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                List<LTABusStopData> toProcess = (List<LTABusStopData>) o;
+                if(toProcess.size() <= 0){
+                    Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+                    return;
                 }
-            };
-
-            result = (List<LTABusStopData>) asyncTask.execute().get();
-
-            if(result.size() <= 0){
-                Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
-                return;
-            }
-            nearbyCardList.clear();
-            for(int i=0; i< 16; i++) {
-                BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
-                nearbyCardList.add(card);
+                nearbyCardList.clear();
+                for(int i=0; i< 16; i++) {
+                    BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
+                    nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-                Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                    assert card != null;
+                    Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                }
+                updateAdapterList(nearbyCardList);
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
+        };
+        asyncTask.execute();
     }
 
     public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
