@@ -108,7 +108,7 @@ import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNet
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener{
+        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -218,7 +218,6 @@ public class MainActivity extends AppCompatActivity
     private ProgressBar progressBar;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme_NoActionBar);
@@ -314,7 +313,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onRestart() {
-        if(adapter != null)
+        if (adapter != null)
             adapter.resumeHandlers();
         super.onRestart();
         // Resuming location updates depending on button state and
@@ -332,7 +331,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         handler.removeCallbacks(runnable);
-        if(adapter != null)
+        if (adapter != null)
             adapter.pauseHandlers();
         super.onPause();
 
@@ -384,15 +383,17 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void clearCardsForUpdate(){
+    private void clearCardsForUpdate() {
         adapter.Clear();
     }
-    private void updateBottomSheet(){
+
+    private void updateBottomSheet() {
         //TODO Adjust bottomsheet to card length.
         adapter.Clear();
 //        adapter.addAllCard(nearbyCardList);
     }
-    private void prepareBottomSheet(){
+
+    private void prepareBottomSheet() {
         // Bottom sheet
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -409,7 +410,7 @@ public class MainActivity extends AppCompatActivity
                         getSupportActionBar().show();
 //                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
-                    } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
+                    } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         getSupportActionBar().hide();
 //                        fab.setVisibility(View.GONE);
                     }
@@ -435,7 +436,7 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
-        if(animator instanceof SimpleItemAnimator){
+        if (animator instanceof SimpleItemAnimator) {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
 
@@ -447,7 +448,7 @@ public class MainActivity extends AppCompatActivity
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
-                if(favBusStopID.size() > 0) {
+                if (favBusStopID.size() > 0) {
                     clearCardsForUpdate();
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     progressBar.setVisibility(View.VISIBLE);
@@ -459,7 +460,7 @@ public class MainActivity extends AppCompatActivity
                 /*if (adapter != null){
                     transitCardList.clear();
                 }*/
-                if(walkingCardList.size() > 0 || transitCardList.size() > 0) {
+                if (walkingCardList.size() > 0 || transitCardList.size() > 0) {
                     clearCardsForUpdate();
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                     //progressBar.setVisibility(View.VISIBLE);
@@ -470,7 +471,7 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(transitCardList);
                 }
             } else if (id == R.id.action_nearby) {
-                if(mCurrentLocation==null){
+                if (mCurrentLocation == null) {
                     getDeviceLocation();
                     getLocationPermission();
                     return false;
@@ -490,13 +491,13 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     protected void onPostExecute(Object o) {
                         super.onPostExecute(o);
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition)o));
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
                     }
                 };
 
                 asyncTask.execute();
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                if(!isPooling()) {
+                if (!isPooling()) {
                     setPooling(true);
 
                     lookUpNearbyBusStops();
@@ -529,8 +530,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        for(int i=0; i<permissions.length; i++) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++) {
             String permission = permissions[i];
             int grantedResult = grantResults[i];
             if (permission.equals(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -540,6 +541,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
     @SuppressWarnings("unchecked")
     private void getDeviceLocation() {
         /*
@@ -556,8 +558,8 @@ public class MainActivity extends AppCompatActivity
                 super.onLocationResult(locationResult);
                 // location is received
                 mCurrentLocation = locationResult.getLastLocation();
-                if(!firstLocationUpdate){
-                    if(mCurrentLocation!=null){
+                if (!firstLocationUpdate) {
+                    if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
@@ -572,7 +574,7 @@ public class MainActivity extends AppCompatActivity
                     } else {
                         mMap.setMyLocationEnabled(false);
                     }
-                } catch (SecurityException e)  {
+                } catch (SecurityException e) {
                     Log.e("Exception: %s", e.getMessage());
                 }
 //                updateLocationUI();
@@ -633,6 +635,56 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
 //            lookUpNearbyBusStops();
+            /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location locationNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            long GPSLocationTime = 0;
+            if (null != locationGPS) { GPSLocationTime = locationGPS.getTime(); }
+
+            long NetLocationTime = 0;
+
+            if (null != locationNet) {
+                NetLocationTime = locationNet.getTime();
+            }
+
+            // Define a listener that responds to location updates
+            LocationListener locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+                    // Called when a new location is found by the network location provider.
+//                    mCurrentLocation.setLatitude(location.getLatitude());
+//                    mCurrentLocation.setLongitude(location.getLongitude());
+                    mCurrentLocation = location;
+                }
+
+                public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+                public void onProviderEnabled(String provider) {}
+
+                public void onProviderDisabled(String provider) {}
+            };
+
+            if ( 0 < GPSLocationTime - NetLocationTime ) {
+//                return locationGPS;
+                Log.d(TAG, "getDeviceLocation: GPS is more accurate");
+                // Register the listener with the Location Manager to receive location updates
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            }
+            else {
+//                return locationNet;
+                Log.d(TAG, "getDeviceLocation: Network is more accurate");
+                // Register the listener with the Location Manager to receive location updates
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            }*/
         }
     }
 
@@ -716,17 +768,13 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_bus) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_bus_stops) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_trainstations) {
 
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_setting) {
 
         }
 
