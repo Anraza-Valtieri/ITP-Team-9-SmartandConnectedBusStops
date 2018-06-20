@@ -23,6 +23,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
@@ -38,10 +41,13 @@ import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetwo
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
 //    private PackageManager mPackageManager;
     private static final String TAG = CardAdapter.class.getSimpleName();
+    private final static int BUS_STOP_CARD = 0;
+    private final static int NAVIGATE_TRANSIT_CARD = 1;
+    private final static int NAVIGATE_WALKING_CARD = 2;
     private Context mContext;
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheet;
-    private ArrayList<BusStopCards> mCard;
+    private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
@@ -55,15 +61,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.favBusStopID = favBusStopID;
     }
 
-    public ArrayList<BusStopCards> getmCard() {
+    public ArrayList<Card> getmCard() {
         return mCard;
     }
 
-    public void setmCard(ArrayList<BusStopCards> mCard) {
+    public void setmCard(ArrayList<Card> mCard) {
         this.mCard = mCard;
     }
 
-    public CardAdapter(Context context, ArrayList<BusStopCards> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
+    public CardAdapter(Context context, ArrayList<Card> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
 //        this.mApplications = mApplications;
         mContext = context;
         this.mCard = card;
@@ -74,16 +80,47 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     private List<ApplicationInfo> mApplications;
 
+    public int getItemViewType(Card card){
+        if (card instanceof BusStopCards){
+            return BUS_STOP_CARD;
+        } else if(card instanceof NavigateTransitCard){
+            return NAVIGATE_TRANSIT_CARD;
+        }
+        else{
+            return NAVIGATE_WALKING_CARD;
+        }
+    }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(parent);
+        ViewHolder holder;
+        View v;
+        Context context = parent.getContext();
+        switch(viewType){
+            case BUS_STOP_CARD:
+                v = LayoutInflater.from(context)
+                        .inflate(R.layout.busstopcard, parent, false);
+                holder = new ViewHolder(v);
+            case NAVIGATE_TRANSIT_CARD:
+                v = LayoutInflater.from(context)
+                        .inflate(R.layout.navigate_transit_card, parent, false);
+                holder = new ViewHolder(v);
+            default:
+                v = LayoutInflater.from(context)
+                        .inflate(R.layout.navigate_walking_card, parent, false);
+                holder = new ViewHolder(v);
+        }
+        return holder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        BusStopCards card = mCard.get(position);
+        //TODO switch case here
+        /*switch (holder.lay){
+            case
+        }*/
+        BusStopCards card = (BusStopCards) mCard.get(position);
         holder.setItem(card);
 
         // This part creates layout for bus services
@@ -165,13 +202,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //        return mApplications == null ? 0 : mApplications.size();
     }
 
-    public void addAllCard(ArrayList<BusStopCards> card){
+    public void addAllCard(ArrayList<Card> card){
         this.mCard.addAll(card);
         Refresh();
         Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
 
-    public void addCard(BusStopCards card){
+    public void addCard(Card card){
         mCard.add(card);
         notifyItemInserted(mCard.size());
         Refresh();
@@ -266,7 +303,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     Runnable runnable2 = new Runnable() {
         @Override
         public void run() {
-            updateCardData(mCard);
+            List<BusStopCards> busStopCards = null;
+            for (int i = 0; i < mCard.size(); i++){
+                busStopCards.add((BusStopCards) mCard.get(i));
+            }
+            updateCardData(busStopCards);
             doAutoRefresh();
         }
     };
@@ -294,7 +335,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 @Override
                 protected Object doInBackground(Object[] objects) {
                     for (int i = 0; i < mCard.size(); i++) {
-                        BusStopCards updateCard = mCard.get(i);
+                        BusStopCards updateCard = (BusStopCards) mCard.get(i);
 //                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
                         if (result.get(updateCard.getBusStopID()) != null) {
                             Map<String, List<String>> loadedData = result.get(updateCard.getBusStopID());
@@ -324,6 +365,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        //TODO switch case for different card types
 
 //        ImageView appIcon;
 //        TextView appName;
@@ -373,6 +415,27 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
         }
 
+        private void setItem(NavigateTransitCard card){
+            /*
+            this.busStopName.setText(card.getBusStopName());
+            this.busStopID.setText(card.getBusStopID());
+            this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+            if(card.isFavorite())
+                this.favorite.setImageResource(R.drawable.ic_favorite_red);
+            else
+                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);*/
+        }
+
+        private void setItem(NavigateWalkingCard card){
+            /*
+            this.busStopName.setText(card.getBusStopName());
+            this.busStopID.setText(card.getBusStopID());
+            this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+            if(card.isFavorite())
+                this.favorite.setImageResource(R.drawable.ic_favorite_red);
+            else
+                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);*/
+        }
 
     }
 }
