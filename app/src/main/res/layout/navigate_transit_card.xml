@@ -17,7 +17,8 @@
     card_view:cardElevation="@dimen/card_elevation"
     card_view:elevation="@dimen/card_elevation">
 
-    <RelativeLayout
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/relativeLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -25,122 +26,141 @@
             android:id="@+id/textViewTotalTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toTopOf="parent"
             tools:text="XX hours" />
 
         <TextView
             android:id="@+id/textViewTotalDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/textViewTotalTime"
+            android:layout_marginStart="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalTime"
             tools:text="XX km" />
 
         <TextView
             android:id="@+id/textViewCost"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignTop="@id/textViewTotalDistance"
+            android:layout_marginEnd="8dp"
+            android:text="$ X.XX"
+            card_view:layout_constraintEnd_toEndOf="parent"
+            card_view:layout_constraintTop_toTopOf="@+id/textViewTotalDistance"
             tools:text="$ X.XX" />
 
         <View
             android:id="@+id/breakdownBar"
-            android:layout_width="match_parent"
-            android:layout_height="7dp"
-            android:layout_gravity="center"
-            android:layout_below="@+id/textViewTotalDistance"
-            android:background="#a40404" />
+            android:layout_width="wrap_content"
+            android:layout_height="12dp"
+            android:layout_marginTop="8dp"
+            android:background="#a40404"
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalDistance"
+            tools:layout_editor_absoluteX="0dp" />
 
-        <LinearLayout
-            android:id="@+id/startingJourney"
-            android:layout_width="match_parent"
+
+        <ImageView
+            android:id="@+id/imageViewStartingStation"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/breakdownBar"
-            android:orientation="horizontal">
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/ic_directions_bus_black_24dp"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/breakdownBar" />
 
-            <ImageView
-                android:id="@+id/imageViewStartingStation"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_gravity="start"
-                android:background="@drawable/ic_directions_bus_black_24dp" />
+        <TextView
+            android:id="@+id/textViewStartingStation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            card_view:layout_constraintStart_toEndOf="@+id/imageViewStartingStation"
+            card_view:layout_constraintTop_toTopOf="@+id/imageViewStartingStation"
+            tools:text="Farrer Park" />
 
-            <TextView
-                android:id="@+id/textViewStartingStation"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                tools:text="Farrer Park" />
-
-        </LinearLayout>
 
         <TextView
             android:id="@+id/textViewTimeTaken"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/startingJourney"
-            android:layout_marginTop="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/imageViewStartingStation"
             tools:text="X mins" />
 
         <TextView
             android:id="@+id/textViewNumStops"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/startingJourney"
-            android:layout_toEndOf="@id/textViewTimeTaken"
+            android:layout_marginStart="8dp"
+            card_view:layout_constraintStart_toEndOf="@+id/textViewTimeTaken"
+            card_view:layout_constraintTop_toTopOf="@+id/textViewTimeTaken"
             tools:text="( X stops)" />
 
 
         <View
             android:id="@+id/dividerBeforeTransferStation"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="8dp"
             android:background="?android:attr/listDivider"
-            android:layout_below="@id/textViewNumStops" />
+            card_view:layout_constraintEnd_toEndOf="parent"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTimeTaken" />
 
         <TextView
             android:id="@+id/textViewTransferStation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/textViewNumStops"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toTopOf="@+id/dividerBeforeTransferStation"
             tools:text="Transfer station" />
 
         <View
             android:id="@+id/dividerBeforeEndStation"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="8dp"
             android:background="?android:attr/listDivider"
-            android:layout_below="@id/textViewTransferStation"
-            />
+            card_view:layout_constraintEnd_toEndOf="parent"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTransferStation" />
 
-        <LinearLayout
-            android:id="@+id/endingJourney"
-            android:layout_width="match_parent"
+
+        <ImageView
+            android:id="@+id/imageViewEndingStation"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/dividerBeforeEndStation"
-            android:orientation="horizontal">
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/ic_directions_bus_black_24dp"
+            card_view:layout_constraintBottom_toBottomOf="parent"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/dividerBeforeEndStation" />
 
-            <ImageView
-                android:id="@+id/imageViewEndingStation"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_gravity="start"
-                android:background="@drawable/ic_directions_bus_black_24dp" />
+        <TextView
+            android:id="@+id/textViewEndingStation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+            card_view:layout_constraintStart_toEndOf="@+id/imageViewEndingStation"
+            card_view:layout_constraintTop_toTopOf="@+id/imageViewEndingStation"
+            tools:text="Dhoby Ghaut MRT" />
 
-            <TextView
-                android:id="@+id/textViewEndingStation"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                tools:text="Dhoby Ghaut MRT" />
-        </LinearLayout>
 
-    </RelativeLayout>
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.v7.widget.CardView>

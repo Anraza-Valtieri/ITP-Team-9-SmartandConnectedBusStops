@@ -41,6 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MultiAutoCompleteTextView;
@@ -502,6 +503,8 @@ public class MainActivity extends AppCompatActivity
                                 + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                         Log.i(TAG,query);
                         lookUpRoutes(query);
+                        hideKeyboard();
+
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
                     }
@@ -1311,6 +1314,9 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpRoute: "+card.toString());
             }
 
+            clearCardsForUpdate();
+            updateAdapterList(transitCardList);
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -1395,6 +1401,15 @@ public class MainActivity extends AppCompatActivity
     //TODO getRouteData for NavigateWalkingCard
 
 
+    public void hideKeyboard(){
+        // Check if no view has focus:
+        View view = getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            assert imm != null;
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 
     /*
     ALL BUS STOPS FROM LTA
