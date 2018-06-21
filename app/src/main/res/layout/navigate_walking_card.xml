@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/walkingCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/card_margin_bottom"
+    android:layout_marginEnd="@dimen/card_margin_right"
+    android:layout_marginStart="@dimen/card_margin_left"
+    android:layout_marginTop="@dimen/card_margin_top"
+    android:animateLayoutChanges="true"
+    android:clickable="true"
+    android:focusable="true"
+    card_view:cardCornerRadius="@dimen/card_corner_rad"
+    card_view:cardElevation="@dimen/card_elevation"
+    card_view:elevation="@dimen/card_elevation">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textViewWalkingTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            tools:text="XX hours " />
+
+        <TextView
+            android:id="@+id/textViewWalkingDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/textViewWalkingTime"
+            android:layout_toEndOf="@+id/textViewWalkingTime"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            android:textColor="@color/browser_actions_title_color"
+            tools:text="( XX km)" />
+
+        <TextView
+            android:id="@+id/textViewStartingRoad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textViewWalkingDistance"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            tools:text="via XX Road" />
+
+
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>
