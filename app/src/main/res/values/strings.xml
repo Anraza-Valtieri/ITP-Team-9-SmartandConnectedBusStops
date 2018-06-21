@@ -13,6 +13,11 @@
     <string name="option_get_place">Get place</string>
     <string name="pick_place">Choose a place</string>
 
+    <!--for navigate fragment-->
+    <string name="starting_point">Starting point</string>
+    <string name="destination">Destination</string>
+
+
     <string name="large_text">
         "Material is the metaphor.\n\n"
 

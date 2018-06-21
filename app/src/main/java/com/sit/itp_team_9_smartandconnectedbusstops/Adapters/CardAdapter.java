@@ -3,6 +3,7 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -13,7 +14,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,11 +42,11 @@ import java.util.Map;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
-//    private PackageManager mPackageManager;
+    //    private PackageManager mPackageManager;
     private static final String TAG = CardAdapter.class.getSimpleName();
-    private final static int BUS_STOP_CARD = 0;
-    private final static int NAVIGATE_TRANSIT_CARD = 1;
-    private final static int NAVIGATE_WALKING_CARD = 2;
+    private static final int BUS_STOP_CARD = 1;
+    private static final int NAVIGATE_TRANSIT_CARD = 2;
+    private static final int NAVIGATE_WALKING_CARD = 3;
     private Context mContext;
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheet;
@@ -69,6 +72,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mCard = mCard;
     }
 
+    private List<ApplicationInfo> mApplications;
+
     public CardAdapter(Context context, ArrayList<Card> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
 //        this.mApplications = mApplications;
         mContext = context;
@@ -78,62 +83,55 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //        mPackageManager = mContext.getPackageManager();
     }
 
-    private List<ApplicationInfo> mApplications;
-
-    public int getItemViewType(Card card){
-        if (card instanceof BusStopCards){
-            return BUS_STOP_CARD;
-        } else if(card instanceof NavigateTransitCard){
-            return NAVIGATE_TRANSIT_CARD;
-        }
-        else{
-            return NAVIGATE_WALKING_CARD;
-        }
-    }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolder holder;
-        View v;
-        Context context = parent.getContext();
+        //TODO switch case
+        View view;
+        ViewHolder viewHolder = null;
         switch(viewType){
             default:
             case BUS_STOP_CARD:
-                v = LayoutInflater.from(context)
-                        .inflate(R.layout.busstopcard, parent, false);
-                holder = new ViewHolder(v, BUS_STOP_CARD);
+                view = LayoutInflater.from(mContext).inflate(R.layout.busstopcard,parent,false);
+                viewHolder = new ViewHolder(view, BUS_STOP_CARD);
                 break;
             case NAVIGATE_TRANSIT_CARD:
-                v = LayoutInflater.from(context)
-                        .inflate(R.layout.navigate_transit_card, parent, false);
-                holder = new ViewHolder(v, NAVIGATE_TRANSIT_CARD);
+                view = LayoutInflater.from(mContext).inflate(R.layout.navigate_transit_card,parent,false);
+                viewHolder = new ViewHolder(view, NAVIGATE_TRANSIT_CARD);
                 break;
             case NAVIGATE_WALKING_CARD:
-                v = LayoutInflater.from(context)
-                        .inflate(R.layout.navigate_walking_card, parent, false);
-                holder = new ViewHolder(v, NAVIGATE_WALKING_CARD);
+                view = LayoutInflater.from(mContext).inflate(R.layout.navigate_walking_card,parent,false);
+                viewHolder = new ViewHolder(view, NAVIGATE_WALKING_CARD);
                 break;
         }
-        return holder;
+        return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        //TODO switch case here
-        /*switch (holder.lay){
-            case
-        }*/
-
-        Card cards = mCard.get(position);
-        switch (cards.getType()) {
+        switch(getItemViewType(position)){
             case BUS_STOP_CARD:
                 BusStopCards card = (BusStopCards) mCard.get(position);
+                card.setType(card.BUS_STOP_CARD);
                 holder.setItem(card);
-//                holder.setBusItem(card);
+
+                TextView busStopID = holder.itemView.findViewById(R.id.sub_text);
+                TextView busStopName = holder.itemView.findViewById(R.id.primary_text);
+                TextView busLastUpdated = holder.itemView.findViewById(R.id.updatedTiming);
+
+                busStopName.setText(card.getBusStopName());
+                busStopID.setText(card.getBusStopID());
+                busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+//                TextView busDirection = holder.itemView.findViewById(R.id.direction);
+//                TextView busDuration1 = holder.itemView.findViewById(R.id.duration1);
+//                TextView busDuration2 = holder.itemView.findViewById(R.id.duration2);
+
+
+
                 // This part creates layout for bus services
                 final View cardview = holder.itemView.findViewById(R.id.buscard);
                 ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
+
                 Map<String, List<String>> timings = card.getBusServices();
                 if(timings.size() > 0) {
                     LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
@@ -175,7 +173,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 if(card.isFavorite())
                     favorite.setImageResource(R.drawable.ic_favorite_red);
 
-//        doDataRefresh(holder, position);
+                //        doDataRefresh(holder, position);
                 favorite.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -202,10 +200,67 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 });
                 break;
             case NAVIGATE_TRANSIT_CARD:
+                NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
+                transitCard.setType(transitCard.NAVIGATE_TRANSIT_CARD);
+                holder.setItem(transitCard);
+                final View transitCardView = holder.itemView.findViewById(R.id.transitcard);
+                TextView totalTime = transitCardView.findViewById(R.id.textViewTotalTime);
+                TextView totalDistance = transitCardView.findViewById(R.id.textViewTotalDistance);
+                TextView cost = transitCardView.findViewById(R.id.textViewCost);
+                View breakdownBar = transitCardView.findViewById(R.id.breakdownBar);
+                TextView startingStation = transitCardView.findViewById(R.id.textViewStartingStation);
+                TextView transferStation = transitCardView.findViewById(R.id.textViewTransferStation);
+                TextView endingStation = transitCardView.findViewById(R.id.textViewEndingStation);
+                TextView timeTaken = transitCardView.findViewById(R.id.textViewTimeTaken);
+                TextView numStops = transitCardView.findViewById(R.id.textViewNumStops);
+                ImageView imageViewStartingStation = transitCardView.findViewById(R.id.imageViewStartingStation);
+                ImageView imageViewEndingStation = transitCardView.findViewById(R.id.imageViewEndingStation);
+
+
+                totalTime.setText(transitCard.getTotalTime());
+                totalDistance.setText(transitCard.getTotalDistance());
+                cost.setText(transitCard.getCost());
+                //breakdownBar.setProgress(10); //TODO breakdown bar needs to be set
+                startingStation.setText(transitCard.getStartingStation());
+                transferStation.setText(transitCard.getTransferStation());
+                endingStation.setText(transitCard.getEndingStation());
+                timeTaken.setText(transitCard.getTimeTaken());
+                numStops.setText(transitCard.getNumStops());
+                //imageViewStartingStation.setColorFilter((Color.rgb( 255, 255, 255)));
+                imageViewStartingStation.setImageResource(transitCard.getImageViewStartingStation());
+                imageViewStartingStation.setColorFilter(transitCard.getImageViewStartingStationColor(), PorterDuff.Mode.SRC_IN);
+                imageViewEndingStation.setImageResource(transitCard.getImageViewEndingStation());
+                imageViewEndingStation.setColorFilter(transitCard.getImageViewEndingStationColor(), PorterDuff.Mode.SRC_IN);
+
+                transitCardView.setOnClickListener(v -> {
+                    //TODO open new detailed card
+                    Log.d(TAG,"onClick NavigateTransitCard");
+                    //bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                });
                 break;
+
             case NAVIGATE_WALKING_CARD:
+                //TODO complete code here
+                NavigateWalkingCard walkingCard = (NavigateWalkingCard) mCard.get(position);
+                walkingCard.setType(walkingCard.NAVIGATE_WALKING_CARD);
+                holder.setItem(walkingCard);
+                final View walkingCardView = holder.itemView.findViewById(R.id.walkingCard);
+                TextView walkingTime = walkingCardView.findViewById(R.id.textViewWalkingTime);
+                TextView walkingDistance = walkingCardView.findViewById(R.id.textViewWalkingDistance);
+                TextView startingRoad = walkingCardView.findViewById(R.id.textViewStartingRoad);
+
+                walkingTime.setText(walkingCard.getTotalTime());
+                walkingDistance.setText(walkingCard.getTotalDistance());
+                startingRoad.setText(walkingCard.getDescription());
+
+                walkingCardView.setOnClickListener(v -> {
+                    //TODO open new detailed card
+                    Log.d(TAG,"onClick NavigateTransitCard");
+                    bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                });
                 break;
         }
+
     }
 
 
@@ -216,7 +271,21 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //        return mApplications == null ? 0 : mApplications.size();
     }
 
-    public void addAllCard(ArrayList<Card> card){
+    @Override
+    public int getItemViewType(int position) {
+        Card card = mCard.get(position);
+        if (card instanceof BusStopCards){
+            return BUS_STOP_CARD;
+        }
+        else if(card instanceof NavigateTransitCard){
+            return NAVIGATE_TRANSIT_CARD;
+        }
+        else{
+            return NAVIGATE_WALKING_CARD;
+        }
+    }
+
+    public void addAllCard(ArrayList<? extends Card> card){
         this.mCard.addAll(card);
         Refresh();
         Log.d(TAG, "addAllCard: called adds "+mCard.size());
@@ -242,7 +311,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //        doAutoRefresh();
     }
 
-    
+
     private void updateCardData(List<BusStopCards> cards){
         if(!haveNetworkConnection(mContext)){
             Toast.makeText(mContext,
@@ -287,15 +356,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     Runnable runnable2 = new Runnable() {
         @Override
         public void run() {
-            List<BusStopCards> busStopCards = new ArrayList<>();
-            Log.d(TAG, "run: "+mCard.size());
-            for (int i = 0; i < mCard.size(); i++){
-                Card cards = mCard.get(i);
-                if(cards.getType() == BUS_STOP_CARD)
-                    busStopCards.add((BusStopCards)mCard.get(i));
+            if (mCard != null) {
+                Card card = mCard.get(0);
+                if (card.getType() == card.BUS_STOP_CARD) {
+                    List<BusStopCards> busStopCards = new ArrayList<BusStopCards>();
+                    for (int i = 0; i < mCard.size(); i++) {
+                        busStopCards.add((BusStopCards) mCard.get(i));
+                    }
+                    updateCardData(busStopCards);
+                    //updateCardData(mCard);
+                    doAutoRefresh();
+                }
             }
-            updateCardData(busStopCards);
-            doAutoRefresh();
         }
     };
 
@@ -349,11 +421,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        //TODO switch case for different card types
-
+        //TODO switch case here
+        //For bus card
 //        ImageView appIcon;
 //        TextView appName;
-        int holderType = 0;
         TextView busStopID;
         TextView busStopName;
         TextView busStopDesc;
@@ -366,16 +437,33 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView busLastUpdated;
         ImageButton favorite;
 
-        BusStopCards card;
+        //For navigate transit card
+        TextView totalTime;
+        TextView totalDistance;
+        TextView cost;
+        ProgressBar breakdownBar;
+        TextView startingStation;
+        TextView transferStation;
+        TextView endingStation;
+        TextView timeTaken;
+        TextView numStops;
+
+        //For navigate walking card
+        TextView walkingTime;
+        TextView walkingDistance;
+        TextView startingRoad;
+
+        int cardType = 0;
+        //BusStopCards card;
 
         // Create map to store
         Map<String, List<String>> busServices = new HashMap<>();
         // create list one and store values
         List<String> busTiming = new ArrayList<>();
 
-//        ViewHolder(ViewGroup parent, int type) {
-//            this(LayoutInflater.from(parent.getContext()).inflate(R.layout.busstopcard, parent, false), type);
-//        }
+        /*ViewHolder(ViewGroup parent) {
+            this(LayoutInflater.from(parent.getContext()).inflate(R.layout.busstopcard, parent, false));
+        }*/
 
 
         public ViewHolder(View itemView, int type) {
@@ -388,7 +476,24 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busDuration2 = itemView.findViewById(R.id.duration2);
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
             favorite = itemView.findViewById(R.id.favoritebtn);
-            holderType = type;
+
+            //For navigate transit card
+            totalTime = itemView.findViewById(R.id.textViewTotalTime);
+            totalDistance = itemView.findViewById(R.id.textViewTotalDistance);
+            cost = itemView.findViewById(R.id.textViewCost);
+            breakdownBar = itemView.findViewById(R.id.progressBar);
+            startingStation = itemView.findViewById(R.id.textViewStartingStation);
+            transferStation = itemView.findViewById(R.id.textViewTransferStation);
+            endingStation = itemView.findViewById(R.id.textViewEndingStation);
+            timeTaken = itemView.findViewById(R.id.textViewTimeTaken);
+            numStops = itemView.findViewById(R.id.textViewNumStops);
+
+            //For navigate walking card
+            walkingTime = itemView.findViewById(R.id.textViewWalkingTime);
+            walkingDistance = itemView.findViewById(R.id.textViewWalkingDistance);
+            startingRoad = itemView.findViewById(R.id.textViewStartingRoad);
+
+            cardType = type;
         }
 
         private void setBusItem(BusStopCards card){
@@ -396,9 +501,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }
 
         private void setItem(Card card){
-            switch (holderType) {
+            switch (this.cardType) {
                 case BUS_STOP_CARD:
                     BusStopCards cards = (BusStopCards)card;
+                    cards.setType(card.BUS_STOP_CARD);
                     this.busStopName.setText(cards.getBusStopName());
                     this.busStopID.setText(cards.getBusStopID());
                     this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(cards.getLastUpdated())));
@@ -408,32 +514,36 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
                     break;
                 case NAVIGATE_TRANSIT_CARD:
+                    NavigateTransitCard cards2 = (NavigateTransitCard)card;
+                    cards2.setType(card.NAVIGATE_TRANSIT_CARD);
+                    this.totalTime.setText(cards2.getTotalTime());
+                    this.totalDistance.setText(cards2.getTotalDistance());
+                    this.cost.setText(cards2.getCost());
+                    this.startingStation.setText(cards2.getStartingStation());
+                    this.transferStation.setText(cards2.getTransferStation());
+                    this.endingStation.setText(cards2.getEndingStation());
+                    this.numStops.setText(cards2.getNumStops());
+                    this.timeTaken.setText(cards2.getTimeTaken());
+                    break;
                 case NAVIGATE_WALKING_CARD:
+                    NavigateWalkingCard cards3 = (NavigateWalkingCard)card;
+                    cards3.setType(card.NAVIGATE_WALKING_CARD);
+                    this.walkingTime.setText(cards3.getTotalTime());
+                    this.walkingDistance.setText(cards3.getTotalDistance());
+                    this.startingRoad.setText(cards3.getDescription());
                     break;
             }
         }
 
-        private void setItem(NavigateTransitCard card){
-            /*
-            this.busStopName.setText(card.getBusStopName());
-            this.busStopID.setText(card.getBusStopID());
-            this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-            if(card.isFavorite())
-                this.favorite.setImageResource(R.drawable.ic_favorite_red);
-            else
-                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);*/
+        /*private void setItem(NavigateTransitCard card){
+
         }
 
-        private void setItem(NavigateWalkingCard card){
-            /*
-            this.busStopName.setText(card.getBusStopName());
-            this.busStopID.setText(card.getBusStopID());
-            this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-            if(card.isFavorite())
-                this.favorite.setImageResource(R.drawable.ic_favorite_red);
-            else
-                this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);*/
-        }
+        private void setItem(NavigateWalkingCard card) {
+            this.walkingTime.setText(card.getTotalTime());
+            this.walkingDistance.setText(card.getTotalDistance());
+            this.startingRoad.setText(card.getDescription());
+        }*/
 
     }
 }
