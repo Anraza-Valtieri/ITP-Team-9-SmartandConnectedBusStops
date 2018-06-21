@@ -21,6 +21,7 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.INotificationSideChannel;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -38,7 +39,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -91,6 +94,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -146,6 +150,7 @@ public class MainActivity extends AppCompatActivity
 
     // Header
     private Toolbar toolbar;
+    private Toolbar toolbarNavigate; //for navigate tab
     private NavigationView navigationView;
     private View navHeader;
     private LinearLayout navheaderbanner;
@@ -211,7 +216,8 @@ public class MainActivity extends AppCompatActivity
     //Progress
     private ProgressBar progressBar;
 
-
+    //Navigate
+    boolean optionMode = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,6 +225,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
+        toolbarNavigate = findViewById(R.id.navigate_toolbar);
         setSupportActionBar(toolbar);
         rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -401,6 +408,10 @@ public class MainActivity extends AppCompatActivity
             int id = item.getItemId();
 //            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
+                toolbarNavigate.setVisibility(View.INVISIBLE);
+                toolbar.setVisibility(View.VISIBLE);
+                setSupportActionBar(toolbar);
+                getSupportActionBar().show();
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
@@ -411,22 +422,73 @@ public class MainActivity extends AppCompatActivity
                     prepareFavoriteCards(getFavBusStopID());
                 }
             } else if (id == R.id.action_nav) {
+                //TODO fix searchview's icon covering search button
                 fab.hide();
-                //TODO toolbar to have Starting Point and Destination
+                toolbar.setVisibility(View.GONE);
+                getSupportActionBar().hide();
+                toolbarNavigate.setVisibility(View.VISIBLE);
+                setSupportActionBar(toolbarNavigate);
+                getSupportActionBar().show();
+                MultiAutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
+                MultiAutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
+                ImageButton optionButton = findViewById(R.id.optionButton);
+                ImageButton searchButton = findViewById(R.id.searchButton);
+                optionButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (optionMode) {
+                            optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
+                            optionMode = false;
+                        } else{
+                            optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
+                            optionMode = true;
+                        }
+                    }
+                });
+                searchButton.setOnClickListener(new View.OnClickListener(){
+                    public void onClick(View v){
+                    Log.i(TAG,"onClickListener!");
+                        if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
+                            Log.i(TAG,"lookUpRoutes!");
+                            String mode;
+                            if (optionMode){
+                                mode = "transit";
+                            }else{
+                                mode = "walking";
+                            }
+                            String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                                    + startingPointTextView.getText().toString() + "&destination="
+                                    + destinationTextView.getText().toString()
+                                    + "&mode=" + mode + "&departure_time=1529577013" //for testing
+                                    + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                            Log.i(TAG,query);
+                            lookUpRoutes(query);
+                        }else{
+                            Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
                 /*if (adapter != null){
                     transitCardList.clear();
                 }*/
+                //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
+
                 if(walkingCardList.size() > 0 || transitCardList.size() > 0) {
                     clearCardsForUpdate();
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    updateAdapterList(transitCardList);
+                    //handler.postDelayed(runnable, 3000);
                     //progressBar.setVisibility(View.VISIBLE);
                     //prepareFavoriteCards(getFavBusStopID());
                     //TODO prepare routes cards
-                    lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=FarrerPark&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                     //TODO default is transitCardList (childFragmentManager also here?)
-                    updateAdapterList(transitCardList);
+                    //updateAdapterList(transitCardList);
                 }
             } else if (id == R.id.action_nearby) {
+                toolbarNavigate.setVisibility(View.INVISIBLE);
+                toolbar.setVisibility(View.VISIBLE);
+                setSupportActionBar(toolbar);
+                getSupportActionBar().show();
 //                fab.show();
                 if(mCurrentLocation==null){
                     getDeviceLocation();
@@ -626,7 +688,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        /*getMenuInflater().inflate(R.menu.main, menu);
 
         // Associate searchable configuration with the SearchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
@@ -634,7 +696,7 @@ public class MainActivity extends AppCompatActivity
         assert searchManager != null;
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setIconifiedByDefault(true);
-        searchView.setSubmitButtonEnabled(true);
+        searchView.setSubmitButtonEnabled(true);*/
         return true;
     }
 
@@ -652,6 +714,19 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (bottomNav.getSelectedItemId()==R.id.action_nav){
+            toolbar.setVisibility(View.GONE);
+            toolbar.setEnabled(false);
+
+        }else{
+            toolbar.setVisibility(View.VISIBLE);
+            toolbar.setEnabled(true);
+        }
+        return true;
     }
 
 
@@ -1055,9 +1130,9 @@ public class MainActivity extends AppCompatActivity
      * <p>
      * This method returns nothing
      *
-     * @param list ArrayList<BusStopCards>
+     * @param list ArrayList<Card>
      */
-    private void updateAdapterList(ArrayList<Card> list){
+    private void updateAdapterList(ArrayList<? extends Card> list){
         clearCardsForUpdate();
         adapter.notifyDataSetChanged();
         adapter.addAllCard(list);
@@ -1081,18 +1156,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void lookUpRoutes(String query){
-        List<String> directionsQuery = null;
+        List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
+        Log.i(TAG,directionsQuery.toString());
         JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result = null; //result from parser
+        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
         try {
             result = directionsParser.execute().get();
+            Log.d(TAG,query);
             if(result.size() <= 0){
                 Log.d(TAG, "lookUpRoute: Google returned no data");
                 return;
             }
             transitCardList.clear();
-            for(int i=0; i< transitCardList.size(); i++) {
+            for(int i=0; i< result.size(); i++) {
                 NavigateTransitCard card = getRouteData(result.get(i));
                 transitCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
@@ -1108,23 +1185,74 @@ public class MainActivity extends AppCompatActivity
 
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData){
         //TODO set card details here (route ID?)
-        NavigateTransitCard card = null;
+        NavigateTransitCard card = new NavigateTransitCard();
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
         //need loop to get
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-        for(int i=0; i< routeSteps.size(); i++) {
-            if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
-                    (!routeSteps.get(i-1).getTravelMode().equals("TRANSIT") ||
-                            routeSteps.get(i-1) == null)){
-                //first public transport station
-                card.setStartingStation(routeSteps.get(i).getDepartureStop());
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
+                        (!routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ||
+                                routeSteps.get(i - 1) == null)) {
+                    //first public transport station
+                    card.setStartingStation(routeSteps.get(i).getDepartureStop());
+                    card.setNumStops("( "+String.valueOf(routeSteps.get(i).getNumStops())+" stops)");
+                    card.setTimeTaken(routeSteps.get(i).getDuration());
+                    card.setImageViewStartingStation(R.drawable.ic_directions_bus_black_24dp);
+                    String trainLine = routeSteps.get(i).getTrainLine();
+                    if (trainLine != null) {
+                        switch (trainLine) {
+                            case "Downtown Line":
+                                card.setImageViewStartingStationColor(Color.argb(255,1, 87, 155));
+                                break;
+                            case "North East Line":
+                                card.setImageViewStartingStationColor(Color.argb(255,72, 35, 175));
+                                break;
+                            case "East West Line":
+                                card.setImageViewStartingStationColor(Color.argb(255,36, 130, 37));
+                                break;
+                            case "North South Line":
+                                card.setImageViewStartingStationColor(Color.argb(255,244, 65, 65));
+                                break;
+                            case "Circle Line":
+                                card.setImageViewStartingStationColor(Color.argb(255,244, 226, 66));
+                                break;
+                        }
+                    }
+                    //card.setTransferStation(routeSteps.get(i).getArrivalStop());
+
+                }
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT")) {
+                    //last public transport station
+                    card.setEndingStation(routeSteps.get(i).getArrivalStop());
+                    /*if (card.getTransferStation().equals(card.getEndingStation())){
+                        card.setTransferStation(null);
+                    }*/
+                    String trainLineEnd = routeSteps.get(i).getTrainLine();
+                    if (trainLineEnd != null) {
+                        switch (trainLineEnd) {
+                            case "Downtown Line":
+                                card.setImageViewEndingStationColor(Color.argb(255,1, 87, 155));
+                                break;
+                            case "North East Line":
+                                card.setImageViewEndingStationColor(Color.argb(255,72, 35, 175));
+                                break;
+                            case "East West Line":
+                                card.setImageViewEndingStationColor(Color.argb(255,36, 130, 37));
+                                break;
+                            case "North South Line":
+                                card.setImageViewEndingStationColor(Color.argb(255,244, 65, 65));
+                                break;
+                            case "Circle Line":
+                                card.setImageViewEndingStationColor(Color.argb(255,244, 226, 66));
+                                break;
+                        }
+                    }
+
+                }
+                card.setCost("$X.XX");
             }
-            if (routeSteps.get(i).getTravelMode().equals("TRANSIT")){
-                //last public transport station
-                card.setEndingStation(routeSteps.get(i).getArrivalStop());
-            }
-            card.setCost("X.XX");
         }
         return card;
     }

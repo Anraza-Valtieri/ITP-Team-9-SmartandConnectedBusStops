@@ -1,6 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
-public class    NavigateWalkingCard extends Card {
+public class NavigateWalkingCard extends Card {
     String totalTime;
     String totalDistance;
     String description;
