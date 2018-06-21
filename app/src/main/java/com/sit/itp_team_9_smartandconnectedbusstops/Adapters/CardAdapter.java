@@ -44,9 +44,9 @@ import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetwo
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
     //    private PackageManager mPackageManager;
     private static final String TAG = CardAdapter.class.getSimpleName();
-    private static final int BUS_STOP_CARD = 1;
-    private static final int NAVIGATE_TRANSIT_CARD = 2;
-    private static final int NAVIGATE_WALKING_CARD = 3;
+    private static final int BUS_STOP_CARD = 0;
+    private static final int NAVIGATE_TRANSIT_CARD = 1;
+    private static final int NAVIGATE_WALKING_CARD = 2;
     private Context mContext;
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheet;
@@ -357,16 +357,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         @Override
         public void run() {
             if (mCard != null) {
-                Card card = mCard.get(0);
-                if (card.getType() == card.BUS_STOP_CARD) {
-                    List<BusStopCards> busStopCards = new ArrayList<BusStopCards>();
-                    for (int i = 0; i < mCard.size(); i++) {
+                List<BusStopCards> busStopCards = new ArrayList<>();
+                for(int i=0; i<mCard.size(); i++ ) {
+                    Card card = mCard.get(i);
+                    if (card.getType() == card.BUS_STOP_CARD) {
+//                        Log.d(TAG, "run: Adding Buscard!");
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
-                    updateCardData(busStopCards);
-                    //updateCardData(mCard);
-                    doAutoRefresh();
                 }
+                updateCardData(busStopCards);
+                //updateCardData(mCard);
+                doAutoRefresh();
             }
         }
     };
@@ -389,6 +390,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 protected Object doInBackground(Object[] objects) {
                     for (int i = 0; i < mCard.size(); i++) {
                         Card cards = mCard.get(i);
+//                        Log.d(TAG, "processFinishFromLTA: "+cards.toString()+ " type: "+cards.getType());
                         if(cards.getType() == BUS_STOP_CARD) {
                             BusStopCards updateCard = (BusStopCards) cards;
 //                        Log.d(TAG, "processFinishFromLTA: "+updateCard.getBusStopID()+ " size: "+result.size());
