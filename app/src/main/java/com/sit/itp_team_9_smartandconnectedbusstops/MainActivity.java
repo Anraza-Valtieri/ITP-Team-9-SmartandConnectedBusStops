@@ -3,8 +3,11 @@ package com.sit.itp_team_9_smartandconnectedbusstops;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.app.SearchManager;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -16,12 +19,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.INotificationSideChannel;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -29,7 +32,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
@@ -39,6 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MultiAutoCompleteTextView;
@@ -87,14 +90,13 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -104,9 +106,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
+import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener{
+        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -177,14 +182,14 @@ public class MainActivity extends AppCompatActivity
     private List<LTABusStopData> sortedLTABusStopData = new ArrayList<>();
 
     // Bus cards
-    private ArrayList<BusStopCards> favCardList = new ArrayList<>(); // Favorite cards
-    private ArrayList<BusStopCards> singleCardList = new ArrayList<>(); // single cards (POI)
-    public ArrayList<BusStopCards> nearbyCardList = new ArrayList<>(); // NearbyList
+    private ArrayList<Card> favCardList = new ArrayList<>(); // Favorite cards
+    private ArrayList<Card> singleCardList = new ArrayList<>(); // single cards (POI)
+    public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID;
 
     //Route cards
-    private ArrayList<NavigateTransitCard> transitCardList = new ArrayList<>(); // Public transport cards
-    private ArrayList<NavigateWalkingCard> walkingCardList = new ArrayList<>(); // Walking cards
+    private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
+    private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
 
     // UserData
     UserData userData;
@@ -250,6 +255,10 @@ public class MainActivity extends AppCompatActivity
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            window.setSustainedPerformanceMode(true);
+        }
+
         fab = findViewById(R.id.fab);
         fab.hide();
         fab.setOnClickListener(view -> {
@@ -306,11 +315,12 @@ public class MainActivity extends AppCompatActivity
 
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
+        scheduleJob();
     }
 
     @Override
     protected void onRestart() {
-        if(adapter != null)
+        if (adapter != null)
             adapter.resumeHandlers();
         super.onRestart();
         // Resuming location updates depending on button state and
@@ -318,12 +328,17 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             getDeviceLocation();
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Window window = this.getWindow();
+            window.setSustainedPerformanceMode(true);
+        }
     }
 
     @Override
     protected void onPause() {
         handler.removeCallbacks(runnable);
-        if(adapter != null)
+        if (adapter != null)
             adapter.pauseHandlers();
         super.onPause();
 
@@ -331,12 +346,38 @@ public class MainActivity extends AppCompatActivity
             // pausing location updates
             stopLocationUpdates();
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Window window = this.getWindow();
+            window.setSustainedPerformanceMode(false);
+        }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
+        startService(startServiceIntent);
+    }
 
     @Override
     protected void onStop() {
         super.onStop();
+        stopService(new Intent(this, NetworkSchedulerService.class));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void scheduleJob() {
+        JobInfo myJob = new JobInfo.Builder(0, new ComponentName(this, NetworkSchedulerService.class))
+                .setRequiresCharging(true)
+                .setMinimumLatency(1000)
+                .setOverrideDeadline(2000)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true)
+                .build();
+
+        JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.schedule(myJob);
     }
 
     @Override
@@ -349,15 +390,17 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void clearCardsForUpdate(){
+    private void clearCardsForUpdate() {
         adapter.Clear();
     }
-    private void updateBottomSheet(){
+
+    private void updateBottomSheet() {
         //TODO Adjust bottomsheet to card length.
         adapter.Clear();
 //        adapter.addAllCard(nearbyCardList);
     }
-    private void prepareBottomSheet(){
+
+    private void prepareBottomSheet() {
         // Bottom sheet
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -368,14 +411,15 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
+                        getSupportActionBar().hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
                         getSupportActionBar().show();
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
-                    } else if (BottomSheetBehavior.STATE_EXPANDED == newState){
+                    } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         getSupportActionBar().hide();
-                        fab.setVisibility(View.GONE);
+//                        fab.setVisibility(View.GONE);
                     }
                 }
 
@@ -383,14 +427,14 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-                    getSupportActionBar().hide();
+//                    getSupportActionBar().hide();
                 }
             });
         }
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), new ArrayList<>(), mMap, bottomSheetBehavior);
+        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior);
         adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -399,7 +443,7 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
-        if(animator instanceof SimpleItemAnimator){
+        if (animator instanceof SimpleItemAnimator) {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
 
@@ -415,7 +459,7 @@ public class MainActivity extends AppCompatActivity
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
-                if(favBusStopID.size() > 0) {
+                if (favBusStopID.size() > 0) {
                     clearCardsForUpdate();
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     progressBar.setVisibility(View.VISIBLE);
@@ -433,39 +477,36 @@ public class MainActivity extends AppCompatActivity
                 MultiAutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
-                optionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if (optionMode) {
-                            optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
-                            optionMode = false;
-                        } else{
-                            optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
-                            optionMode = true;
-                        }
+                optionButton.setOnClickListener(view -> {
+                    if (optionMode) {
+                        optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
+                        optionMode = false;
+                    } else{
+                        optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
+                        optionMode = true;
                     }
                 });
-                searchButton.setOnClickListener(new View.OnClickListener(){
-                    public void onClick(View v){
-                    Log.i(TAG,"onClickListener!");
-                        if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
-                            Log.i(TAG,"lookUpRoutes!");
-                            String mode;
-                            if (optionMode){
-                                mode = "transit";
-                            }else{
-                                mode = "walking";
-                            }
-                            String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
-                                    + startingPointTextView.getText().toString() + "&destination="
-                                    + destinationTextView.getText().toString()
-                                    + "&mode=" + mode + "&departure_time=1529577013" //for testing
-                                    + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
-                            Log.i(TAG,query);
-                            lookUpRoutes(query);
+                searchButton.setOnClickListener(v -> {
+                Log.i(TAG,"onClickListener!");
+                    if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
+                        Log.i(TAG,"lookUpRoutes!");
+                        String mode;
+                        if (optionMode){
+                            mode = "transit";
                         }else{
-                            Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
+                            mode = "walking";
                         }
+                        String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                                + startingPointTextView.getText().toString() + "&destination="
+                                + destinationTextView.getText().toString()
+                                + "&mode=" + mode + "&departure_time=1529577013" //for testing
+                                + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                        Log.i(TAG,query);
+                        lookUpRoutes(query);
+                        hideKeyboard();
+
+                    }else{
+                        Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
                     }
                 });
                 /*if (adapter != null){
@@ -495,18 +536,31 @@ public class MainActivity extends AppCompatActivity
                     getLocationPermission();
                     return false;
                 }
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                        .build();                   // Creates a CameraPosition from the builder
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                if(!isPooling()) {
+
+                @SuppressLint("StaticFieldLeak")
+                AsyncTask asyncTask = new AsyncTask() {
+                    @Override
+                    protected Object doInBackground(Object[] objects) {
+                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();                   // Creates a CameraPosition from the builder
+                        return cameraPosition;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        super.onPostExecute(o);
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
+                    }
+                };
+
+                asyncTask.execute();
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                if (!isPooling()) {
                     setPooling(true);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
                     lookUpNearbyBusStops();
-                    clearCardsForUpdate();
-                    progressBar.setVisibility(View.VISIBLE);
-                    updateAdapterList(nearbyCardList);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -536,8 +590,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        for(int i=0; i<permissions.length; i++) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++) {
             String permission = permissions[i];
             int grantedResult = grantResults[i];
             if (permission.equals(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -547,6 +601,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
     @SuppressWarnings("unchecked")
     private void getDeviceLocation() {
         /*
@@ -563,8 +618,8 @@ public class MainActivity extends AppCompatActivity
                 super.onLocationResult(locationResult);
                 // location is received
                 mCurrentLocation = locationResult.getLastLocation();
-                if(!firstLocationUpdate){
-                    if(mCurrentLocation!=null){
+                if (!firstLocationUpdate) {
+                    if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
@@ -579,11 +634,11 @@ public class MainActivity extends AppCompatActivity
                     } else {
                         mMap.setMyLocationEnabled(false);
                     }
-                } catch (SecurityException e)  {
+                } catch (SecurityException e) {
                     Log.e("Exception: %s", e.getMessage());
                 }
 //                updateLocationUI();
-                lookUpNearbyBusStops();
+//                lookUpNearbyBusStops();
             }
         };
 
@@ -639,7 +694,57 @@ public class MainActivity extends AppCompatActivity
 
                         }
                     });
+//            lookUpNearbyBusStops();
+            /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location locationNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            long GPSLocationTime = 0;
+            if (null != locationGPS) { GPSLocationTime = locationGPS.getTime(); }
 
+            long NetLocationTime = 0;
+
+            if (null != locationNet) {
+                NetLocationTime = locationNet.getTime();
+            }
+
+            // Define a listener that responds to location updates
+            LocationListener locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+                    // Called when a new location is found by the network location provider.
+//                    mCurrentLocation.setLatitude(location.getLatitude());
+//                    mCurrentLocation.setLongitude(location.getLongitude());
+                    mCurrentLocation = location;
+                }
+
+                public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+                public void onProviderEnabled(String provider) {}
+
+                public void onProviderDisabled(String provider) {}
+            };
+
+            if ( 0 < GPSLocationTime - NetLocationTime ) {
+//                return locationGPS;
+                Log.d(TAG, "getDeviceLocation: GPS is more accurate");
+                // Register the listener with the Location Manager to receive location updates
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            }
+            else {
+//                return locationNet;
+                Log.d(TAG, "getDeviceLocation: Network is more accurate");
+                // Register the listener with the Location Manager to receive location updates
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            }*/
         }
     }
 
@@ -736,17 +841,13 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_bus) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_bus_stops) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_trainstations) {
 
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_setting) {
 
         }
 
@@ -840,8 +941,13 @@ public class MainActivity extends AppCompatActivity
 
         mMap.setMaxZoomPreference(MAX_ZOOM);
         mMap.setMinZoomPreference(MIN_ZOOM);
+
         prepareBottomSheet();
-        PrepareLTAData();
+        if(haveNetworkConnection(this)) {
+            PrepareLTAData();
+        }else{
+            showNoNetworkDialog(this);
+        }
     }
 
     @Override
@@ -857,11 +963,11 @@ public class MainActivity extends AppCompatActivity
         this.pooling = pooling;
     }
 
-    public ArrayList<BusStopCards> getFavCardList() {
+    public ArrayList<Card> getFavCardList() {
         return favCardList;
     }
 
-    public void setFavCardList(ArrayList<BusStopCards> favCardList) {
+    public void setFavCardList(ArrayList<Card> favCardList) {
         this.favCardList = favCardList;
     }
 
@@ -1009,6 +1115,7 @@ public class MainActivity extends AppCompatActivity
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
                             Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
+                            card.setType(card.BUS_STOP_CARD);
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
@@ -1024,6 +1131,8 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
         }.execute();
+
+        lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
     }
 
@@ -1061,13 +1170,13 @@ public class MainActivity extends AppCompatActivity
                 String key = entryData.getKey(); // Bus stop ID
                 Map value = entryData.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
-
+                card.setType(card.BUS_STOP_CARD);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(3);
                     Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
                     if(allBusStops.get(toConvertID).getRoadName() != null)
-                        newData.set(3, allBusStops.get(toConvertID).getRoadName());
+                        newData.set(3, allBusStops.get(toConvertID).getDescription());
                 }
                 result.setBusServices(finalData);
                 result.setLastUpdated(Calendar.getInstance().getTime().toString());
@@ -1091,18 +1200,45 @@ public class MainActivity extends AppCompatActivity
      * nearbyCardList array is used to swap into adapter to display nearby bus stop
      */
     private void lookUpNearbyBusStops(){
-        List<LTABusStopData> result = sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-        if(result.size() <= 0){
-            Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+        if(mCurrentLocation==null)
             return;
-        }
-        nearbyCardList.clear();
-        for(int i=0; i< 10; i++) {
-            BusStopCards card = getBusStopData(result.get(i).getBusStopCode());
-            nearbyCardList.add(card);
+
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressBar.setVisibility(View.VISIBLE);
+                clearCardsForUpdate();
+            }
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
+//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                List<LTABusStopData> toProcess = (List<LTABusStopData>) o;
+                if(toProcess.size() <= 0){
+                    Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+                    return;
+                }
+                nearbyCardList.clear();
+                for(int i=0; i< 16; i++) {
+                    BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
+                    card.setType(card.BUS_STOP_CARD);
+                    nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-            Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
-        }
+                    assert card != null;
+                    Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                }
+                updateAdapterList(nearbyCardList);
+            }
+        };
+        asyncTask.execute();
     }
 
     public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
@@ -1148,6 +1284,7 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
                 BusStopCards card = getBusStopData(list.get(i));
+                card.setType(card.BUS_STOP_CARD);
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
 //            }
@@ -1171,10 +1308,14 @@ public class MainActivity extends AppCompatActivity
             transitCardList.clear();
             for(int i=0; i< result.size(); i++) {
                 NavigateTransitCard card = getRouteData(result.get(i));
+                card.setType(card.NAVIGATE_TRANSIT_CARD);
                 transitCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                 Log.d(TAG, "lookUpRoute: "+card.toString());
             }
+
+            clearCardsForUpdate();
+            updateAdapterList(transitCardList);
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -1186,6 +1327,7 @@ public class MainActivity extends AppCompatActivity
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData){
         //TODO set card details here (route ID?)
         NavigateTransitCard card = new NavigateTransitCard();
+        card.setType(card.NAVIGATE_TRANSIT_CARD);
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
         //need loop to get
@@ -1259,6 +1401,15 @@ public class MainActivity extends AppCompatActivity
     //TODO getRouteData for NavigateWalkingCard
 
 
+    public void hideKeyboard(){
+        // Check if no view has focus:
+        View view = getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            assert imm != null;
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 
     /*
     ALL BUS STOPS FROM LTA
