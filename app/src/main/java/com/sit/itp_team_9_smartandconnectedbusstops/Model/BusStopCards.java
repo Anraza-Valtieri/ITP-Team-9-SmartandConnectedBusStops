@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BusStopCards {
+public class BusStopCards extends Card {
     private static final String TAG = BusStopCards.class.getSimpleName();
     String busStopID;
     String busStopName;
