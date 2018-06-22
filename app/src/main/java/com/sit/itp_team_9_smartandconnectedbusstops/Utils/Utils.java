@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static boolean isBeforeDay(Date date1, Date date2) {
@@ -79,6 +80,51 @@ public class Utils {
                 long apptTime = date.getTime();
                 long currentTime = currentDate.getTime();
 
+                long relativetime = apptTime - currentTime;
+                if(TimeUnit.MILLISECONDS.toHours(relativetime) > 0){
+                    String text = String.format(Locale.getDefault(), "%02d H %02d mins",
+                            TimeUnit.MILLISECONDS.toHours(relativetime),
+                            TimeUnit.MILLISECONDS.toMinutes(relativetime));
+                    return text;
+                }
+                if(TimeUnit.MILLISECONDS.toMinutes(relativetime) > 0){
+                    String text = String.format(Locale.getDefault(), "%02d mins",
+                            TimeUnit.MILLISECONDS.toMinutes(relativetime));
+                    return text;
+                }
+
+                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) > 0){
+                    String text = String.format(Locale.getDefault(), "%02d secs",
+                            TimeUnit.MILLISECONDS.toSeconds(relativetime));
+                    return text;
+                }
+
+                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) < 0){
+                    String text = String.format(Locale.getDefault(), "Arr");
+                    return text;
+                }
+//                CharSequence relativetime = DateUtils.getRelativeTimeSpanString(apptTime,
+//                        currentTime, DateUtils.SECOND_IN_MILLIS,  DateUtils.FORMAT_ABBREV_RELATIVE);
+//                return relativetime.toString();
+                return "Arr";
+            }
+        };
+        String result = "";
+        try {
+            result = ((String)task.execute(date).get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static String dateCheck2(final Date date){
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                Date currentDate = Calendar.getInstance().getTime();
+                long apptTime = date.getTime();
+                long currentTime = currentDate.getTime();
                 CharSequence relativetime = DateUtils.getRelativeTimeSpanString(apptTime,
                         currentTime, DateUtils.SECOND_IN_MILLIS,  DateUtils.FORMAT_ABBREV_RELATIVE);
                 return relativetime.toString();

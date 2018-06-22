@@ -3,10 +3,12 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -121,12 +123,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                 busStopName.setText(card.getBusStopName());
                 busStopID.setText(card.getBusStopID());
-                busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-//                TextView busDirection = holder.itemView.findViewById(R.id.direction);
-//                TextView busDuration1 = holder.itemView.findViewById(R.id.duration1);
-//                TextView busDuration2 = holder.itemView.findViewById(R.id.duration2);
-
-
+                busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(card.getLastUpdated())));
 
                 // This part creates layout for bus services
                 final View cardview = holder.itemView.findViewById(R.id.buscard);
@@ -145,19 +142,100 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
 
                         TextView busID = to_add.findViewById(R.id.busnumber);
+                        TextView operator = to_add.findViewById(R.id.operator);
                         TextView direction = to_add.findViewById(R.id.direction);
                         TextView duration = to_add.findViewById(R.id.duration1);
                         TextView duration2 = to_add.findViewById(R.id.duration2);
+                        TextView duration3 = to_add.findViewById(R.id.duration3);
+                        ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
+                        ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
+                        ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
+
+                        ImageView wheel1 = to_add.findViewById(R.id.wheel1);
+                        ImageView wheel2 = to_add.findViewById(R.id.wheel2);
+                        ImageView wheel3 = to_add.findViewById(R.id.wheel3);
 
                         busID.setText(busNo);
+                        switch (value.get(13)) {
+                            case "SBST":
+                                operator.setText("SBS");
+//                                busID.setTextColor(Color.parseColor("#790e8b"));
+                                operator.setTextColor(Color.parseColor("#790e8b"));
+                                break;
+                            case "SMRT":
+                                operator.setText("SMRT");
+//                                busID.setTextColor(Color.parseColor("#b61827"));
+                                operator.setTextColor(Color.parseColor("#b61827"));
+                                break;
+                            case "TTS":
+                                operator.setText("TTS");
+//                                busID.setTextColor(Color.parseColor("#338a3e"));
+                                operator.setTextColor(Color.parseColor("#338a3e"));
+                                break;
+                            case "GAS":
+                                operator.setText("GAS");
+//                                busID.setTextColor(Color.parseColor("#c9bc1f"));
+                                operator.setTextColor(Color.parseColor("#c9bc1f"));
+                                break;
+                        }
 
-                        if (!value.get(0).equals(""))
-                            duration.setText(Utils.dateCheck(Utils.formatTime(value.get(0))));
+                        if (!value.get(1).equals("")) {
+                            duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+                            if(value.get(4).equals(""))
+                                wheel1.setVisibility(View.GONE);
 
-                        if (!value.get(1).equals(""))
-                            duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+                            switch (value.get(2)) {
+                                case "SDA":
+                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                                case "LSD":
+                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }else
+                            card1.setVisibility(View.INVISIBLE);
 
-                        direction.setText(value.get(3));
+
+                        if (!value.get(5).equals("")) {
+                            duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
+                            if(value.get(7).equals(""))
+                                wheel2.setVisibility(View.GONE);
+
+                            switch (value.get(6)) {
+                                case "SDA":
+                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                                case "LSD":
+                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }else
+                            card2.setVisibility(View.INVISIBLE);
+
+                        if (!value.get(9).equals("")) {
+                            duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
+                            if(value.get(11).equals(""))
+                                wheel3.setVisibility(View.GONE);
+
+                            switch (value.get(10)) {
+                                case "SDA":
+                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                                case "LSD":
+                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }else
+                            card3.setVisibility(View.INVISIBLE);
+
+
+                        direction.setText(value.get(0));
                         options_layout.addView(to_add);
                     }
                     updateUI(position);
@@ -437,6 +515,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView busDuration1;
         TextView busDuration2;
         TextView busLastUpdated;
+        TextView operator;
         ImageButton favorite;
 
         //For navigate transit card
@@ -478,6 +557,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busDuration2 = itemView.findViewById(R.id.duration2);
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
             favorite = itemView.findViewById(R.id.favoritebtn);
+            operator = itemView.findViewById(R.id.operator);
 
             //For navigate transit card
             totalTime = itemView.findViewById(R.id.textViewTotalTime);

@@ -1173,7 +1173,7 @@ public class MainActivity extends AppCompatActivity
                 card.setType(card.BUS_STOP_CARD);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
-                    String toConvertID = newData.get(3);
+                    String toConvertID = newData.get(0);
                     Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
                     if(allBusStops.get(toConvertID).getRoadName() != null)
                         newData.set(3, allBusStops.get(toConvertID).getDescription());
