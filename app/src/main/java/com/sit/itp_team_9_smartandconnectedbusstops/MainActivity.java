@@ -85,12 +85,14 @@ import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
@@ -1314,6 +1316,7 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpRoute: "+card.toString());
             }
 
+            lookUpTrafficDuration("https://maps.googleapis.com/maps/api/distancematrix/json?origins=1.2996781,103.8557064&destinations=1.3164326,103.8829187&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s", "https://maps.googleapis.com/maps/api/directions/json?origin=825+tampines&destination=dhoby+ghaut&departure_time=1529577013&mode=transit&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
             clearCardsForUpdate();
             updateAdapterList(transitCardList);
 
@@ -1322,6 +1325,75 @@ public class MainActivity extends AppCompatActivity
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+    }
+
+    private void lookUpTrafficDuration(String queryMatrix, String queryDir){
+        List<String> durationQuery = new ArrayList<>();
+        durationQuery.add(queryMatrix);
+        List<String> directionsQuery = new ArrayList<>();
+        directionsQuery.add(queryDir);
+        Log.i(TAG,durationQuery.toString());
+        JSONDistanceMatrixParser durationParser = new JSONDistanceMatrixParser(MainActivity.this,durationQuery);
+        List<DistanceData> result1;  //result from parser
+        JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
+        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        try {
+            result = directionsParser.execute().get();
+            result1 = durationParser.execute().get();
+            Log.d(TAG,queryMatrix);
+            if(result1.size() <= 0){
+                Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
+                return;
+            }
+            Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
+            Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
+            for(int i=0; i< result.size(); i++) {
+                NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
+                card.setType(card.NAVIGATE_TRANSIT_CARD);
+                transitCardList.add(card);
+                Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
+        //TODO set card details here (route ID?)
+        NavigateTransitCard card = new NavigateTransitCard();
+        card.setType(card.NAVIGATE_TRANSIT_CARD);
+        //card.setTotalDistance(googleRoutesData.getTotalDistance());
+        //card.setTotalTime(googleRoutesData.getTotalDuration());
+        //need loop to get
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+
+        Log.d(TAG, "distanceData start add: "+distanceData.getStartAdd());
+        Log.d(TAG, "distanceData distance: "+distanceData.getDistance());
+        Log.d(TAG, "distanceData duration: "+distanceData.getDuration());
+        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
+        int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
+        int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
+        Log.d(TAG, "duration int: "+ duration );
+        if ((duration_in_traffic - duration) < 10){
+            Log.d(TAG, "No congestion" );
+        }
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
+                    Log.d(TAG, "IS A TRAIN" );
+                }
+                else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
+                    Log.d(TAG, "IS A BUS" );
+                    
+                }
+            }
+        }
+        else{
+            Log.d(TAG, "routeSteps EMPTY" );
+        }
+        return card;
     }
 
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData){

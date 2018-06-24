@@ -5,8 +5,6 @@ import java.util.List;
 public class DistanceData {
     private List<DistanceData> results;
 
-    private String startLat;
-    private String startLng;
     private String startAdd;
     private String endLat;
     private String endLng;
@@ -15,45 +13,12 @@ public class DistanceData {
     private String duration;
     private String duration_in_traffic;
 
-
-    public String getStartLat() {
-        return startLat;
+    public List<DistanceData> getInfo() {
+        return results;
     }
 
-    public void setStartLat(String startLat) {
-        this.startLat = startLat;
-    }
-
-    public String getStartLng() {
-        return startLng;
-    }
-
-    public void setStartLng(String startLng) {
-        this.startLng = startLng;
-    }
-
-    public String getStartAdd() {
-        return startAdd;
-    }
-
-    public void setStartAdd(String startAdd) {
-        this.startAdd = startAdd;
-    }
-
-    public String getEndLat() {
-        return endLat;
-    }
-
-    public void setEndLat(String endLat) {
-        this.endLat = endLat;
-    }
-
-    public String getEndLng() {
-        return endLng;
-    }
-
-    public void setEndLng(String endLng) {
-        this.endLng = endLng;
+    public void setInfo(List<DistanceData> results) {
+        this.results = results;
     }
 
     public String getEndAdd() {
@@ -62,6 +27,14 @@ public class DistanceData {
 
     public void setEndAdd(String endAdd) {
         this.endAdd = endAdd;
+    }
+
+    public String getStartAdd() {
+        return startAdd;
+    }
+
+    public void setStartAdd(String startAdd) {
+        this.startAdd = startAdd;
     }
 
     public String getDistance() {

@@ -5,7 +5,6 @@ public class NavigateWalkingCard extends Card {
     String totalDistance;
     String description;
     boolean isFavorite;
-
     public String getTotalTime() {
         return totalTime;
     }

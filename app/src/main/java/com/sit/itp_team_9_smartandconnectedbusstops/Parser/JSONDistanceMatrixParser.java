@@ -74,23 +74,27 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
                     }
                     JSONObject response1 = new JSONObject(buffer.toString());
                     JSONArray jsonArrayRows = response1.getJSONArray("rows");
-                    for(int i=0; i< jsonArrayRows.length(); i++) {
-                        JSONObject obj = jsonArrayRows.getJSONObject(i);
 
-                        DistanceData durationDetails = new DistanceData();
-                        durationDetails.setStartAdd(obj.getJSONObject("origin_addresses").toString());
-                        durationDetails.setEndAdd(obj.getJSONObject("destination_addresses").toString());
+                    DistanceData durationDetails = new DistanceData();
+                    if(response1.getString("status").equals("OK")) {
+                        Log.e(TAG, "STATUS OK!");
+                        for (int i = 0; i < jsonArrayRows.length(); i++) {
+                            JSONObject obj = jsonArrayRows.getJSONObject(i);
 
-                        JSONArray jsonArrayEle= obj.getJSONArray("elements");
-                        for (int j = 0; j < jsonArrayEle.length(); j++) {
-                            JSONObject details = jsonArrayEle.getJSONObject(j);
 
-                            durationDetails.setStartAdd(details.getJSONObject("distance").getString("text"));
-                            durationDetails.setStartAdd(details.getJSONObject("duration").getString("text"));
-                            durationDetails.setStartAdd(details.getJSONObject("duration_in_traffic").getString("text"));
-                        }
-                        distanceDataList.add(durationDetails);
+                            JSONArray jsonArrayEle = obj.getJSONArray("elements");
+                            for (int j = 0; j < jsonArrayEle.length(); j++) {
+                                JSONObject details = jsonArrayEle.getJSONObject(j);
+
+                                durationDetails.setStartAdd(response1.getJSONArray("origin_addresses").toString());
+                                durationDetails.setEndAdd(response1.getJSONArray("destination_addresses").toString());
+                                durationDetails.setDistance(details.getJSONObject("distance").getString("text"));
+                                durationDetails.setDuration(details.getJSONObject("duration").getString("text"));
+                                durationDetails.setDuration_in_traffic(details.getJSONObject("duration_in_traffic").getString("text"));
+                            }
+                            distanceDataList.add(durationDetails);
                     }
+                }
                     urlConnection.disconnect();
                 } else {
                     Log.e(TAG, "doInBackground: ERROR " + urlConnection.getResponseCode() + " when pulling DistanceMatrix data");
