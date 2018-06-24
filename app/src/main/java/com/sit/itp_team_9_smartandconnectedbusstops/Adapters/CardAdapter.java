@@ -82,6 +82,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
+        updateUI();
 //        mPackageManager = mContext.getPackageManager();
     }
 
@@ -110,170 +111,64 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     @Override
+    public void onBindViewHolder(ViewHolder viewHolder, int position, List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            // Perform a full update
+            onBindViewHolder(viewHolder, position);
+        } else {
+            // Perform a partial update
+            for (Object payload : payloads) {
+                String text = payload.toString().replace("[", "").replace("]", "");
+//                Log.d(TAG, "onBindViewHolder: payload "+text);
+                viewHolder.busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(text)));
+            }
+        }
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 //        holder.setIsRecyclable(false);
         switch(getItemViewType(position)){
             case BUS_STOP_CARD:
                 BusStopCards card = (BusStopCards) mCard.get(position);
                 card.setType(card.BUS_STOP_CARD);
-                if(card.isMajorUpdate())
-                    holder.setItem(card);
 
-                TextView busStopID = holder.itemView.findViewById(R.id.sub_text);
-                TextView busStopName = holder.itemView.findViewById(R.id.primary_text);
-                TextView busLastUpdated = holder.itemView.findViewById(R.id.updatedTiming);
+//                onBindViewHolder(holder, position);
+//                if(card.isMajorUpdate())
+                holder.setItem(card);
 
-                busStopName.setText(card.getBusStopName());
-                busStopID.setText(card.getBusStopID());
-                busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(card.getLastUpdated())));
                 final View cardview = holder.itemView.findViewById(R.id.buscard);
                 ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
 
-                /*if(card.isMajorUpdate()) {
-                    // This part creates layout for bus services
+//                if (card.isFavorite())
+//                    favorite.setImageResource(R.drawable.ic_favorite_red);
 
-
-                    Map<String, List<String>> timings = card.getBusServices();
-                    LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    if (timings.size() > 0) {
-                        LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-                        options_layout.setOrientation(LinearLayout.VERTICAL);
-                        options_layout.removeAllViewsInLayout();
-                        for (String busNo : card.getSortedKeys()) {
-                            List<String> value = timings.get(busNo);
-                            assert inflater != null;
-                            View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
-                            TextView busID = to_add.findViewById(R.id.busnumber);
-                            TextView operator = to_add.findViewById(R.id.operator);
-                            TextView direction = to_add.findViewById(R.id.direction);
-                            TextView duration = to_add.findViewById(R.id.duration1);
-                            TextView duration2 = to_add.findViewById(R.id.duration2);
-                            TextView duration3 = to_add.findViewById(R.id.duration3);
-                            ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
-                            ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
-                            ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
-
-                            ImageView wheel1 = to_add.findViewById(R.id.wheel1);
-                            ImageView wheel2 = to_add.findViewById(R.id.wheel2);
-                            ImageView wheel3 = to_add.findViewById(R.id.wheel3);
-
-                            busID.setText(busNo);
-                            switch (value.get(13)) {
-                                case "SBST":
-                                    operator.setText("SBS");
-//                                busID.setTextColor(Color.parseColor("#790e8b"));
-                                    operator.setTextColor(Color.parseColor("#790e8b"));
-                                    break;
-                                case "SMRT":
-                                    operator.setText("SMRT");
-//                                busID.setTextColor(Color.parseColor("#b61827"));
-                                    operator.setTextColor(Color.parseColor("#b61827"));
-                                    break;
-                                case "TTS":
-                                    operator.setText("TTS");
-//                                busID.setTextColor(Color.parseColor("#338a3e"));
-                                    operator.setTextColor(Color.parseColor("#338a3e"));
-                                    break;
-                                case "GAS":
-                                    operator.setText("GAS");
-//                                busID.setTextColor(Color.parseColor("#c9bc1f"));
-                                    operator.setTextColor(Color.parseColor("#c9bc1f"));
-                                    break;
-                            }
-
-                            if (!value.get(1).equals("")) {
-                                duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
-                                if (value.get(4).equals(""))
-                                    wheel1.setVisibility(View.GONE);
-
-                                switch (value.get(2)) {
-                                    case "SDA":
-                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                        break;
-                                    case "LSD":
-                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            } else
-                                card1.setVisibility(View.INVISIBLE);
-
-
-                            if (!value.get(5).equals("")) {
-                                duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
-                                if (value.get(7).equals(""))
-                                    wheel2.setVisibility(View.GONE);
-
-                                switch (value.get(6)) {
-                                    case "SDA":
-                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                        break;
-                                    case "LSD":
-                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            } else
-                                card2.setVisibility(View.INVISIBLE);
-
-//                            if (!value.get(9).equals("")) {
-//                                duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
-//                                if (value.get(11).equals(""))
-//                                    wheel3.setVisibility(View.GONE);
-//
-//                                switch (value.get(10)) {
-//                                    case "SDA":
-//                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-//                                        break;
-//                                    case "LSD":
-//                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
-//                                        break;
-//                                    default:
-//                                        break;
-//                                }
-//                            } else
-//                                card3.setVisibility(View.INVISIBLE);
-                            direction.setText(value.get(0));
-                            options_layout.addView(to_add);
-                        }
+                //        doDataRefresh(holder, position);
+                favorite.setOnClickListener(v -> {
+                    if (card.isFavorite()) {
+                        card.setFavorite(false);
+                        favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                        favBusStopID.remove(card.getBusStopID());
                     } else {
-                        LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-                        options_layout.removeAllViewsInLayout();
-                        assert inflater != null;
-                        View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
-                        options_layout.addView(to_add);
-                    }*/
-                    if (card.isFavorite())
+                        card.setFavorite(true);
                         favorite.setImageResource(R.drawable.ic_favorite_red);
-
-                    //        doDataRefresh(holder, position);
-                    favorite.setOnClickListener(v -> {
-                        if (card.isFavorite()) {
-                            card.setFavorite(false);
-                            favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                            favBusStopID.remove(card.getBusStopID());
-                        } else {
-                            card.setFavorite(true);
-                            favorite.setImageResource(R.drawable.ic_favorite_red);
-                            favBusStopID.add(card.getBusStopID());
-                        }
-                    });
-                    cardview.setOnClickListener(v -> {
-                        int DEFAULT_ZOOM = 18;
-                        CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(new LatLng(Double.parseDouble(card.getBusStopLat()) - 0.0002,
-                                        Double.parseDouble(card.getBusStopLong())))
-                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();                   // Creates a CameraPosition from the builder
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                        bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                    });
+                        favBusStopID.add(card.getBusStopID());
+                    }
+                });
+                cardview.setOnClickListener(v -> {
+                    int DEFAULT_ZOOM = 18;
+                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                            .target(new LatLng(Double.parseDouble(card.getBusStopLat()) - 0.0002,
+                                    Double.parseDouble(card.getBusStopLong())))
+                            .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                            .build();                   // Creates a CameraPosition from the builder
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                });
 
 //                    card.setMajorUpdate(false);
 //                }
-                updateUI(position);
+//                updateUI();
                 break;
             case NAVIGATE_TRANSIT_CARD:
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
@@ -385,6 +280,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         handler.removeCallbacksAndMessages(null);
         notifyDataSetChanged();
 //        doAutoRefresh();
+        updateUI();
     }
 
 
@@ -413,9 +309,41 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         asyncTask.execute();
     }
 
-    private void updateUI(int position){
-//        Log.d(TAG, "updateUI: "+position);
-        handler.postDelayed(() -> notifyItemChanged(position), 1000);
+    private void updateUI(){
+//        Log.d(TAG, "updateUI: ");
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(mCard.size() > 0) {
+//            Log.d(TAG, "updateUI: mCard.size() > 0");
+                    switch (getItemViewType(0)) {
+                        case BUS_STOP_CARD:
+                            BusStopCards card = (BusStopCards) mCard.get(0);
+                            if (card != null && card.getLastUpdated() != null) {
+//                        Log.d(TAG, "updateUI: " + card.getLastUpdated());
+                                ArrayList<String> payload = new ArrayList<>();
+                                payload.add(card.getLastUpdated());
+                                return payload;
+                            }
+                            break;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                notifyItemRangeChanged(0, mCard.size(), o);
+            }
+        };
+
+        asyncTask.execute();
+
+//        updateUI();
+        handler.postDelayed(() -> updateUI(), 1000);
+
     }
 
     public void pauseHandlers(){
@@ -424,9 +352,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void resumeHandlers(){
-        for(int i = 0; i < mCard.size(); i++){
-            updateUI(i);
-        }
+//        for(int i = 0; i < mCard.size(); i++){
+            updateUI();
+//        }
         doAutoRefresh();
     }
 
@@ -444,6 +372,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
                 }
                 updateCardData(busStopCards);
+                notifyItemRangeChanged(0, mCard.size());
                 //updateCardData(mCard);
                 doAutoRefresh();
             }

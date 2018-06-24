@@ -1090,7 +1090,7 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 dialog.dismiss();
-                bottomNav.setSelectedItemId(R.id.action_fav);
+//                bottomNav.setSelectedItemId(R.id.action_fav);
 //                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
 
@@ -1231,7 +1231,7 @@ public class MainActivity extends AppCompatActivity
                     return;
                 }
                 nearbyCardList.clear();
-                for(int i=0; i< 16; i++) {
+                for(int i=0; i< 11; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
                     card.setType(card.BUS_STOP_CARD);
                     card.setMajorUpdate(true);
@@ -1249,6 +1249,25 @@ public class MainActivity extends AppCompatActivity
     public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
 
         Comparator comp = (Comparator<LTABusStopData>) (o, o2) -> {
+            float[] result1 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
+            Float distance1 = result1[0];
+
+            float[] result2 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o2.getBusStopLat()), Double.parseDouble(o2.getBusStopLong()), result2);
+            Float distance2 = result2[0];
+            return distance1.compareTo(distance2);
+        };
+        long start = System.currentTimeMillis();
+        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+        Collections.sort(locations, comp);
+        long elapsedTime = System.currentTimeMillis() - start;
+        Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
+        return locations;
+    }
+
+    public static List<Card> sortCardsByLocation(List<Card> locations, final double myLatitude,final double myLongitude) {
+        Comparator comp = (Comparator<BusStopCards>) (o, o2) -> {
             float[] result1 = new float[3];
             Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
             Float distance1 = result1[0];
@@ -1288,14 +1307,41 @@ public class MainActivity extends AppCompatActivity
         }
 
         for(int i=0; i< list.size(); i++) {
-                BusStopCards card = getBusStopData(list.get(i));
-                card.setType(card.BUS_STOP_CARD);
-                card.setMajorUpdate(true);
-                favCardList.add(card);
-                Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
+            BusStopCards card = getBusStopData(list.get(i));
+            card.setType(card.BUS_STOP_CARD);
+            card.setMajorUpdate(true);
+            favCardList.add(card);
+            Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
 //            }
         }
-        updateAdapterList(favCardList);
+
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressBar.setVisibility(View.VISIBLE);
+                clearCardsForUpdate();
+            }
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(mCurrentLocation != null)
+//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    return sortCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                else
+                    return favCardList;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                updateAdapterList(favCardList);
+            }
+        };
+        asyncTask.execute();
+
+//        updateAdapterList(favCardList);
     }
 
     private void lookUpRoutes(String query){
