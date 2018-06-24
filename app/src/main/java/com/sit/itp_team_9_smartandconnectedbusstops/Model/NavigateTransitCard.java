@@ -19,7 +19,7 @@ public class NavigateTransitCard extends Card {
     private int imageViewTransferStation;
     private int imageViewEndingStation;
     private int imageViewEndingStationColor;
-
+    boolean isFavorite;
 
 
     public int getID() {
@@ -133,4 +133,8 @@ public class NavigateTransitCard extends Card {
     public void setImageViewEndingStationColor(int imageViewEndingStationColor) {
         this.imageViewEndingStationColor = imageViewEndingStationColor;
     }
+
+    public boolean isFavorite() { return isFavorite; }
+
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
 }
