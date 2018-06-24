@@ -80,8 +80,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
-import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -443,8 +441,8 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setAdapter(adapter);
         recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
 //        recyclerView.setItemViewCacheSize(300000);
-//        recyclerView.setDrawingCacheEnabled(true);
-//        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
         if (animator instanceof SimpleItemAnimator) {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
@@ -624,11 +622,16 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
+                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
+                            prepareFavoriteCards(getFavBusStopID());
+
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                                 .build();                   // Creates a CameraPosition from the builder
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        mMap.setMaxZoomPreference(MAX_ZOOM);
+                        mMap.setMinZoomPreference(MIN_ZOOM);
                     }
                 }
                 try {
@@ -905,6 +908,12 @@ public class MainActivity extends AppCompatActivity
 
         });
 
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(1.3521, 103.8198))      // Sets the center of the map to Mountain View
+                .zoom(10)                   // Sets the zoom
+                .build();                   // Creates a CameraPosition from the builder
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
         // Prompt the user for permission.
         getLocationPermission();
 
@@ -933,7 +942,7 @@ public class MainActivity extends AppCompatActivity
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
         mClusterManager.setAnimation(false);
-        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
+//        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
@@ -942,8 +951,10 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnCameraMoveListener(this);
         mMap.setOnMarkerClickListener(mClusterManager);
 
-        mMap.setMaxZoomPreference(MAX_ZOOM);
-        mMap.setMinZoomPreference(MIN_ZOOM);
+//        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
+
+
+//        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
 
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
@@ -952,7 +963,6 @@ public class MainActivity extends AppCompatActivity
             showNoNetworkDialog(this);
         }
     }
-
     @Override
     public void onCameraMove() {
 //        layer.animate().alpha(0).setDuration(1000);
