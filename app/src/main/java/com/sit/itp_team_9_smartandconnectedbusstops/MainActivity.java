@@ -439,9 +439,10 @@ public class MainActivity extends AppCompatActivity
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
-        recyclerView.setItemViewCacheSize(20);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
+//        recyclerView.setItemViewCacheSize(300000);
+//        recyclerView.setDrawingCacheEnabled(true);
+//        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
         if (animator instanceof SimpleItemAnimator) {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
@@ -1171,6 +1172,7 @@ public class MainActivity extends AppCompatActivity
                 Map value = entryData.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
                 card.setType(card.BUS_STOP_CARD);
+                card.setMajorUpdate(true);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(0);
@@ -1230,6 +1232,7 @@ public class MainActivity extends AppCompatActivity
                 for(int i=0; i< 16; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
                     card.setType(card.BUS_STOP_CARD);
+                    card.setMajorUpdate(true);
                     nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     assert card != null;
@@ -1285,6 +1288,7 @@ public class MainActivity extends AppCompatActivity
         for(int i=0; i< list.size(); i++) {
                 BusStopCards card = getBusStopData(list.get(i));
                 card.setType(card.BUS_STOP_CARD);
+                card.setMajorUpdate(true);
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
 //            }
@@ -1335,8 +1339,8 @@ public class MainActivity extends AppCompatActivity
         if (routeSteps != null) {
             for (int i = 0; i < routeSteps.size(); i++) {
                 if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
-                        (!routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ||
-                                routeSteps.get(i - 1) == null)) {
+                        (!routeSteps.get(i).getTravelMode().equals("TRANSIT") ||
+                                routeSteps.get(i) == null)) {
                     //first public transport station
                     card.setStartingStation(routeSteps.get(i).getDepartureStop());
                     card.setNumStops("( "+String.valueOf(routeSteps.get(i).getNumStops())+" stops)");

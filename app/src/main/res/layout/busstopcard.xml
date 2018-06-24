@@ -39,7 +39,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="33333 - 2 min"
+            android:text="33333"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="@color/place_autocomplete_prediction_secondary_text"
             app:layout_constraintStart_toStartOf="parent"
@@ -50,10 +50,11 @@
             android:layout_width="wrap_content"
             android:layout_height="19dp"
             android:layout_marginStart="8dp"
-            android:text="Updated 1m ago"
             android:textAlignment="textEnd"
+            android:visibility="visible"
             app:layout_constraintStart_toEndOf="@+id/sub_text"
-            app:layout_constraintTop_toTopOf="@+id/sub_text" />
+            app:layout_constraintTop_toTopOf="@+id/sub_text"
+            tools:text="2 mins ago" />
 
         <LinearLayout
             android:id="@+id/busdetailLayout"

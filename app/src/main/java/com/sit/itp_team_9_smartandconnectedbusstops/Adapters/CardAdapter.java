@@ -95,15 +95,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             default:
             case BUS_STOP_CARD:
                 view = LayoutInflater.from(mContext).inflate(R.layout.busstopcard,parent,false);
-                viewHolder = new ViewHolder(view, BUS_STOP_CARD);
+                viewHolder = new ViewHolder(view, BUS_STOP_CARD, mContext);
                 break;
             case NAVIGATE_TRANSIT_CARD:
                 view = LayoutInflater.from(mContext).inflate(R.layout.navigate_transit_card,parent,false);
-                viewHolder = new ViewHolder(view, NAVIGATE_TRANSIT_CARD);
+                viewHolder = new ViewHolder(view, NAVIGATE_TRANSIT_CARD, mContext);
                 break;
             case NAVIGATE_WALKING_CARD:
                 view = LayoutInflater.from(mContext).inflate(R.layout.navigate_walking_card,parent,false);
-                viewHolder = new ViewHolder(view, NAVIGATE_WALKING_CARD);
+                viewHolder = new ViewHolder(view, NAVIGATE_WALKING_CARD, mContext);
                 break;
         }
         return viewHolder;
@@ -111,11 +111,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+//        holder.setIsRecyclable(false);
         switch(getItemViewType(position)){
             case BUS_STOP_CARD:
                 BusStopCards card = (BusStopCards) mCard.get(position);
                 card.setType(card.BUS_STOP_CARD);
-                holder.setItem(card);
+                if(card.isMajorUpdate())
+                    holder.setItem(card);
 
                 TextView busStopID = holder.itemView.findViewById(R.id.sub_text);
                 TextView busStopName = holder.itemView.findViewById(R.id.primary_text);
@@ -124,158 +126,154 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 busStopName.setText(card.getBusStopName());
                 busStopID.setText(card.getBusStopID());
                 busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(card.getLastUpdated())));
-
-                // This part creates layout for bus services
                 final View cardview = holder.itemView.findViewById(R.id.buscard);
                 ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
 
-                Map<String, List<String>> timings = card.getBusServices();
-                if(timings.size() > 0) {
-                    LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-                    options_layout.setOrientation(LinearLayout.VERTICAL);
-                    options_layout.removeAllViewsInLayout();
-                    for(String busNo : card.getSortedKeys()){
-//            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
-                        List<String> value = timings.get(busNo);
-                        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                        assert inflater != null;
-                        View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
-
-                        TextView busID = to_add.findViewById(R.id.busnumber);
-                        TextView operator = to_add.findViewById(R.id.operator);
-                        TextView direction = to_add.findViewById(R.id.direction);
-                        TextView duration = to_add.findViewById(R.id.duration1);
-                        TextView duration2 = to_add.findViewById(R.id.duration2);
-                        TextView duration3 = to_add.findViewById(R.id.duration3);
-                        ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
-                        ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
-                        ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
-
-                        ImageView wheel1 = to_add.findViewById(R.id.wheel1);
-                        ImageView wheel2 = to_add.findViewById(R.id.wheel2);
-                        ImageView wheel3 = to_add.findViewById(R.id.wheel3);
-
-                        busID.setText(busNo);
-                        switch (value.get(13)) {
-                            case "SBST":
-                                operator.setText("SBS");
-//                                busID.setTextColor(Color.parseColor("#790e8b"));
-                                operator.setTextColor(Color.parseColor("#790e8b"));
-                                break;
-                            case "SMRT":
-                                operator.setText("SMRT");
-//                                busID.setTextColor(Color.parseColor("#b61827"));
-                                operator.setTextColor(Color.parseColor("#b61827"));
-                                break;
-                            case "TTS":
-                                operator.setText("TTS");
-//                                busID.setTextColor(Color.parseColor("#338a3e"));
-                                operator.setTextColor(Color.parseColor("#338a3e"));
-                                break;
-                            case "GAS":
-                                operator.setText("GAS");
-//                                busID.setTextColor(Color.parseColor("#c9bc1f"));
-                                operator.setTextColor(Color.parseColor("#c9bc1f"));
-                                break;
-                        }
-
-                        if (!value.get(1).equals("")) {
-                            duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
-                            if(value.get(4).equals(""))
-                                wheel1.setVisibility(View.GONE);
-
-                            switch (value.get(2)) {
-                                case "SDA":
-                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                    break;
-                                case "LSD":
-                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }else
-                            card1.setVisibility(View.INVISIBLE);
+                /*if(card.isMajorUpdate()) {
+                    // This part creates layout for bus services
 
 
-                        if (!value.get(5).equals("")) {
-                            duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
-                            if(value.get(7).equals(""))
-                                wheel2.setVisibility(View.GONE);
-
-                            switch (value.get(6)) {
-                                case "SDA":
-                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                    break;
-                                case "LSD":
-                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }else
-                            card2.setVisibility(View.INVISIBLE);
-
-                        if (!value.get(9).equals("")) {
-                            duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
-                            if(value.get(11).equals(""))
-                                wheel3.setVisibility(View.GONE);
-
-                            switch (value.get(10)) {
-                                case "SDA":
-                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                    break;
-                                case "LSD":
-                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }else
-                            card3.setVisibility(View.INVISIBLE);
-
-
-                        direction.setText(value.get(0));
-                        options_layout.addView(to_add);
-                    }
-                    updateUI(position);
-                }else{
-                    LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
-                    options_layout.removeAllViewsInLayout();
+                    Map<String, List<String>> timings = card.getBusServices();
                     LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    assert inflater != null;
-                    View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
-                    options_layout.addView(to_add);
-                    updateUI(position);
-                }
-                if(card.isFavorite())
-                    favorite.setImageResource(R.drawable.ic_favorite_red);
+                    if (timings.size() > 0) {
+                        LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
+                        options_layout.setOrientation(LinearLayout.VERTICAL);
+                        options_layout.removeAllViewsInLayout();
+                        for (String busNo : card.getSortedKeys()) {
+                            List<String> value = timings.get(busNo);
+                            assert inflater != null;
+                            View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) holder.itemView.getRootView(), false);
+                            TextView busID = to_add.findViewById(R.id.busnumber);
+                            TextView operator = to_add.findViewById(R.id.operator);
+                            TextView direction = to_add.findViewById(R.id.direction);
+                            TextView duration = to_add.findViewById(R.id.duration1);
+                            TextView duration2 = to_add.findViewById(R.id.duration2);
+                            TextView duration3 = to_add.findViewById(R.id.duration3);
+                            ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
+                            ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
+                            ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
 
-                //        doDataRefresh(holder, position);
-                favorite.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(card.isFavorite()){
+                            ImageView wheel1 = to_add.findViewById(R.id.wheel1);
+                            ImageView wheel2 = to_add.findViewById(R.id.wheel2);
+                            ImageView wheel3 = to_add.findViewById(R.id.wheel3);
+
+                            busID.setText(busNo);
+                            switch (value.get(13)) {
+                                case "SBST":
+                                    operator.setText("SBS");
+//                                busID.setTextColor(Color.parseColor("#790e8b"));
+                                    operator.setTextColor(Color.parseColor("#790e8b"));
+                                    break;
+                                case "SMRT":
+                                    operator.setText("SMRT");
+//                                busID.setTextColor(Color.parseColor("#b61827"));
+                                    operator.setTextColor(Color.parseColor("#b61827"));
+                                    break;
+                                case "TTS":
+                                    operator.setText("TTS");
+//                                busID.setTextColor(Color.parseColor("#338a3e"));
+                                    operator.setTextColor(Color.parseColor("#338a3e"));
+                                    break;
+                                case "GAS":
+                                    operator.setText("GAS");
+//                                busID.setTextColor(Color.parseColor("#c9bc1f"));
+                                    operator.setTextColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                            }
+
+                            if (!value.get(1).equals("")) {
+                                duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+                                if (value.get(4).equals(""))
+                                    wheel1.setVisibility(View.GONE);
+
+                                switch (value.get(2)) {
+                                    case "SDA":
+                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        break;
+                                    case "LSD":
+                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else
+                                card1.setVisibility(View.INVISIBLE);
+
+
+                            if (!value.get(5).equals("")) {
+                                duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
+                                if (value.get(7).equals(""))
+                                    wheel2.setVisibility(View.GONE);
+
+                                switch (value.get(6)) {
+                                    case "SDA":
+                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        break;
+                                    case "LSD":
+                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else
+                                card2.setVisibility(View.INVISIBLE);
+
+//                            if (!value.get(9).equals("")) {
+//                                duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
+//                                if (value.get(11).equals(""))
+//                                    wheel3.setVisibility(View.GONE);
+//
+//                                switch (value.get(10)) {
+//                                    case "SDA":
+//                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+//                                        break;
+//                                    case "LSD":
+//                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+//                                        break;
+//                                    default:
+//                                        break;
+//                                }
+//                            } else
+//                                card3.setVisibility(View.INVISIBLE);
+                            direction.setText(value.get(0));
+                            options_layout.addView(to_add);
+                        }
+                    } else {
+                        LinearLayout options_layout = holder.itemView.findViewById(R.id.busdetailLayout);
+                        options_layout.removeAllViewsInLayout();
+                        assert inflater != null;
+                        View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) holder.itemView.getRootView(), false);
+                        options_layout.addView(to_add);
+                    }*/
+                    if (card.isFavorite())
+                        favorite.setImageResource(R.drawable.ic_favorite_red);
+
+                    //        doDataRefresh(holder, position);
+                    favorite.setOnClickListener(v -> {
+                        if (card.isFavorite()) {
                             card.setFavorite(false);
                             favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
                             favBusStopID.remove(card.getBusStopID());
-                        }else{
+                        } else {
                             card.setFavorite(true);
                             favorite.setImageResource(R.drawable.ic_favorite_red);
                             favBusStopID.add(card.getBusStopID());
                         }
-                    }
-                });
-                cardview.setOnClickListener(v -> {
-                    int DEFAULT_ZOOM = 18;
-                    CameraPosition cameraPosition = new CameraPosition.Builder()
-                            .target(new LatLng(Double.parseDouble(card.getBusStopLat())-0.0002,
-                                    Double.parseDouble(card.getBusStopLong())))
-                            .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                            .build();                   // Creates a CameraPosition from the builder
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                });
+                    });
+                    cardview.setOnClickListener(v -> {
+                        int DEFAULT_ZOOM = 18;
+                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(Double.parseDouble(card.getBusStopLat()) - 0.0002,
+                                        Double.parseDouble(card.getBusStopLong())))
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();                   // Creates a CameraPosition from the builder
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    });
+
+//                    card.setMajorUpdate(false);
+//                }
+                updateUI(position);
                 break;
             case NAVIGATE_TRANSIT_CARD:
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
@@ -416,6 +414,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     private void updateUI(int position){
+//        Log.d(TAG, "updateUI: "+position);
         handler.postDelayed(() -> notifyItemChanged(position), 1000);
     }
 
@@ -440,6 +439,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     Card card = mCard.get(i);
                     if (card.getType() == card.BUS_STOP_CARD) {
 //                        Log.d(TAG, "run: Adding Buscard!");
+                        ((BusStopCards)mCard.get(i)).setMajorUpdate(true);
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
                 }
@@ -505,6 +505,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         //For bus card
 //        ImageView appIcon;
 //        TextView appName;
+        Context mContext;
         TextView busStopID;
         TextView busStopName;
         TextView busStopDesc;
@@ -547,8 +548,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }*/
 
 
-        public ViewHolder(View itemView, int type) {
+        public ViewHolder(View itemView, int type, Context context) {
             super(itemView);
+            mContext = context;
             busStopID = itemView.findViewById(R.id.sub_text);
             busStopName = itemView.findViewById(R.id.primary_text);
             busNo = itemView.findViewById(R.id.busnumber);
@@ -578,9 +580,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             cardType = type;
         }
 
-        private void setBusItem(BusStopCards card){
-
-        }
 
         private void setItem(Card card){
             switch (this.cardType) {
@@ -594,6 +593,131 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.favorite.setImageResource(R.drawable.ic_favorite_red);
                     else
                         this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
+//                    Log.d(TAG, "setItem: "+cards.isMajorUpdate());
+                    // This part creates layout for bus services
+                    final View cardview = itemView.findViewById(R.id.buscard);
+                    ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
+
+                    Map<String, List<String>> timings = cards.getBusServices();
+                    LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    if (timings.size() > 0) {
+                        LinearLayout options_layout = itemView.findViewById(R.id.busdetailLayout);
+                        options_layout.setOrientation(LinearLayout.VERTICAL);
+                        options_layout.removeAllViewsInLayout();
+
+                        for (String busNo : cards.getSortedKeys()) {
+//            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
+                            List<String> value = timings.get(busNo);
+                            assert inflater != null;
+                            View to_add = inflater.inflate(R.layout.busstopcarddetails, (ViewGroup) itemView.getRootView(), false);
+                            TextView busID = to_add.findViewById(R.id.busnumber);
+                            TextView operator = to_add.findViewById(R.id.operator);
+                            TextView direction = to_add.findViewById(R.id.direction);
+                            TextView duration = to_add.findViewById(R.id.duration1);
+                            TextView duration2 = to_add.findViewById(R.id.duration2);
+                            TextView duration3 = to_add.findViewById(R.id.duration3);
+                            ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
+                            ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
+                            ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
+
+                            ImageView wheel1 = to_add.findViewById(R.id.wheel1);
+                            ImageView wheel2 = to_add.findViewById(R.id.wheel2);
+                            ImageView wheel3 = to_add.findViewById(R.id.wheel3);
+
+                            busID.setText(busNo);
+                            switch (value.get(13)) {
+                                case "SBST":
+                                    operator.setText("SBS");
+//                                busID.setTextColor(Color.parseColor("#790e8b"));
+                                    operator.setTextColor(Color.parseColor("#790e8b"));
+                                    break;
+                                case "SMRT":
+                                    operator.setText("SMRT");
+//                                busID.setTextColor(Color.parseColor("#b61827"));
+                                    operator.setTextColor(Color.parseColor("#b61827"));
+                                    break;
+                                case "TTS":
+                                    operator.setText("TTS");
+//                                busID.setTextColor(Color.parseColor("#338a3e"));
+                                    operator.setTextColor(Color.parseColor("#338a3e"));
+                                    break;
+                                case "GAS":
+                                    operator.setText("GAS");
+//                                busID.setTextColor(Color.parseColor("#c9bc1f"));
+                                    operator.setTextColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                            }
+
+                            if (!value.get(1).equals("")) {
+                                duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
+                                if (value.get(4).equals(""))
+                                    wheel1.setVisibility(View.GONE);
+
+                                switch (value.get(2)) {
+                                    case "SDA":
+                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        break;
+                                    case "LSD":
+                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else
+                                card1.setVisibility(View.INVISIBLE);
+
+
+                            if (!value.get(5).equals("")) {
+                                duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
+                                if (value.get(7).equals(""))
+                                    wheel2.setVisibility(View.GONE);
+
+                                switch (value.get(6)) {
+                                    case "SDA":
+                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        break;
+                                    case "LSD":
+                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else
+                                card2.setVisibility(View.INVISIBLE);
+
+                        /*if (!value.get(9).equals("")) {
+                            duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
+                            if (value.get(11).equals(""))
+                                wheel3.setVisibility(View.GONE);
+
+                            switch (value.get(10)) {
+                                case "SDA":
+                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                    break;
+                                case "LSD":
+                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } else
+                            card3.setVisibility(View.INVISIBLE);*/
+                            direction.setText(value.get(0));
+                            options_layout.addView(to_add);
+                        }
+                    } else {
+                        LinearLayout options_layout = itemView.findViewById(R.id.busdetailLayout);
+                        options_layout.removeAllViewsInLayout();
+                        assert inflater != null;
+                        View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) itemView.getRootView(), false);
+                        options_layout.addView(to_add);
+                    }
+                    if (cards.isFavorite())
+                        favorite.setImageResource(R.drawable.ic_favorite_red);
+
+                    cards.setMajorUpdate(false);
+                    //        doDataRefresh(holder, position);
                     break;
                 case NAVIGATE_TRANSIT_CARD:
                     NavigateTransitCard cards2 = (NavigateTransitCard)card;

@@ -132,7 +132,7 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
     protected void onPostExecute(Map<String, Map> result) {
         //Do something with the JSON string
 
-        Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
+//        Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
         if(delegate2 != null)
             delegate2.processFinishFromLTA(result);
     }
