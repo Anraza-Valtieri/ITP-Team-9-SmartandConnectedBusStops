@@ -159,6 +159,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private View navHeader;
     private LinearLayout navheaderbanner;
+    private ActionBarDrawerToggle toggle;
 
     // FAB
     FloatingActionButton fab;
@@ -292,7 +293,7 @@ public class MainActivity extends AppCompatActivity
         userData = new UserData();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -434,10 +435,10 @@ public class MainActivity extends AppCompatActivity
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior);
-        adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
+        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
+        adapter.doAutoRefresh();
         recyclerView.setAdapter(adapter);
 //        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
 //        recyclerView.setItemViewCacheSize(300000);
@@ -464,6 +465,7 @@ public class MainActivity extends AppCompatActivity
                 if (favBusStopID.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    recyclerView.scrollToPosition(0);
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -562,11 +564,11 @@ public class MainActivity extends AppCompatActivity
                 };
 
                 asyncTask.execute();
-//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 if (!isPooling()) {
                     setPooling(true);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 //                    lookUpNearbyBusStops();
+                    recyclerView.scrollToPosition(0);
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -827,6 +829,10 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        if (toggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -1018,6 +1024,10 @@ public class MainActivity extends AppCompatActivity
                         userData = document.toObject(UserData.class);
                         favBusStopID = userData.getFavBusStopID();
                         adapter.setFavBusStopID(favBusStopID);
+
+                        bottomNav.setSelectedItemId(R.id.action_fav);
+//                        prepareFavoriteCards(favBusStopID);
+//                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
 //                        favBusStopID = (ArrayList) document.getData().get("favBusStopID");
                     } else {
                         Log.d(TAG, "No such document");
