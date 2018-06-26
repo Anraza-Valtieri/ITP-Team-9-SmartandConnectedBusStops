@@ -13,5 +13,12 @@ public class Card {
     public void setType(int type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "Card{" +
+                "type=" + type +
+                '}';
+    }
 }
 

@@ -118,4 +118,5 @@
     <string name="peek_me">Peek me!</string>
     <string name="drag_me">Drag me!</string>
     <string name="modal">Modal bottom sheet</string>
+    <string name="_4_min">X min</string>
 </resources>
