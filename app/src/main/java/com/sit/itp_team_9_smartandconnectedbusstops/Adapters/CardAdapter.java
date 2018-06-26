@@ -53,6 +53,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private Context mContext;
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheet;
+    private RecyclerView recyclerView;
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
@@ -77,12 +78,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     private List<ApplicationInfo> mApplications;
 
-    public CardAdapter(Context context, ArrayList<Card> card, GoogleMap mMap, BottomSheetBehavior bottomSheet) {
+    public CardAdapter(Context context, ArrayList<Card> card, GoogleMap mMap,
+                       BottomSheetBehavior bottomSheet, RecyclerView rv) {
 //        this.mApplications = mApplications;
         mContext = context;
         this.mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
+        this.recyclerView = rv;
 //        updateUI();
 //        mPackageManager = mContext.getPackageManager();
     }
@@ -165,11 +168,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             .build();                   // Creates a CameraPosition from the builder
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                     bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    recyclerView.scrollToPosition(position);
                 });
-
-//                    card.setMajorUpdate(false);
-//                }
-//                updateUI();
                 break;
             case NAVIGATE_TRANSIT_CARD:
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
