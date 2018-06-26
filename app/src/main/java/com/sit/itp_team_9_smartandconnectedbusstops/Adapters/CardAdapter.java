@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -82,7 +83,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
-        updateUI();
+//        updateUI();
 //        mPackageManager = mContext.getPackageManager();
     }
 
@@ -117,11 +118,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             onBindViewHolder(viewHolder, position);
         } else {
             // Perform a partial update
-            for (Object payload : payloads) {
-                String text = payload.toString().replace("[", "").replace("]", "");
+//            for (Object payload : payloads) {
+//                String text = payload.toString().replace("[", "").replace("]", "");
 //                Log.d(TAG, "onBindViewHolder: payload "+text);
-                viewHolder.busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(text)));
-            }
+//                viewHolder.busLastUpdated.setText(Utils.dateCheck2(Utils.formatCardTime(text)));
+//            }
         }
     }
 
@@ -280,7 +281,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         handler.removeCallbacksAndMessages(null);
         notifyDataSetChanged();
 //        doAutoRefresh();
-        updateUI();
+//        updateUI();
     }
 
 
@@ -335,7 +336,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                notifyItemRangeChanged(0, mCard.size(), o);
+//                notifyItemRangeChanged(0, mCard.size(), o);
             }
         };
 
@@ -447,6 +448,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView busLastUpdated;
         TextView operator;
         ImageButton favorite;
+        ImageView updating;
 
         //For navigate transit card
         TextView totalTime;
@@ -489,6 +491,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             busLastUpdated = itemView.findViewById(R.id.updatedTiming);
             favorite = itemView.findViewById(R.id.favoritebtn);
             operator = itemView.findViewById(R.id.operator);
+            updating = itemView.findViewById(R.id.updatingIcon);
 
             //For navigate transit card
             totalTime = itemView.findViewById(R.id.textViewTotalTime);
@@ -522,6 +525,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.favorite.setImageResource(R.drawable.ic_favorite_red);
                     else
                         this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
+                    AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
+                    AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.0f);
+                    fadeIn.setDuration(500);
+                    fadeOut.setDuration(500);
+                    fadeOut.setStartOffset(500+fadeIn.getStartOffset()+500);
+                    fadeIn.setRepeatCount(1);
+                    fadeOut.setRepeatCount(1);
+                    updating.startAnimation(fadeIn);
+                    updating.startAnimation(fadeOut);
 
 //                    Log.d(TAG, "setItem: "+cards.isMajorUpdate());
                     // This part creates layout for bus services
@@ -585,12 +598,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 switch (value.get(2)) {
                                     case "SDA":
-                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        duration.setTextColor(Color.parseColor("#c9bc1f"));
                                         break;
                                     case "LSD":
-                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        duration.setTextColor(Color.parseColor("#c63f17"));
                                         break;
                                     default:
+                                        duration.setTextColor(Color.parseColor("#087f23"));
                                         break;
                                 }
                             } else
@@ -604,12 +618,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 switch (value.get(6)) {
                                     case "SDA":
-                                        card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
+                                        duration2.setTextColor(Color.parseColor("#c9bc1f"));
                                         break;
                                     case "LSD":
-                                        card1.setBackgroundColor(Color.parseColor("#c63f17"));
+                                        duration2.setTextColor(Color.parseColor("#c63f17"));
                                         break;
                                     default:
+                                        duration2.setTextColor(Color.parseColor("#087f23"));
                                         break;
                                 }
                             } else

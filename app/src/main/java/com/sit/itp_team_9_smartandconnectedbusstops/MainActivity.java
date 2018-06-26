@@ -439,7 +439,7 @@ public class MainActivity extends AppCompatActivity
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
-        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
+//        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
 //        recyclerView.setItemViewCacheSize(300000);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
@@ -461,8 +461,8 @@ public class MainActivity extends AppCompatActivity
                     setFavBusStopID(adapter.getFavBusStopID());
 
                 if (favBusStopID.size() > 0) {
-                    clearCardsForUpdate();
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//                    clearCardsForUpdate();
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     progressBar.setVisibility(View.VISIBLE);
                     prepareFavoriteCards(getFavBusStopID());
                 }
@@ -516,7 +516,7 @@ public class MainActivity extends AppCompatActivity
                 //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
 
                 if(walkingCardList.size() > 0 || transitCardList.size() > 0) {
-                    clearCardsForUpdate();
+//                    clearCardsForUpdate();
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     updateAdapterList(transitCardList);
                     //handler.postDelayed(runnable, 3000);
@@ -622,8 +622,8 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
-                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
-                            prepareFavoriteCards(getFavBusStopID());
+//                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
+//                            prepareFavoriteCards(getFavBusStopID());
 
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
@@ -1223,7 +1223,8 @@ public class MainActivity extends AppCompatActivity
             protected void onPreExecute() {
                 super.onPreExecute();
                 progressBar.setVisibility(View.VISIBLE);
-                clearCardsForUpdate();
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+//                clearCardsForUpdate();
             }
 
             @Override
@@ -1304,10 +1305,12 @@ public class MainActivity extends AppCompatActivity
      */
     private void updateAdapterList(ArrayList<? extends Card> list){
         clearCardsForUpdate();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         adapter.notifyDataSetChanged();
         adapter.addAllCard(list);
         adapter.doAutoRefresh();
         progressBar.setVisibility(View.GONE);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     private void prepareFavoriteCards(ArrayList<String> list){
@@ -1377,7 +1380,7 @@ public class MainActivity extends AppCompatActivity
             }
 
             lookUpTrafficDuration("https://maps.googleapis.com/maps/api/distancematrix/json?origins=1.2996781,103.8557064&destinations=1.3164326,103.8829187&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s", "https://maps.googleapis.com/maps/api/directions/json?origin=825+tampines&destination=dhoby+ghaut&departure_time=1529577013&mode=transit&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
-            clearCardsForUpdate();
+//            clearCardsForUpdate();
             updateAdapterList(transitCardList);
 
         } catch (InterruptedException e) {
