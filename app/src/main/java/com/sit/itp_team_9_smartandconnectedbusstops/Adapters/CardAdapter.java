@@ -3,6 +3,7 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
@@ -10,6 +11,8 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.widget.ImageViewCompat;
+import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -136,18 +139,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             case BUS_STOP_CARD:
                 BusStopCards card = (BusStopCards) mCard.get(position);
                 card.setType(card.BUS_STOP_CARD);
-
-//                onBindViewHolder(holder, position);
-//                if(card.isMajorUpdate())
                 holder.setItem(card);
 
                 final View cardview = holder.itemView.findViewById(R.id.buscard);
                 ImageButton favorite = cardview.findViewById(R.id.favoritebtn);
 
-//                if (card.isFavorite())
-//                    favorite.setImageResource(R.drawable.ic_favorite_red);
-
-                //        doDataRefresh(holder, position);
                 favorite.setOnClickListener(v -> {
                     if (card.isFavorite()) {
                         card.setFavorite(false);
@@ -288,7 +284,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private void updateCardData(List<BusStopCards> cards){
         if(!haveNetworkConnection(mContext)){
             Toast.makeText(mContext,
-                    "No Network detected, failed to refresh data!",
+                    "No Network detected!",
                     Toast.LENGTH_SHORT).show();
 //            showNoNetworkDialog(mContext);
             return;
@@ -525,6 +521,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.favorite.setImageResource(R.drawable.ic_favorite_red);
                     else
                         this.favorite.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
+                    if(!Utils.haveNetworkConnection(mContext)){
+                        ColorStateList csl = AppCompatResources.getColorStateList(mContext,R.color.error_red);
+                        ImageViewCompat.setImageTintList(updating, csl);
+                    }else{
+                        ColorStateList csl = AppCompatResources.getColorStateList(mContext,R.color.good_green);
+                        ImageViewCompat.setImageTintList(updating, csl);
+                    }
 
                     AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
                     AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.0f);
