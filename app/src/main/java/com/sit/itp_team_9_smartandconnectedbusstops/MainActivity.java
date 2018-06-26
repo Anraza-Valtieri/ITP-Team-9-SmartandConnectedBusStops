@@ -459,12 +459,18 @@ public class MainActivity extends AppCompatActivity
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
-                if (favBusStopID.size() > 0 && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+                if (favBusStopID.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                    prepareFavoriteCards(getFavBusStopID());
-                }else{
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            prepareFavoriteCards(getFavBusStopID());
+                        }
+                    }, 600);
+//                    prepareFavoriteCards(getFavBusStopID());
                 }
             } else if (id == R.id.action_nav) {
                 //TODO fix searchview's icon covering search button
@@ -557,14 +563,17 @@ public class MainActivity extends AppCompatActivity
 
                 asyncTask.execute();
 //                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                if (!isPooling() && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+                if (!isPooling()) {
                     setPooling(true);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                    lookUpNearbyBusStops();
+//                    lookUpNearbyBusStops();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            lookUpNearbyBusStops();
+                        }
+                    }, 600);
                     handler.postDelayed(runnable, 3000);
-                }
-                else{
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
             }
             return true;
