@@ -451,7 +451,6 @@ public class MainActivity extends AppCompatActivity
         loadFavoritesFromDB();
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-//            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
                 toolbarNavigate.setVisibility(View.INVISIBLE);
                 toolbar.setVisibility(View.VISIBLE);
@@ -460,11 +459,12 @@ public class MainActivity extends AppCompatActivity
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
-                if (favBusStopID.size() > 0) {
-//                    clearCardsForUpdate();
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                if (favBusStopID.size() > 0 && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
                     progressBar.setVisibility(View.VISIBLE);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     prepareFavoriteCards(getFavBusStopID());
+                }else{
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
             } else if (id == R.id.action_nav) {
                 //TODO fix searchview's icon covering search button
@@ -516,7 +516,6 @@ public class MainActivity extends AppCompatActivity
                 //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
 
                 if(walkingCardList.size() > 0 || transitCardList.size() > 0) {
-//                    clearCardsForUpdate();
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     updateAdapterList(transitCardList);
                     //handler.postDelayed(runnable, 3000);
@@ -557,12 +556,15 @@ public class MainActivity extends AppCompatActivity
                 };
 
                 asyncTask.execute();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                if (!isPooling()) {
+//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                if (!isPooling() && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
                     setPooling(true);
-
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     lookUpNearbyBusStops();
                     handler.postDelayed(runnable, 3000);
+                }
+                else{
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
             }
             return true;
@@ -1224,7 +1226,6 @@ public class MainActivity extends AppCompatActivity
                 super.onPreExecute();
                 progressBar.setVisibility(View.VISIBLE);
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-//                clearCardsForUpdate();
             }
 
             @Override
@@ -1380,7 +1381,6 @@ public class MainActivity extends AppCompatActivity
             }
 
             lookUpTrafficDuration("https://maps.googleapis.com/maps/api/distancematrix/json?origins=1.2996781,103.8557064&destinations=1.3164326,103.8829187&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s", "https://maps.googleapis.com/maps/api/directions/json?origin=825+tampines&destination=dhoby+ghaut&departure_time=1529577013&mode=transit&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
-//            clearCardsForUpdate();
             updateAdapterList(transitCardList);
 
         } catch (InterruptedException e) {
