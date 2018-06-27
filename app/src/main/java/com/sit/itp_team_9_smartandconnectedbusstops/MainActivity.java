@@ -321,9 +321,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onRestart() {
+        super.onRestart();
         if (adapter != null)
             adapter.resumeHandlers();
-        super.onRestart();
         // Resuming location updates depending on button state and
         // allowed permissions
         if (mLocationPermissionGranted) {
@@ -338,10 +338,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        handler.removeCallbacks(runnable);
+        super.onPause();
+//        handler.removeCallbacks(runnable);
         if (adapter != null)
             adapter.pauseHandlers();
-        super.onPause();
+
 
         if (mLocationPermissionGranted) {
             // pausing location updates
@@ -472,16 +473,15 @@ public class MainActivity extends AppCompatActivity
                             prepareFavoriteCards(getFavBusStopID());
                         }
                     }, 600);
-//                    prepareFavoriteCards(getFavBusStopID());
                 }
             } else if (id == R.id.action_nav) {
                 //TODO fix searchview's icon covering search button
-                fab.hide();
                 toolbar.setVisibility(View.GONE);
                 getSupportActionBar().hide();
                 toolbarNavigate.setVisibility(View.VISIBLE);
                 setSupportActionBar(toolbarNavigate);
                 getSupportActionBar().show();
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 MultiAutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
                 MultiAutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 ImageButton optionButton = findViewById(R.id.optionButton);
@@ -511,8 +511,8 @@ public class MainActivity extends AppCompatActivity
                                 + "&mode=" + mode + "&departure_time=1529577013" //for testing
                                 + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                         Log.i(TAG,query);
-                        lookUpRoutes(query);
                         hideKeyboard();
+                        lookUpRoutes(query);
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -635,8 +635,6 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
-//                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
-//                            prepareFavoriteCards(getFavBusStopID());
 
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
@@ -656,8 +654,6 @@ public class MainActivity extends AppCompatActivity
                 } catch (SecurityException e) {
                     Log.e("Exception: %s", e.getMessage());
                 }
-//                updateLocationUI();
-//                lookUpNearbyBusStops();
             }
         };
 
