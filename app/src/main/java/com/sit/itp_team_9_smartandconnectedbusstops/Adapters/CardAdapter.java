@@ -350,7 +350,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void resumeHandlers(){
 //        for(int i = 0; i < mCard.size(); i++){
-            updateUI();
+//            updateUI();
 //        }
         doAutoRefresh();
     }
