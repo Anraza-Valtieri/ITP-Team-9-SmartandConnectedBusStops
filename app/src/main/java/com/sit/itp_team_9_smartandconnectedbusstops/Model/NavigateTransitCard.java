@@ -1,24 +1,39 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.widget.ImageView;
 
+import java.util.List;
+import java.util.Map;
+
 public class NavigateTransitCard extends Card {
+    public final static int CCL_COLOR = Color.argb(255,244, 226, 66);
+    public final static int NEL_COLOR = Color.argb(255,72, 35, 175);
+    public final static int DTL_COLOR = Color.argb(255,1, 87, 155);
+    public final static int EWL_COLOR = Color.argb(255,36, 130, 37);
+    public final static int NSL_COLOR = Color.argb(255,244, 65, 65);
+    public final static int WALKING_COLOR = Color.argb(255,120, 120, 120);
+    public final static int BUS_COLOR = Color.argb(255,0, 0, 0);
+
     private int ID;
     private String totalTime;
     private String cost;
     private String totalDistance;
+    private List<List<Object>> timeTaken; //time(int),weight(float), colour(int) (breakdown bar based on this)
     private String startingStation;
-    private String timeTaken; //breakdown bar based on this
-    private String numStops;
-    private String transferStation;
-    private String endingStation;
+    private String startingStationTimeTaken;
     private int imageViewStartingStation;
     private int imageViewStartingStationColor;
-    private int imageViewTransferStation;
-    private int imageViewEndingStation;
-    private int imageViewEndingStationColor;
+    private String numStops;
+    //private List<String> transitStations;
+    private Map<String,List<Integer>> transitStations; //arrival stop, List<image resource(int),color(int)>
+    //private String transferStation;
+    //private String endingStation;
+
+    //private int imageViewTransitStation;
+    //private int imageViewTransitStationColor;
 
 
 
@@ -62,11 +77,11 @@ public class NavigateTransitCard extends Card {
         this.startingStation = startingStation;
     }
 
-    public String getTimeTaken() {
+    public List<List<Object>> getTimeTaken() {
         return timeTaken;
     }
 
-    public void setTimeTaken(String timeTaken) {
+    public void setTimeTaken(List<List<Object>> timeTaken) {
         this.timeTaken = timeTaken;
     }
 
@@ -78,7 +93,7 @@ public class NavigateTransitCard extends Card {
         this.numStops = numStops;
     }
 
-    public String getTransferStation() {
+    /*public String getTransferStation() {
         return transferStation;
     }
 
@@ -92,7 +107,7 @@ public class NavigateTransitCard extends Card {
 
     public void setEndingStation(String endingStation) {
         this.endingStation = endingStation;
-    }
+    }*/
 
     public int getImageViewStartingStation() {
         return imageViewStartingStation;
@@ -110,27 +125,27 @@ public class NavigateTransitCard extends Card {
         this.imageViewStartingStationColor = imageViewStartingStationColor;
     }
 
-    public int getImageViewTransferStation() {
-        return imageViewTransferStation;
+    public String getStartingStationTimeTaken() {
+        return startingStationTimeTaken;
     }
 
-    public void setImageViewTransferStation(int imageViewTransferStation) {
-        this.imageViewTransferStation = imageViewTransferStation;
+    public void setStartingStationTimeTaken(String startingStationTimeTaken) {
+        this.startingStationTimeTaken = startingStationTimeTaken;
     }
 
-    public int getImageViewEndingStation() {
-        return imageViewEndingStation;
+    /*public List<String> getTransitStations() {
+        return transitStations;
     }
 
-    public void setImageViewEndingStation(int imageViewEndingStation) {
-        this.imageViewEndingStation = imageViewEndingStation;
+    public void setTransitStations(List<String> transitStations) {
+        this.transitStations = transitStations;
+    }*/
+
+    public Map<String, List<Integer>> getTransitStations() {
+        return transitStations;
     }
 
-    public int getImageViewEndingStationColor() {
-        return imageViewEndingStationColor;
-    }
-
-    public void setImageViewEndingStationColor(int imageViewEndingStationColor) {
-        this.imageViewEndingStationColor = imageViewEndingStationColor;
+    public void setTransitStations(Map<String, List<Integer>> transitStations) {
+        this.transitStations = transitStations;
     }
 }

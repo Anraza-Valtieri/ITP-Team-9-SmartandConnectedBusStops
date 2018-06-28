@@ -78,7 +78,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                     Log.i(TAG, "jsonArray");
                     if(response1.getString("status").equals("OK")) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            Log.i(TAG, "THIS IS WORKING");
+                            Log.i(TAG, "THIS IS DIRECTIONS PARSER");
                             JSONObject obj = jsonArray.getJSONObject(i);
                             GoogleRoutesData entry = new GoogleRoutesData();
                             entry.setID(i);
@@ -123,6 +123,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                         } else if (vehicle.equals("BUS")) {
                                             steps.setBusNum(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("line").optString("short_name"));
+                                            steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
+                                                    .getJSONObject("departure_stop").optString("name"));
+                                            steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
+                                                    .getJSONObject("arrival_stop").optString("name"));
                                             //Double newBusDistance = entry.getTotalBusDistance() + Double.valueOf(steps.getDistance());
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }

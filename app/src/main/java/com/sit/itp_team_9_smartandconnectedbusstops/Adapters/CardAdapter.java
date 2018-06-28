@@ -1,13 +1,16 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +29,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -32,6 +37,8 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -207,35 +214,69 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 TextView totalTime = transitCardView.findViewById(R.id.textViewTotalTime);
                 TextView totalDistance = transitCardView.findViewById(R.id.textViewTotalDistance);
                 TextView cost = transitCardView.findViewById(R.id.textViewCost);
-                View breakdownBar = transitCardView.findViewById(R.id.breakdownBar);
+                //View breakdownBar = transitCardView.findViewById(R.id.breakdownBar);
                 TextView startingStation = transitCardView.findViewById(R.id.textViewStartingStation);
-                TextView transferStation = transitCardView.findViewById(R.id.textViewTransferStation);
-                TextView endingStation = transitCardView.findViewById(R.id.textViewEndingStation);
                 TextView timeTaken = transitCardView.findViewById(R.id.textViewTimeTaken);
                 TextView numStops = transitCardView.findViewById(R.id.textViewNumStops);
                 ImageView imageViewStartingStation = transitCardView.findViewById(R.id.imageViewStartingStation);
-                ImageView imageViewEndingStation = transitCardView.findViewById(R.id.imageViewEndingStation);
-
 
                 totalTime.setText(transitCard.getTotalTime());
                 totalDistance.setText(transitCard.getTotalDistance());
                 cost.setText(transitCard.getCost());
-                //breakdownBar.setProgress(10); //TODO breakdown bar needs to be set
                 startingStation.setText(transitCard.getStartingStation());
-                transferStation.setText(transitCard.getTransferStation());
-                endingStation.setText(transitCard.getEndingStation());
-                timeTaken.setText(transitCard.getTimeTaken());
+                timeTaken.setText(transitCard.getStartingStationTimeTaken());
                 numStops.setText(transitCard.getNumStops());
-                //imageViewStartingStation.setColorFilter((Color.rgb( 255, 255, 255)));
                 imageViewStartingStation.setImageResource(transitCard.getImageViewStartingStation());
                 imageViewStartingStation.setColorFilter(transitCard.getImageViewStartingStationColor(), PorterDuff.Mode.SRC_IN);
-                imageViewEndingStation.setImageResource(transitCard.getImageViewEndingStation());
-                imageViewEndingStation.setColorFilter(transitCard.getImageViewEndingStationColor(), PorterDuff.Mode.SRC_IN);
 
+                //Creates layout for transit stations
+                LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
+                transit_layout.setOrientation(LinearLayout.VERTICAL);
+
+                for (Map.Entry<String, List<Integer>> entry : transitCard.getTransitStations().entrySet()) {
+                    String stationName = entry.getKey();
+                    //List<Integer> stationImageStationColor = entry.getValue();
+                    Integer stationImage = entry.getValue().get(0);
+                    Integer stationColor = entry.getValue().get(1);
+
+                    LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    assert inflater != null;
+                    View to_add_navigate = inflater.inflate(R.layout.navigate_transit_card_transit_stops, (ViewGroup) holder.itemView.getRootView(), false);
+                    TextView transitStation = to_add_navigate.findViewById(R.id.textViewTransitStation);
+                    ImageView imageViewTransitStation = to_add_navigate.findViewById(R.id.imageViewTransitStation);
+
+                    transitStation.setText(stationName);
+                    imageViewTransitStation.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
+                    imageViewTransitStation.setImageResource(stationImage);
+                    Log.i(TAG,"transitStationString="+stationName);
+                    transit_layout.addView(to_add_navigate);
+                }
+
+                //Creates layout for breakdown bar (summary bar below the total distance)
+                LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
+                breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
+
+                for (int i=0; i < transitCard.getTimeTaken().size();i++){
+                    String breakdownBarPartActualTime = (String) transitCard.getTimeTaken().get(i).get(0);
+                    float breakdownBarPartWeight = (Float)transitCard.getTimeTaken().get(i).get(1);
+                    int breakdownBarPartColor = (Integer) transitCard.getTimeTaken().get(i).get(2);
+
+                    LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    assert inflater2 != null;
+                    View to_add_breakdown = inflater2.inflate(R.layout.navigate_transit_card_breakdown_bar, (ViewGroup) holder.itemView.getRootView(), false);
+                    View breakdownBarPart = to_add_breakdown.findViewById(R.id.breakdownBar);
+                    TextView breakdownBarPartTime = to_add_breakdown.findViewById(R.id.textViewTime);
+
+                    Log.i(TAG,"breakdownBarPartWeight: "+breakdownBarPartWeight);
+                    breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
+                    breakdownBarPartTime.setText(breakdownBarPartActualTime);
+                    to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
+                    breakdown_bar_layout.addView(to_add_breakdown);
+                }
                 transitCardView.setOnClickListener(v -> {
-                    //TODO open new detailed card
+                    //TODO open new detailed card, get route ID
                     Log.d(TAG,"onClick NavigateTransitCard");
-                    //bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    //trigger method in MainActivity to set card, card adapter return
                 });
                 break;
 
@@ -251,7 +292,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                 walkingTime.setText(walkingCard.getTotalTime());
                 walkingDistance.setText(walkingCard.getTotalDistance());
-                startingRoad.setText(walkingCard.getDescription());
+                //startingRoad.setText(walkingCard.getDescription());
 
                 walkingCardView.setOnClickListener(v -> {
                     //TODO open new detailed card
@@ -445,8 +486,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView cost;
         ProgressBar breakdownBar;
         TextView startingStation;
-        TextView transferStation;
-        TextView endingStation;
+        TextView transitStation;
         TextView timeTaken;
         TextView numStops;
 
@@ -485,8 +525,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             cost = itemView.findViewById(R.id.textViewCost);
             breakdownBar = itemView.findViewById(R.id.progressBar);
             startingStation = itemView.findViewById(R.id.textViewStartingStation);
-            transferStation = itemView.findViewById(R.id.textViewTransferStation);
-            endingStation = itemView.findViewById(R.id.textViewEndingStation);
+            //transitStation = itemView.findViewById(R.id.textViewTransitStation);
             timeTaken = itemView.findViewById(R.id.textViewTimeTaken);
             numStops = itemView.findViewById(R.id.textViewNumStops);
 
@@ -522,10 +561,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     this.totalDistance.setText(cards2.getTotalDistance());
                     this.cost.setText(cards2.getCost());
                     this.startingStation.setText(cards2.getStartingStation());
-                    this.transferStation.setText(cards2.getTransferStation());
-                    this.endingStation.setText(cards2.getEndingStation());
+                    //this.transitStation.setText(cards2.getTransferStation());
                     this.numStops.setText(cards2.getNumStops());
-                    this.timeTaken.setText(cards2.getTimeTaken());
+                    this.timeTaken.setText(cards2.getStartingStationTimeTaken());
                     break;
                 case NAVIGATE_WALKING_CARD:
                     NavigateWalkingCard cards3 = (NavigateWalkingCard)card;
