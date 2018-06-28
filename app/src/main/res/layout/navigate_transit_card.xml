@@ -18,7 +18,7 @@
     card_view:elevation="@dimen/card_elevation">
 
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/relativeLayout"
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -53,15 +53,15 @@
             card_view:layout_constraintTop_toTopOf="@+id/textViewTotalDistance"
             tools:text="$ X.XX" />
 
-        <View
-            android:id="@+id/breakdownBar"
-            android:layout_width="wrap_content"
-            android:layout_height="12dp"
+        <LinearLayout
+            android:id="@+id/linearLayoutBreakdownBar"
+            android:layout_width="match_parent"
+            android:layout_height="17dp"
             android:layout_marginTop="8dp"
-            android:background="#a40404"
-            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalDistance"
-            tools:layout_editor_absoluteX="0dp" />
+            android:orientation="horizontal"
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalDistance">
 
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/imageViewStartingStation"
@@ -69,9 +69,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:background="@drawable/ic_directions_bus_black_24dp"
             card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/breakdownBar" />
+            card_view:layout_constraintTop_toBottomOf="@+id/linearLayoutBreakdownBar"
+            card_view:srcCompat="@drawable/ic_directions_bus_black_24dp" />
 
         <TextView
             android:id="@+id/textViewStartingStation"
@@ -89,7 +89,7 @@
             android:id="@+id/textViewTimeTaken"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="64dp"
             android:layout_marginTop="8dp"
             card_view:layout_constraintStart_toStartOf="parent"
             card_view:layout_constraintTop_toBottomOf="@+id/imageViewStartingStation"
@@ -104,61 +104,14 @@
             card_view:layout_constraintTop_toTopOf="@+id/textViewTimeTaken"
             tools:text="( X stops)" />
 
-
-        <View
-            android:id="@+id/dividerBeforeTransferStation"
-            android:layout_width="0dp"
-            android:layout_height="2dp"
-            android:layout_marginTop="8dp"
-            android:background="?android:attr/listDivider"
-            card_view:layout_constraintEnd_toEndOf="parent"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/textViewTimeTaken" />
-
-        <TextView
-            android:id="@+id/textViewTransferStation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toTopOf="@+id/dividerBeforeTransferStation"
-            tools:text="Transfer station" />
-
-        <View
-            android:id="@+id/dividerBeforeEndStation"
-            android:layout_width="0dp"
-            android:layout_height="2dp"
-            android:layout_marginTop="8dp"
-            android:background="?android:attr/listDivider"
-            card_view:layout_constraintEnd_toEndOf="parent"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/textViewTransferStation" />
-
-
-        <ImageView
-            android:id="@+id/imageViewEndingStation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:id="@+id/linearLayoutTransitStops"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_marginBottom="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/ic_directions_bus_black_24dp"
+            android:orientation="vertical"
             card_view:layout_constraintBottom_toBottomOf="parent"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/dividerBeforeEndStation" />
-
-        <TextView
-            android:id="@+id/textViewEndingStation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            card_view:layout_constraintStart_toEndOf="@+id/imageViewEndingStation"
-            card_view:layout_constraintTop_toTopOf="@+id/imageViewEndingStation"
-            tools:text="Dhoby Ghaut MRT" />
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTimeTaken"></LinearLayout>
 
 
     </android.support.constraint.ConstraintLayout>

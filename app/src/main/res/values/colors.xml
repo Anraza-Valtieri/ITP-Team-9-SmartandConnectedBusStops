@@ -8,4 +8,6 @@
     <color name="grey_font">#cfd8dc</color>
     <color name="text_shadow">#7F000000</color>
     <color name="text_shadow_white">#FFFFFF</color>
+    <color name="error_red">#ba000d</color>
+    <color name="good_green">#FF669900</color>
 </resources>

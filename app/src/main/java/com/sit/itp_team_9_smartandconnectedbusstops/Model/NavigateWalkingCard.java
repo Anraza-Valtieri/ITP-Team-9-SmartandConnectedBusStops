@@ -1,10 +1,19 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
 public class NavigateWalkingCard extends Card {
-    String totalTime;
-    String totalDistance;
-    String description;
-    boolean isFavorite;
+    private int ID;
+    private String totalTime;
+    private String totalDistance;
+    private String description;
+    private boolean isFavorite;
+    public int getID() {
+        return ID;
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
     public String getTotalTime() {
         return totalTime;
     }

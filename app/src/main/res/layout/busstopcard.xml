@@ -3,7 +3,6 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/buscard"
-    style="@style/CardView.Light"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/card_margin_bottom"
@@ -51,7 +50,7 @@
             android:layout_height="19dp"
             android:layout_marginStart="8dp"
             android:textAlignment="textEnd"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintStart_toEndOf="@+id/sub_text"
             app:layout_constraintTop_toTopOf="@+id/sub_text"
             tools:text="2 mins ago" />
@@ -72,9 +71,11 @@
 
         <ImageButton
             android:id="@+id/favoritebtn"
-            style="@android:style/Widget.Material.Light.ActionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@android:color/transparent"
             android:cropToPadding="true"
             android:padding="0dp"
             android:paddingBottom="0dp"
@@ -86,6 +87,18 @@
             android:src="@drawable/ic_favorite_border_black_24dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/updatingIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="8dp"
+            android:alpha="1"
+            android:src="@drawable/ic_rss_feed_black_24dp"
+            android:tint="@android:color/holo_green_dark"
+            app:layout_constraintBottom_toBottomOf="@+id/sub_text"
+            app:layout_constraintStart_toEndOf="@+id/sub_text"
+            app:layout_constraintTop_toTopOf="@+id/sub_text" />
 
 
     </android.support.constraint.ConstraintLayout>
