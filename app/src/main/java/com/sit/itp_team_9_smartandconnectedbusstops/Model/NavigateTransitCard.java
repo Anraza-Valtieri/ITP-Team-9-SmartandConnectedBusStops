@@ -1,9 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
-import android.widget.ImageView;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +24,7 @@ public class NavigateTransitCard extends Card {
     private int imageViewStartingStation;
     private int imageViewStartingStationColor;
     private String numStops;
+    private boolean isFavorite;
     //private List<String> transitStations;
     private Map<String,List<Integer>> transitStations; //arrival stop, List<image resource(int),color(int)>
     //private String transferStation;
@@ -34,8 +32,6 @@ public class NavigateTransitCard extends Card {
 
     //private int imageViewTransitStation;
     //private int imageViewTransitStationColor;
-
-
 
     public int getID() {
         return ID;
@@ -148,4 +144,8 @@ public class NavigateTransitCard extends Card {
     public void setTransitStations(Map<String, List<Integer>> transitStations) {
         this.transitStations = transitStations;
     }
+
+    public boolean isFavorite() { return isFavorite; }
+
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
 }

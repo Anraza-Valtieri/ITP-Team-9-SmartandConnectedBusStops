@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -57,12 +58,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -72,22 +69,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
-import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
@@ -95,6 +87,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
@@ -108,6 +101,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
@@ -119,19 +114,16 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
-    private View mapView;
-    private CameraPosition mCameraPosition;
 
-    // The entry points to the Places API.
-    private GeoDataClient mGeoDataClient;
-    private PlaceDetectionClient mPlaceDetectionClient;
-
-    // The entry point to the Fused Location Provider.
-    private FusedLocationProviderClient mFusedLocationProviderClient;
+//    // The entry points to the Places API.
+//    private GeoDataClient mGeoDataClient;
+//    private PlaceDetectionClient mPlaceDetectionClient;
+//
+//    // The entry point to the Fused Location Provider.
+//    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
-    private final LatLng mDefaultLocation = new LatLng(1.3139991, 103.7740386);
     private static final int DEFAULT_ZOOM = 18;
     private static final float MAX_ZOOM = 20.0f;
     private static final float MIN_ZOOM = 15.0f;
@@ -155,7 +147,8 @@ public class MainActivity extends AppCompatActivity
 
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
+    private static final String UUID_ID = "uuid_id";
+    private String UUIDStr = "";
 
     // Header
     private Toolbar toolbar;
@@ -163,6 +156,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private View navHeader;
     private LinearLayout navheaderbanner;
+    private ActionBarDrawerToggle toggle;
 
     // FAB
     FloatingActionButton fab;
@@ -204,7 +198,6 @@ public class MainActivity extends AppCompatActivity
 
     // Recycler
     private CardAdapter adapter = null;
-    private View rootView;
 
     private BottomNavigationView bottomNav;
 
@@ -220,7 +213,6 @@ public class MainActivity extends AppCompatActivity
 
     //Pooling limit
     private boolean pooling = false;
-    private int receivedCards = 0;
 
     //Progress
     private ProgressBar progressBar;
@@ -238,13 +230,25 @@ public class MainActivity extends AppCompatActivity
         toolbar = findViewById(R.id.toolbar);
         toolbarNavigate = findViewById(R.id.navigate_toolbar);
         setSupportActionBar(toolbar);
-        rootView = findViewById(R.id.includeroot);
+        View rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navHeader = navigationView.getHeaderView(0);
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
+
+        SharedPreferences prefs = getSharedPreferences(UUID_ID, MODE_PRIVATE);
+        String restoredText = prefs.getString("UUID", null);
+        if (restoredText != null) {
+            UUIDStr = restoredText;
+        }else{
+            SharedPreferences.Editor editor = getSharedPreferences(UUID_ID, MODE_PRIVATE).edit();
+            String id = UUID.randomUUID().toString();
+            editor.putString("UUID", id);
+            editor.apply();
+            UUIDStr = id;
+        }
 
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -298,7 +302,7 @@ public class MainActivity extends AppCompatActivity
         userData = new UserData();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -306,29 +310,29 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // Construct a GeoDataClient.
-        mGeoDataClient = Places.getGeoDataClient(this, null);
-
-        // Construct a PlaceDetectionClient.
-        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-
-        // Construct a FusedLocationProviderClient.
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+//        // Construct a GeoDataClient.
+//        mGeoDataClient = Places.getGeoDataClient(this, null);
+//
+//        // Construct a PlaceDetectionClient.
+//        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+//
+//        // Construct a FusedLocationProviderClient.
+//        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Build the map.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapView);
 
-        mapView = mapFragment.getView();
+//        View mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
         scheduleJob();
     }
 
     @Override
     protected void onRestart() {
+        super.onRestart();
         if (adapter != null)
             adapter.resumeHandlers();
-        super.onRestart();
         // Resuming location updates depending on button state and
         // allowed permissions
         if (mLocationPermissionGranted) {
@@ -343,10 +347,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        handler.removeCallbacks(runnable);
+        super.onPause();
+//        handler.removeCallbacks(runnable);
         if (adapter != null)
             adapter.pauseHandlers();
-        super.onPause();
+
 
         if (mLocationPermissionGranted) {
             // pausing location updates
@@ -383,17 +388,18 @@ public class MainActivity extends AppCompatActivity
                 .build();
 
         JobScheduler jobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        assert jobScheduler != null;
         jobScheduler.schedule(myJob);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
+
     }
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-
     }
 
     private void clearCardsForUpdate() {
@@ -418,13 +424,13 @@ public class MainActivity extends AppCompatActivity
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
 //                        fab.setVisibility(View.GONE);
-                        getSupportActionBar().hide();
+                        Objects.requireNonNull(getSupportActionBar()).hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                        getSupportActionBar().show();
+                        Objects.requireNonNull(getSupportActionBar()).show();
 //                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                        getSupportActionBar().hide();
+                        Objects.requireNonNull(getSupportActionBar()).hide();
 //                        fab.setVisibility(View.GONE);
                     }
                 }
@@ -440,12 +446,13 @@ public class MainActivity extends AppCompatActivity
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setItemPrefetchEnabled(true);
-        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior);
-        adapter.doAutoRefresh();
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(linearLayoutManager);
+        adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
+        adapter.doAutoRefresh();
         recyclerView.setAdapter(adapter);
-        recyclerView.setItemViewCacheSize(20);
+//        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
+//        recyclerView.setItemViewCacheSize(300000);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
@@ -456,7 +463,6 @@ public class MainActivity extends AppCompatActivity
         loadFavoritesFromDB();
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-//            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (id == R.id.action_fav) {
                 toolbarNavigate.setVisibility(View.INVISIBLE);
                 toolbar.setVisibility(View.VISIBLE);
@@ -465,11 +471,13 @@ public class MainActivity extends AppCompatActivity
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
                 if (favBusStopID.size() > 0) {
-                    clearCardsForUpdate();
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     progressBar.setVisibility(View.VISIBLE);
-                    prepareFavoriteCards(getFavBusStopID());
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    recyclerView.scrollToPosition(0);
+                    handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
                 fab.hide();
@@ -508,8 +516,9 @@ public class MainActivity extends AppCompatActivity
                                 + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                         Log.i(TAG,query);
-                        lookUpRoutes(query);
                         hideKeyboard();
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                        lookUpRoutes(query);
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -519,7 +528,7 @@ public class MainActivity extends AppCompatActivity
                 toolbarNavigate.setVisibility(View.INVISIBLE);
                 toolbar.setVisibility(View.VISIBLE);
                 setSupportActionBar(toolbar);
-                getSupportActionBar().show();
+                Objects.requireNonNull(getSupportActionBar()).show();
 //                fab.show();
                 if(mCurrentLocation==null){
                     getDeviceLocation();
@@ -531,11 +540,10 @@ public class MainActivity extends AppCompatActivity
                 AsyncTask asyncTask = new AsyncTask() {
                     @Override
                     protected Object doInBackground(Object[] objects) {
-                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                        return new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();                   // Creates a CameraPosition from the builder
-                        return cameraPosition;
+                                .build();
                     }
 
                     @Override
@@ -546,11 +554,12 @@ public class MainActivity extends AppCompatActivity
                 };
 
                 asyncTask.execute();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 if (!isPooling()) {
                     setPooling(true);
-
-                    lookUpNearbyBusStops();
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+//                    lookUpNearbyBusStops();
+                    recyclerView.scrollToPosition(0);
+                    handler.postDelayed(this::lookUpNearbyBusStops, 600);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -580,7 +589,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         for (int i = 0; i < permissions.length; i++) {
             String permission = permissions[i];
             int grantedResult = grantResults[i];
@@ -592,6 +601,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @SuppressLint("MissingPermission")
     @SuppressWarnings("unchecked")
     private void getDeviceLocation() {
         /*
@@ -611,11 +621,14 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
+
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                                 .build();                   // Creates a CameraPosition from the builder
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        mMap.setMaxZoomPreference(MAX_ZOOM);
+                        mMap.setMinZoomPreference(MIN_ZOOM);
                     }
                 }
                 try {
@@ -627,8 +640,6 @@ public class MainActivity extends AppCompatActivity
                 } catch (SecurityException e) {
                     Log.e("Exception: %s", e.getMessage());
                 }
-//                updateLocationUI();
-//                lookUpNearbyBusStops();
             }
         };
 
@@ -643,46 +654,39 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             mSettingsClient
                     .checkLocationSettings(mLocationSettingsRequest)
-                    .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-                        @SuppressLint("MissingPermission")
-                        @Override
-                        public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                            Log.i(TAG, "All location settings are satisfied.");
+                    .addOnSuccessListener(this, locationSettingsResponse -> {
+                        Log.i(TAG, "All location settings are satisfied.");
 
 //                            Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
 
-                            //noinspection MissingPermission
-                            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                    mLocationCallback, Looper.myLooper());
+                        //noinspection MissingPermission
+                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                mLocationCallback, Looper.myLooper());
 
-                        }
                     })
-                    .addOnFailureListener(this, new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            int statusCode = ((ApiException) e).getStatusCode();
-                            switch (statusCode) {
-                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                    Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                            "location settings ");
-                                    try {
-                                        // Show the dialog by calling startResolutionForResult(), and check the
-                                        // result in onActivityResult().
-                                        ResolvableApiException rae = (ResolvableApiException) e;
-                                        rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                    } catch (IntentSender.SendIntentException sie) {
-                                        Log.i(TAG, "PendingIntent unable to execute request.");
-                                    }
-                                    break;
-                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                    String errorMessage = "Location settings are inadequate, and cannot be " +
-                                            "fixed here. Fix in Settings.";
-                                    Log.e(TAG, errorMessage);
+                    .addOnFailureListener(this, e -> {
+                        int statusCode = ((ApiException) e).getStatusCode();
+                        switch (statusCode) {
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                        "location settings ");
+                                try {
+                                    // Show the dialog by calling startResolutionForResult(), and check the
+                                    // result in onActivityResult().
+                                    ResolvableApiException rae = (ResolvableApiException) e;
+                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                } catch (IntentSender.SendIntentException sie) {
+                                    Log.i(TAG, "PendingIntent unable to execute request.");
+                                }
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                String errorMessage = "Location settings are inadequate, and cannot be " +
+                                        "fixed here. Fix in Settings.";
+                                Log.e(TAG, errorMessage);
 
-                                    Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                            }
-
+                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
+
                     });
 //            lookUpNearbyBusStops();
             /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -800,6 +804,10 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        if (toggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -892,6 +900,12 @@ public class MainActivity extends AppCompatActivity
 
         });
 
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(1.3521, 103.8198))      // Sets the center of the map to Mountain View
+                .zoom(10)                   // Sets the zoom
+                .build();                   // Creates a CameraPosition from the builder
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
         // Prompt the user for permission.
         getLocationPermission();
 
@@ -920,7 +934,7 @@ public class MainActivity extends AppCompatActivity
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
         mClusterManager.setAnimation(false);
-        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
+//        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
@@ -929,8 +943,10 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnCameraMoveListener(this);
         mMap.setOnMarkerClickListener(mClusterManager);
 
-        mMap.setMaxZoomPreference(MAX_ZOOM);
-        mMap.setMinZoomPreference(MIN_ZOOM);
+//        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
+
+
+//        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
 
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
@@ -939,7 +955,6 @@ public class MainActivity extends AppCompatActivity
             showNoNetworkDialog(this);
         }
     }
-
     @Override
     public void onCameraMove() {
 //        layer.animate().alpha(0).setDuration(1000);
@@ -965,36 +980,55 @@ public class MainActivity extends AppCompatActivity
         return favBusStopID;
     }
 
+    /**
+     * Sets up favoritecards from list
+     * <p>
+     * This method always finishes almost immediately
+     *
+     * @param favBusStopID list of busstop IDs
+     */
     public void setFavBusStopID(ArrayList<String> favBusStopID) {
         this.favCardList.clear();
         this.favBusStopID = favBusStopID;
         userData.setFavBusStopID(favBusStopID);
-        db.collection("user").document("userdata").set(userData);
+        db.collection("user").document(UUIDStr).set(userData);
     }
 
+    /**
+     * Loads up favoritecards from Firebase
+     * <p>
+     * This method always finishes almost immediately
+     * Fills up favBusStopID and syncs it to adapter
+     */
     private void loadFavoritesFromDB(){
-        DocumentReference docRef = db.collection("user").document("userdata");
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                        userData = document.toObject(UserData.class);
+        DocumentReference docRef = db.collection("user").document(UUIDStr);
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document.exists()) {
+                    Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                    userData = document.toObject(UserData.class);
+                    if (userData != null) {
                         favBusStopID = userData.getFavBusStopID();
-                        adapter.setFavBusStopID(favBusStopID);
-//                        favBusStopID = (ArrayList) document.getData().get("favBusStopID");
-                    } else {
-                        Log.d(TAG, "No such document");
                     }
+                    adapter.setFavBusStopID(favBusStopID);
+
+                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
-                    Log.d(TAG, "get failed with ", task.getException());
+                    Log.d(TAG, "No such document");
                 }
+            } else {
+                Log.d(TAG, "get failed with ", task.getException());
             }
         });
     }
 
+    /**
+     * Loads up LTA data from the Datamall
+     * <p>
+     * This method always finishes almost immediately
+     * It will fill up sortedLTABusStopData and allBusStops
+     */
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
 
@@ -1077,7 +1111,7 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 dialog.dismiss();
-                bottomNav.setSelectedItemId(R.id.action_fav);
+//                bottomNav.setSelectedItemId(R.id.action_fav);
 //                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
 
@@ -1120,7 +1154,8 @@ public class MainActivity extends AppCompatActivity
 
                 return null;
             }
-        }.execute();
+        };
+        asyncTask.execute();
 
         lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
@@ -1161,9 +1196,10 @@ public class MainActivity extends AppCompatActivity
                 Map value = entryData.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
                 card.setType(card.BUS_STOP_CARD);
+                card.setMajorUpdate(true);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
-                    String toConvertID = newData.get(3);
+                    String toConvertID = newData.get(0);
                     Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
                     if(allBusStops.get(toConvertID).getRoadName() != null)
                         newData.set(3, allBusStops.get(toConvertID).getDescription());
@@ -1199,7 +1235,7 @@ public class MainActivity extends AppCompatActivity
             protected void onPreExecute() {
                 super.onPreExecute();
                 progressBar.setVisibility(View.VISIBLE);
-                clearCardsForUpdate();
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             }
 
             @Override
@@ -1217,9 +1253,10 @@ public class MainActivity extends AppCompatActivity
                     return;
                 }
                 nearbyCardList.clear();
-                for(int i=0; i< 16; i++) {
+                for(int i=0; i< 11; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
                     card.setType(card.BUS_STOP_CARD);
+                    card.setMajorUpdate(true);
                     nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     assert card != null;
@@ -1231,9 +1268,48 @@ public class MainActivity extends AppCompatActivity
         asyncTask.execute();
     }
 
+    /**
+     * Sorts and return a List of LTABusStopData by location
+     * <p>
+     * This method always returns immediately
+     *
+     * @param  locations List of LTABusStopData
+     * @param  myLatitude Current latitude
+     * @param  myLongitude Current longitude
+     * @return List - LTABusStopData list
+     */
     public static List<LTABusStopData> sortLocations(List<LTABusStopData> locations, final double myLatitude,final double myLongitude) {
 
         Comparator comp = (Comparator<LTABusStopData>) (o, o2) -> {
+            float[] result1 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
+            Float distance1 = result1[0];
+
+            float[] result2 = new float[3];
+            Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o2.getBusStopLat()), Double.parseDouble(o2.getBusStopLong()), result2);
+            Float distance2 = result2[0];
+            return distance1.compareTo(distance2);
+        };
+        long start = System.currentTimeMillis();
+        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+        Collections.sort(locations, comp);
+        long elapsedTime = System.currentTimeMillis() - start;
+        Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
+        return locations;
+    }
+
+    /**
+     * Sorts and return a List of Card by location
+     * <p>
+     * This method always returns immediately
+     *
+     * @param  locations List of Card
+     * @param  myLatitude Current latitude
+     * @param  myLongitude Current longitude
+     * @return List - Card list
+     */
+    public static List<Card> sortCardsByLocation(List<Card> locations, final double myLatitude,final double myLongitude) {
+        Comparator comp = (Comparator<BusStopCards>) (o, o2) -> {
             float[] result1 = new float[3];
             Location.distanceBetween(myLatitude, myLongitude, Double.parseDouble(o.getBusStopLat()), Double.parseDouble(o.getBusStopLong()), result1);
             Float distance1 = result1[0];
@@ -1260,12 +1336,21 @@ public class MainActivity extends AppCompatActivity
      */
     private void updateAdapterList(ArrayList<? extends Card> list){
         clearCardsForUpdate();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         adapter.notifyDataSetChanged();
         adapter.addAllCard(list);
         adapter.doAutoRefresh();
         progressBar.setVisibility(View.GONE);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
+    /**
+     * Prepares Favorite cards for display
+     * <p>
+     * This method always completes
+     *
+     * @param  list List of Favorite Card
+     */
     private void prepareFavoriteCards(ArrayList<String> list){
         if(list.size() < 1){
             Log.e(TAG, "prepareFavoriteCards: list is empty!");
@@ -1273,13 +1358,41 @@ public class MainActivity extends AppCompatActivity
         }
 
         for(int i=0; i< list.size(); i++) {
-                BusStopCards card = getBusStopData(list.get(i));
-                card.setType(card.BUS_STOP_CARD);
-                favCardList.add(card);
-                Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
+            BusStopCards card = getBusStopData(list.get(i));
+            card.setType(card.BUS_STOP_CARD);
+            card.setMajorUpdate(true);
+            favCardList.add(card);
+            Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
 //            }
         }
-        updateAdapterList(favCardList);
+
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressBar.setVisibility(View.VISIBLE);
+                clearCardsForUpdate();
+            }
+
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(mCurrentLocation != null)
+//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    return sortCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                else
+                    return favCardList;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                updateAdapterList(favCardList);
+            }
+        };
+        asyncTask.execute();
+
+//        updateAdapterList(favCardList);
     }
 
     private void lookUpRoutes(String query){
@@ -1297,6 +1410,7 @@ public class MainActivity extends AppCompatActivity
             }
             transitCardList.clear();
             walkingCardList.clear();
+            progressBar.setVisibility(View.VISIBLE);
             if (!optionMode){
                 //walking
                 for(int i=0; i< result.size(); i++) {
@@ -1305,8 +1419,6 @@ public class MainActivity extends AppCompatActivity
                     walkingCardList.add(card);
                     Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
-                clearCardsForUpdate();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 updateAdapterList(walkingCardList);
 
             }else{
@@ -1317,10 +1429,7 @@ public class MainActivity extends AppCompatActivity
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
-                clearCardsForUpdate();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 updateAdapterList(transitCardList);
-
             }
 
         } catch (InterruptedException e) {
@@ -1330,7 +1439,76 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData){
+    private void lookUpTrafficDuration(String queryMatrix, String queryDir){
+        List<String> durationQuery = new ArrayList<>();
+        durationQuery.add(queryMatrix);
+        List<String> directionsQuery = new ArrayList<>();
+        directionsQuery.add(queryDir);
+        Log.i(TAG,durationQuery.toString());
+        JSONDistanceMatrixParser durationParser = new JSONDistanceMatrixParser(MainActivity.this,durationQuery);
+        List<DistanceData> result1;  //result from parser
+        JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
+        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        try {
+            result = directionsParser.execute().get();
+            result1 = durationParser.execute().get();
+            Log.d(TAG,queryMatrix);
+            if(result1.size() <= 0){
+                Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
+                return;
+            }
+            Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
+            Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
+            for(int i=0; i< result.size(); i++) {
+                NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
+                card.setType(card.NAVIGATE_TRANSIT_CARD);
+                transitCardList.add(card);
+                Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
+        //TODO set card details here (route ID?)
+        NavigateTransitCard card = new NavigateTransitCard();
+        card.setType(card.NAVIGATE_TRANSIT_CARD);
+        //card.setTotalDistance(googleRoutesData.getTotalDistance());
+        //card.setTotalTime(googleRoutesData.getTotalDuration());
+        //need loop to get
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+
+        Log.d(TAG, "distanceData start add: "+distanceData.getStartAdd());
+        Log.d(TAG, "distanceData distance: "+distanceData.getDistance());
+        Log.d(TAG, "distanceData duration: "+distanceData.getDuration());
+        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
+        int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
+        int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
+        Log.d(TAG, "duration int: "+ duration );
+        if ((duration_in_traffic - duration) < 10){
+            Log.d(TAG, "No congestion" );
+        }
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
+                    Log.d(TAG, "IS A TRAIN" );
+                }
+                else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
+                    Log.d(TAG, "IS A BUS" );
+                    
+                }
+            }
+        }
+        else{
+            Log.d(TAG, "routeSteps EMPTY" );
+        }
+        return card;
+    }
+
+    private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(card.NAVIGATE_TRANSIT_CARD);
         card.setID(googleRoutesData.getID());
@@ -1390,18 +1568,49 @@ public class MainActivity extends AppCompatActivity
         //in Steps
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
         if (routeSteps != null) {
-            Map<String,List<Integer>> transitStations = new HashMap<>();
+            Map<String, List<Integer>> transitStations = new HashMap<>();
             List<List<Object>> timeTakenList = new ArrayList<>();
 
             //find shortest duration of each step for weights in breakdownBar
             int largestDuration = 0;
             for (int i = 0; i < routeSteps.size(); i++) {
-                Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
+                Log.i(TAG, "DURATION: " + routeSteps.get(i).getDuration());
                 String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                 int duration = Integer.parseInt(intValue);
-
-                if (largestDuration <= duration){
+                if (largestDuration <= duration) {
                     largestDuration = duration;
+                }
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
+                        (!routeSteps.get(i).getTravelMode().equals("TRANSIT") ||
+                                routeSteps.get(i) == null)) {
+                    //first public transport station
+                    card.setStartingStation(routeSteps.get(i).getDepartureStop());
+                    card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
+                    card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
+                    card.setImageViewStartingStation(R.drawable.ic_directions_bus_black_24dp);
+                    String trainLine = routeSteps.get(i).getTrainLine();
+                    if (trainLine != null) {
+                        switch (trainLine) {
+                            case "Downtown Line":
+                                card.setImageViewStartingStationColor(Color.argb(255, 1, 87, 155));
+                                break;
+                            case "North East Line":
+                                card.setImageViewStartingStationColor(Color.argb(255, 72, 35, 175));
+                                break;
+                            case "East West Line":
+                                card.setImageViewStartingStationColor(Color.argb(255, 36, 130, 37));
+                                break;
+                            case "North South Line":
+                                card.setImageViewStartingStationColor(Color.argb(255, 244, 65, 65));
+                                break;
+                            case "Circle Line":
+                                card.setImageViewStartingStationColor(Color.argb(255, 244, 226, 66));
+                                break;
+                        }
+                    }
+                    //card.setTransferStation(routeSteps.get(i).getArrivalStop());
+
+
                 }
             }
 
@@ -1409,12 +1618,12 @@ public class MainActivity extends AppCompatActivity
                 List<Object> timeTakenEachStep = new ArrayList<>();
                 String travelMode = routeSteps.get(i).getTravelMode();
                 String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
-                Log.i(TAG,"largestDuration= "+largestDuration);
-                Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
+                float timeTakenWeight = Float.parseFloat(intValue) / largestDuration;
+                Log.i(TAG, "largestDuration= " + largestDuration);
+                Log.i(TAG, "timeTakenWeight= " + timeTakenWeight);
                 timeTakenEachStep.add(routeSteps.get(i).getDuration());
                 timeTakenEachStep.add(timeTakenWeight);
-                switch (travelMode){
+                switch (travelMode) {
                     case "WALKING":
                         timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
                         break;
@@ -1453,7 +1662,7 @@ public class MainActivity extends AppCompatActivity
                                     timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
                                     break;
                             }
-                        }else{
+                        } else {
                             //if bus
                             String busNumber = routeSteps.get(i).getBusNum();
                             imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
@@ -1466,7 +1675,7 @@ public class MainActivity extends AppCompatActivity
                             //first public transport station
                             card.setStartingStation(routeSteps.get(i).getDepartureStop());
                             //card.setTransferStation(routeSteps.get(i).getArrivalStop());
-                            card.setNumStops("( "+String.valueOf(routeSteps.get(i).getNumStops())+" stops)");
+                            card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
                             card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
                             card.setImageViewStartingStation(imageViewTransit);
                             card.setImageViewStartingStationColor(imageViewColor);
@@ -1475,22 +1684,22 @@ public class MainActivity extends AppCompatActivity
                             List<Integer> stationDetails = new ArrayList<>();
                             stationDetails.add(imageViewTransit);
                             stationDetails.add(imageViewColor);
-                            transitStations.put(routeSteps.get(i).getArrivalStop(),stationDetails);
+                            transitStations.put(routeSteps.get(i).getArrivalStop(), stationDetails);
                         }
                         break;
                 }
                 timeTakenList.add(timeTakenEachStep);
             }
-            card.setTimeTaken(timeTakenList);
-            card.setTransitStations(transitStations);
-        }
+                card.setTimeTaken(timeTakenList);
+                card.setTransitStations(transitStations);
+            }
         return card;
     }
 
     private NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData) {
         NavigateWalkingCard card = new NavigateWalkingCard();
         card.setType(card.NAVIGATE_WALKING_CARD);
-        card.setID(googleRoutesData.getID());
+//        card.setID(googleRoutesData.getID());
         Log.i(TAG,"total distance= "+googleRoutesData.getTotalDistance());
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());

@@ -89,10 +89,21 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
                         JSONObject obj = jsonArray.getJSONObject(i);
                         String busNo = (obj.getString("ServiceNo"));
                         List<String> busTiming = new ArrayList<>();
-                        busTiming.add(obj.getJSONObject("NextBus").getString("EstimatedArrival"));
-                        busTiming.add(obj.getJSONObject("NextBus2").getString("EstimatedArrival"));
-                        busTiming.add(obj.getJSONObject("NextBus3").getString("EstimatedArrival"));
-                        busTiming.add(obj.getJSONObject("NextBus").getString("DestinationCode"));
+                        busTiming.add(obj.getJSONObject("NextBus").getString("DestinationCode")); // 0
+                        busTiming.add(obj.getJSONObject("NextBus").getString("EstimatedArrival")); // 1
+                        busTiming.add(obj.getJSONObject("NextBus").getString("Load")); // 2
+                        busTiming.add(obj.getJSONObject("NextBus").getString("Feature")); // 3
+                        busTiming.add(obj.getJSONObject("NextBus").getString("Type")); // 4
+                        busTiming.add(obj.getJSONObject("NextBus2").getString("EstimatedArrival")); // 5
+                        busTiming.add(obj.getJSONObject("NextBus2").getString("Load")); // 6
+                        busTiming.add(obj.getJSONObject("NextBus2").getString("Feature")); // 7
+                        busTiming.add(obj.getJSONObject("NextBus2").getString("Type")); // 8
+                        busTiming.add(obj.getJSONObject("NextBus3").getString("EstimatedArrival")); // 9
+                        busTiming.add(obj.getJSONObject("NextBus3").getString("Load")); // 10
+                        busTiming.add(obj.getJSONObject("NextBus3").getString("Feature")); // 11
+                        busTiming.add(obj.getJSONObject("NextBus3").getString("Type")); // 12
+                        busTiming.add(obj.getString("Operator")); // 13
+
 //                        Log.d(TAG, "doInBackground: "+busNo+ " - "+ busTiming.toString());
                         responseList.put(busNo, busTiming);
                     }
@@ -121,7 +132,7 @@ public class JSONLTABusTimingParser extends AsyncTask<Void, String, Map<String, 
     protected void onPostExecute(Map<String, Map> result) {
         //Do something with the JSON string
 
-        Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
+//        Log.d(TAG, "onPostExecute: Total of "+result.size()+ " data points has been added");
         if(delegate2 != null)
             delegate2.processFinishFromLTA(result);
     }

@@ -5,7 +5,7 @@ public class NavigateWalkingCard extends Card {
     private String totalTime;
     private String totalDistance;
     private String description;
-
+    private boolean isFavorite;
     public int getID() {
         return ID;
     }
@@ -37,4 +37,8 @@ public class NavigateWalkingCard extends Card {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public boolean isFavorite() { return isFavorite; }
+
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
 }

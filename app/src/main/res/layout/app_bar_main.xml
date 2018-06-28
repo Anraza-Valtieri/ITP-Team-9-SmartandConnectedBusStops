@@ -79,15 +79,6 @@
 
         </android.support.v7.widget.RecyclerView>
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|center_vertical|center"
-            android:paddingBottom="60dp"
-            android:visibility="visible" />
-
     </FrameLayout>
 
     <FrameLayout
@@ -97,6 +88,15 @@
         android:elevation="8dp"
         app:layout_anchor="@+id/include2"
         app:layout_anchorGravity="bottom|center">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_vertical|center"
+            android:paddingBottom="60dp"
+            android:visibility="gone" />
 
         <android.support.design.widget.BottomNavigationView
             android:id="@+id/bottom_navigation"

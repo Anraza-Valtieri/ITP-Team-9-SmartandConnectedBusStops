@@ -7,16 +7,13 @@
     <item android:drawable="@android:color/white"/>
 
     <!-- Your product logo - 144dp color version of your app icon -->
-    <item>
-
-        <!--
-        <bitmap
-            android:src="@drawable/ic_directions_bus_black_24dp"
-            android:gravity="center"/>
-            -->
+    <item android:bottom="150dp">
+        <bitmap android:src="@drawable/googleg_standard_color_18"
+            android:gravity="center_horizontal"/>
+    </item>
+    <item android:bottom="60dp">
         <bitmap android:src="@drawable/powered_by_google_light"
-            android:gravity="center"/>
-
+            android:gravity="center_horizontal" />
     </item>
 
 </layer-list>
