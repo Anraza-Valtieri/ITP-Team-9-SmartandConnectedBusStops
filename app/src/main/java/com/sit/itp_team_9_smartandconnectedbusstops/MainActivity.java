@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -71,10 +72,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -104,6 +103,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
@@ -151,7 +151,8 @@ public class MainActivity extends AppCompatActivity
 
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
+    private static final String UUID_ID = "uuid_id";
+    private String UUIDStr = "";
 
     // Header
     private Toolbar toolbar;
@@ -241,6 +242,18 @@ public class MainActivity extends AppCompatActivity
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
+        SharedPreferences prefs = getSharedPreferences(UUID_ID, MODE_PRIVATE);
+        String restoredText = prefs.getString("UUID", null);
+        if (restoredText != null) {
+            UUIDStr = restoredText;
+        }else{
+            SharedPreferences.Editor editor = getSharedPreferences(UUID_ID, MODE_PRIVATE).edit();
+            String id = UUID.randomUUID().toString();
+            editor.putString("UUID", id);
+            editor.apply();
+            UUIDStr = id;
+        }
+
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().show();
@@ -288,7 +301,7 @@ public class MainActivity extends AppCompatActivity
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();
+//        db.disableNetwork();
 
         userData = new UserData();
 
@@ -385,11 +398,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
+
     }
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-
     }
 
     private void clearCardsForUpdate() {
@@ -1005,32 +1018,27 @@ public class MainActivity extends AppCompatActivity
         this.favCardList.clear();
         this.favBusStopID = favBusStopID;
         userData.setFavBusStopID(favBusStopID);
-        db.collection("user").document("userdata").set(userData);
+//        String uniqueID = UUID.randomUUID().toString();
+        db.collection("user").document(UUIDStr).set(userData);
     }
 
     private void loadFavoritesFromDB(){
-        DocumentReference docRef = db.collection("user").document("userdata");
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                        userData = document.toObject(UserData.class);
-                        favBusStopID = userData.getFavBusStopID();
-                        adapter.setFavBusStopID(favBusStopID);
+        DocumentReference docRef = db.collection("user").document(UUIDStr);
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document.exists()) {
+                    Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                    userData = document.toObject(UserData.class);
+                    favBusStopID = userData.getFavBusStopID();
+                    adapter.setFavBusStopID(favBusStopID);
 
-                        bottomNav.setSelectedItemId(R.id.action_fav);
-//                        prepareFavoriteCards(favBusStopID);
-//                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-//                        favBusStopID = (ArrayList) document.getData().get("favBusStopID");
-                    } else {
-                        Log.d(TAG, "No such document");
-                    }
+                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
-                    Log.d(TAG, "get failed with ", task.getException());
+                    Log.d(TAG, "No such document");
                 }
+            } else {
+                Log.d(TAG, "get failed with ", task.getException());
             }
         });
     }
