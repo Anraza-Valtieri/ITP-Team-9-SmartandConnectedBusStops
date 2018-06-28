@@ -68,10 +68,17 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -216,6 +223,8 @@ public class MainActivity extends AppCompatActivity
 
     //Navigate
     boolean optionMode = true;
+
+    final public ArrayList<String> abc = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1511,7 +1520,56 @@ public class MainActivity extends AppCompatActivity
         card.setID(googleRoutesData.getID());
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
-        card.setCost("$X.XX");
+
+        //can work
+        /*db.collection("adult")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                String cost = "a";
+                if (task.isSuccessful()) {
+                    //Log.d(TAG, "WE ARE HERE");
+                    for(QueryDocumentSnapshot doc : task.getResult()) {
+                        //String intValue = googleRoutesData.getTotalDistance().replaceAll("[^0-9]", "");
+                        if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < Double.valueOf(doc.getId())) {
+                            Log.d(TAG, "HElo" + googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3));
+                            Log.d(TAG, "HElo" + doc.getId());
+                            Log.d(TAG, "HElo" + doc.getDouble("BusMrt"));
+                            cost = String.valueOf(doc.getDouble("BusMrt"));
+
+                            break;
+                        }
+
+                    }
+
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+                card.setCost(cost);
+            }
+        });*/
+
+        db.collection("adult").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                
+                if (task.isSuccessful()) {
+                    abc.clear();
+                    QuerySnapshot querySnapShot = task.getResult();
+                    for (DocumentSnapshot doc : querySnapShot.getDocuments()) {
+                        if (Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < Double.valueOf(doc.getId())) {
+                            abc.add(String.valueOf(doc.getDouble("BusMrt")));
+                            break;
+                        }
+                    }
+
+                }
+
+            }
+        });
+        //card.setCost(abc.get(0));
+
 
         //in Steps
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
