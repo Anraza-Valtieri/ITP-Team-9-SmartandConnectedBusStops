@@ -1,7 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.res.ColorStateList;
@@ -12,7 +11,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v4.widget.ImageViewCompat;
 import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.RecyclerView;
@@ -25,7 +23,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +31,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
-import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -42,8 +38,6 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -200,6 +194,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
                 transit_layout.setOrientation(LinearLayout.VERTICAL);
 
+                transit_layout.removeAllViewsInLayout();
                 for (Map.Entry<String, List<Integer>> entry : transitCard.getTransitStations().entrySet()) {
                     String stationName = entry.getKey();
                     //List<Integer> stationImageStationColor = entry.getValue();
@@ -223,6 +218,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
                 breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
 
+                breakdown_bar_layout.removeAllViewsInLayout();
                 for (int i=0; i < transitCard.getTimeTaken().size();i++){
                     String breakdownBarPartActualTime = (String) transitCard.getTimeTaken().get(i).get(0);
                     float breakdownBarPartWeight = (Float)transitCard.getTimeTaken().get(i).get(1);
@@ -399,19 +395,19 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         @Override
         public void run() {
             if (mCard != null) {
-                List<BusStopCards> busStopCards = new ArrayList<>();
-                for(int i=0; i<mCard.size(); i++ ) {
-                    Card card = mCard.get(i);
-                    if (card.getType() == card.BUS_STOP_CARD) {
+                Card card = mCard.get(0);
+                if (card.getType() == card.BUS_STOP_CARD) {
+                    List<BusStopCards> busStopCards = new ArrayList<>();
+                    for (int i = 0; i < mCard.size(); i++) {
 //                        Log.d(TAG, "run: Adding Buscard!");
-                        ((BusStopCards)mCard.get(i)).setMajorUpdate(true);
+                        ((BusStopCards) mCard.get(i)).setMajorUpdate(true);
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
+                    updateCardData(busStopCards);
+                    notifyItemRangeChanged(0, mCard.size());
+                    //updateCardData(mCard);
+                    doAutoRefresh();
                 }
-                updateCardData(busStopCards);
-                notifyItemRangeChanged(0, mCard.size());
-                //updateCardData(mCard);
-                doAutoRefresh();
             }
         }
     };

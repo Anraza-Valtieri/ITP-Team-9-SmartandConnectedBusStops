@@ -5,7 +5,7 @@ public class NavigateWalkingCard extends Card {
     private String totalTime;
     private String totalDistance;
     private String description;
-
+    private boolean isFavorite;
     public int getID() {
         return ID;
     }

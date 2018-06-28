@@ -69,15 +69,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
@@ -521,6 +517,7 @@ public class MainActivity extends AppCompatActivity
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                         Log.i(TAG,query);
                         hideKeyboard();
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                         lookUpRoutes(query);
 
                     }else{
@@ -1157,7 +1154,8 @@ public class MainActivity extends AppCompatActivity
 
                 return null;
             }
-        }.execute();
+        };
+        asyncTask.execute();
 
         lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
@@ -1412,6 +1410,7 @@ public class MainActivity extends AppCompatActivity
             }
             transitCardList.clear();
             walkingCardList.clear();
+            progressBar.setVisibility(View.VISIBLE);
             if (!optionMode){
                 //walking
                 for(int i=0; i< result.size(); i++) {
@@ -1420,8 +1419,6 @@ public class MainActivity extends AppCompatActivity
                     walkingCardList.add(card);
                     Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
-                clearCardsForUpdate();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 updateAdapterList(walkingCardList);
 
             }else{
@@ -1432,10 +1429,7 @@ public class MainActivity extends AppCompatActivity
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
-                clearCardsForUpdate();
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 updateAdapterList(transitCardList);
-
             }
 
         } catch (InterruptedException e) {
@@ -1583,6 +1577,9 @@ public class MainActivity extends AppCompatActivity
                 Log.i(TAG, "DURATION: " + routeSteps.get(i).getDuration());
                 String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                 int duration = Integer.parseInt(intValue);
+                if (largestDuration <= duration) {
+                    largestDuration = duration;
+                }
                 if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
                         (!routeSteps.get(i).getTravelMode().equals("TRANSIT") ||
                                 routeSteps.get(i) == null)) {
@@ -1613,9 +1610,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     //card.setTransferStation(routeSteps.get(i).getArrivalStop());
 
-                    if (largestDuration <= duration) {
-                        largestDuration = duration;
-                    }
+
                 }
             }
 
