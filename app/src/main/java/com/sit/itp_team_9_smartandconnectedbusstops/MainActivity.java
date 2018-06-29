@@ -60,12 +60,16 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -77,6 +81,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
+import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -222,7 +227,13 @@ public class MainActivity extends AppCompatActivity
     //Navigate
     boolean optionMode = true;
 
-    final public ArrayList<String> abc = new ArrayList<>();
+    //PlaceAutoCompleteAdapter
+    private PlaceAutoCompleteAdapter mPlaceAutoCompleteAdapter;
+    private GeoDataClient mGeoDataClient;
+    private AutocompleteFilter autoCompleteFilter;
+    private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
+            new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -328,6 +339,10 @@ public class MainActivity extends AppCompatActivity
 //        View mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
         scheduleJob();
+
+        mGeoDataClient = Places.getGeoDataClient(this, null);
+        autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
+        mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
     }
 
     @Override
@@ -489,7 +504,9 @@ public class MainActivity extends AppCompatActivity
                 setSupportActionBar(toolbarNavigate);
                 getSupportActionBar().show();
                 AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
+                startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
+                destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
                 optionButton.setOnClickListener(view -> {
