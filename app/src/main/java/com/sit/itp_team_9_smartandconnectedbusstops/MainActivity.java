@@ -99,6 +99,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1567,7 +1568,7 @@ public class MainActivity extends AppCompatActivity
         //in Steps
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
         if (routeSteps != null) {
-            Map<String,List<Integer>> transitStations = new HashMap<>();
+            Map<String,List<Integer>> transitStations = new LinkedHashMap<>();
             List<List<Object>> timeTakenList = new ArrayList<>();
 
             //find largest duration of each step for weights in breakdownBar
@@ -1637,15 +1638,16 @@ public class MainActivity extends AppCompatActivity
                             timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
                         }
 
-                        if (i < 2 && (!routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ||
-                                routeSteps.get(i - 1) == null)) {
-                            //first public transport station
-                            card.setStartingStation(routeSteps.get(i).getDepartureStop());
-                            //card.setTransferStation(routeSteps.get(i).getArrivalStop());
-                            card.setNumStops("( "+String.valueOf(routeSteps.get(i).getNumStops())+" stops)");
-                            card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
-                            card.setImageViewStartingStation(imageViewTransit);
-                            card.setImageViewStartingStationColor(imageViewColor);
+                        if (i < 2){
+                            if(i==0 || !routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ) {
+                                //first public transport station
+                                card.setStartingStation(routeSteps.get(i).getDepartureStop());
+                                //card.setTransferStation(routeSteps.get(i).getArrivalStop());
+                                card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
+                                card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
+                                card.setImageViewStartingStation(imageViewTransit);
+                                card.setImageViewStartingStationColor(imageViewColor);
+                            }
                         }
                         if (!transitStations.containsKey(routeSteps.get(i).getArrivalStop())) {
                             List<Integer> stationDetails = new ArrayList<>();
