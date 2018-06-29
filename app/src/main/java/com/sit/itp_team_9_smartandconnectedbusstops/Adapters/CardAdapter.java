@@ -394,7 +394,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     Runnable runnable2 = new Runnable() {
         @Override
         public void run() {
-            if (mCard != null) {
+            if (mCard != null && mCard.size() > 0) {
                 Card card = mCard.get(0);
                 if (card.getType() == card.BUS_STOP_CARD) {
                     List<BusStopCards> busStopCards = new ArrayList<>();
