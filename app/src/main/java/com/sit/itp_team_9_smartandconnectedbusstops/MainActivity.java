@@ -77,6 +77,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
@@ -92,6 +93,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsP
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
+import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
@@ -1515,6 +1517,7 @@ public class MainActivity extends AppCompatActivity
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
 
+        //Jeremy's part, do not remove first
         //can work
         /*db.collection("adult")
                 .get()
@@ -1544,25 +1547,15 @@ public class MainActivity extends AppCompatActivity
             }
         });*/
 
-        db.collection("adult").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                
-                if (task.isSuccessful()) {
-                    abc.clear();
-                    QuerySnapshot querySnapShot = task.getResult();
-                    for (DocumentSnapshot doc : querySnapShot.getDocuments()) {
-                        if (Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < Double.valueOf(doc.getId())) {
-                            abc.add(String.valueOf(doc.getDouble("BusMrt")));
-                            break;
-                        }
-                    }
+        FareDetails fareDetails = new FareDetails();
+        fareDetails.populateMap();
 
-                }
-
+        for(Map.Entry<Double, AdultFares> entry : fareDetails.getAdultFaresMap().entrySet()) {
+            if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < entry.getKey()) {
+                card.setCost("$".concat(String.valueOf(entry.getValue().getBusMrt())));
+                break;
             }
-        });
-        //card.setCost(abc.get(0));
+        }
 
 
         //in Steps
