@@ -1,63 +1,101 @@
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/toolbar_navigate"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/text_shadow_white"
     android:elevation="4dp"
-    android:minHeight="?attr/actionBarSize"
+    android:minHeight="120dp"
     android:theme="?attr/actionBarTheme">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="top"
+        android:layout_height="120dp"
+        android:gravity="top|bottom|center_vertical|center_horizontal"
         android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:orientation="vertical">
-
-            <AutoCompleteTextView
-                android:id="@+id/textViewStartingPoint"
-                android:layout_width="250dp"
-                android:layout_height="wrap_content"
-                android:hint="@string/starting_point"
-                android:textColor="@android:color/black"
-                android:textColorHint="@android:color/darker_gray" />
-
-            <AutoCompleteTextView
-                android:id="@+id/textViewDestination"
-                android:layout_width="250dp"
-                android:layout_height="wrap_content"
-                android:hint="@string/destination"
-                android:textColor="@android:color/black"
-                android:textColorHint="@android:color/darker_gray" />
-
-        </LinearLayout>
-
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <ImageButton
-                android:id="@+id/optionButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:background="@drawable/ic_directions_bus_black_24dp" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:gravity="top|left"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <ImageButton
-                android:id="@+id/searchButton"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:visibility="visible"
-                app:srcCompat="@drawable/ic_search" />
-        </LinearLayout>
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/textViewStartingPoint"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:hint="@string/starting_point"
+                        android:popupBackground="@android:color/white"
+                        android:textColor="@android:color/black"
+                        android:textColorHint="@android:color/darker_gray"
+                        app:layout_constraintEnd_toStartOf="@+id/optionButton"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <AutoCompleteTextView
+                        android:id="@+id/textViewDestination"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:hint="@string/destination"
+                        android:popupBackground="@android:color/white"
+                        android:textColor="@android:color/black"
+                        android:textColorHint="@android:color/darker_gray"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/searchButton"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textViewStartingPoint" />
+
+                    <ImageButton
+                        android:id="@+id/optionButton"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/ic_directions_bus_black_24dp"
+                        android:gravity="center_vertical|center_horizontal"
+                        app:layout_constraintBottom_toBottomOf="@+id/textViewStartingPoint"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/textViewStartingPoint" />
+
+                    <ImageButton
+                        android:id="@+id/searchButton"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="@color/fui_transparent"
+                        android:gravity="top"
+                        android:visibility="visible"
+                        app:layout_constraintBottom_toBottomOf="@+id/textViewDestination"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/textViewDestination"
+                        app:srcCompat="@drawable/ic_search" />
+                </android.support.constraint.ConstraintLayout>
+
+            </LinearLayout>
+
+        </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>
 </android.support.v7.widget.Toolbar>
