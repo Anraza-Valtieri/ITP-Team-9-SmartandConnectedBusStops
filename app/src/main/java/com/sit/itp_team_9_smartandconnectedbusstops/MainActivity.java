@@ -79,7 +79,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.Fares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
@@ -1562,9 +1562,9 @@ public class MainActivity extends AppCompatActivity
         });*/
 
         FareDetails fareDetails = new FareDetails();
-        fareDetails.populateMap();
+        fareDetails.populateAdultFaresMap();
 
-        for(Map.Entry<Double, AdultFares> entry : fareDetails.getAdultFaresMap().entrySet()) {
+        for(Map.Entry<Double, Fares> entry : fareDetails.getAdultFaresMap().entrySet()) {
             if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < entry.getKey()) {
                 card.setCost("$".concat(String.valueOf(entry.getValue().getBusMrt())));
                 break;
