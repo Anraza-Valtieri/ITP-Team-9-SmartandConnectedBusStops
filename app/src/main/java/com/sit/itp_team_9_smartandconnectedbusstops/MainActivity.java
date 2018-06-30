@@ -72,13 +72,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
@@ -106,6 +103,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -509,6 +507,7 @@ public class MainActivity extends AppCompatActivity
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 optionButton.setOnClickListener(view -> {
                     if (!optionMode) {
                         optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
@@ -1378,7 +1377,7 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
-            card.setType(card.BUS_STOP_CARD);
+            card.setType(Card.BUS_STOP_CARD);
             card.setMajorUpdate(true);
             favCardList.add(card);
             Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
@@ -1480,13 +1479,11 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
                 NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
-                card.setType(card.NAVIGATE_TRANSIT_CARD);
+                card.setType(Card.NAVIGATE_TRANSIT_CARD);
                 transitCardList.add(card);
                 Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
@@ -1494,7 +1491,7 @@ public class MainActivity extends AppCompatActivity
     private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
         //TODO set card details here (route ID?)
         NavigateTransitCard card = new NavigateTransitCard();
-        card.setType(card.NAVIGATE_TRANSIT_CARD);
+        card.setType(Card.NAVIGATE_TRANSIT_CARD);
         //card.setTotalDistance(googleRoutesData.getTotalDistance());
         //card.setTotalTime(googleRoutesData.getTotalDuration());
         //need loop to get
@@ -1574,53 +1571,20 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-
         //in Steps
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
         if (routeSteps != null) {
-            Map<String, List<Integer>> transitStations = new HashMap<>();
+            Map<String,List<Integer>> transitStations = new LinkedHashMap<>();
             List<List<Object>> timeTakenList = new ArrayList<>();
 
-            //find shortest duration of each step for weights in breakdownBar
+            //find largest duration of each step for weights in breakdownBar
             int largestDuration = 0;
             for (int i = 0; i < routeSteps.size(); i++) {
-                Log.i(TAG, "DURATION: " + routeSteps.get(i).getDuration());
+                Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
                 String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                 int duration = Integer.parseInt(intValue);
-                if (largestDuration <= duration) {
+                if (largestDuration <= duration){
                     largestDuration = duration;
-                }
-                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && i < 2 &&
-                        (!routeSteps.get(i).getTravelMode().equals("TRANSIT") ||
-                                routeSteps.get(i) == null)) {
-                    //first public transport station
-                    card.setStartingStation(routeSteps.get(i).getDepartureStop());
-                    card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
-                    card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
-                    card.setImageViewStartingStation(R.drawable.ic_directions_bus_black_24dp);
-                    String trainLine = routeSteps.get(i).getTrainLine();
-                    if (trainLine != null) {
-                        switch (trainLine) {
-                            case "Downtown Line":
-                                card.setImageViewStartingStationColor(Color.argb(255, 1, 87, 155));
-                                break;
-                            case "North East Line":
-                                card.setImageViewStartingStationColor(Color.argb(255, 72, 35, 175));
-                                break;
-                            case "East West Line":
-                                card.setImageViewStartingStationColor(Color.argb(255, 36, 130, 37));
-                                break;
-                            case "North South Line":
-                                card.setImageViewStartingStationColor(Color.argb(255, 244, 65, 65));
-                                break;
-                            case "Circle Line":
-                                card.setImageViewStartingStationColor(Color.argb(255, 244, 226, 66));
-                                break;
-                        }
-                    }
-                    //card.setTransferStation(routeSteps.get(i).getArrivalStop());
-
-
                 }
             }
 
@@ -1628,12 +1592,12 @@ public class MainActivity extends AppCompatActivity
                 List<Object> timeTakenEachStep = new ArrayList<>();
                 String travelMode = routeSteps.get(i).getTravelMode();
                 String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                float timeTakenWeight = Float.parseFloat(intValue) / largestDuration;
-                Log.i(TAG, "largestDuration= " + largestDuration);
-                Log.i(TAG, "timeTakenWeight= " + timeTakenWeight);
+                float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
+                Log.i(TAG,"largestDuration= "+largestDuration);
+                Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
                 timeTakenEachStep.add(routeSteps.get(i).getDuration());
                 timeTakenEachStep.add(timeTakenWeight);
-                switch (travelMode) {
+                switch (travelMode){
                     case "WALKING":
                         timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
                         break;
@@ -1672,7 +1636,7 @@ public class MainActivity extends AppCompatActivity
                                     timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
                                     break;
                             }
-                        } else {
+                        }else{
                             //if bus
                             String busNumber = routeSteps.get(i).getBusNum();
                             imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
@@ -1680,31 +1644,33 @@ public class MainActivity extends AppCompatActivity
                             timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
                         }
 
-                        if (i < 2 && (!routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ||
-                                routeSteps.get(i - 1) == null)) {
-                            //first public transport station
-                            card.setStartingStation(routeSteps.get(i).getDepartureStop());
-                            //card.setTransferStation(routeSteps.get(i).getArrivalStop());
-                            card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
-                            card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
-                            card.setImageViewStartingStation(imageViewTransit);
-                            card.setImageViewStartingStationColor(imageViewColor);
+                        if (i < 2){
+                            if(i==0 || !routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ) {
+                                //first public transport station
+                                card.setStartingStation(routeSteps.get(i).getDepartureStop());
+                                //card.setTransferStation(routeSteps.get(i).getArrivalStop());
+                                card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
+                                card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
+                                card.setImageViewStartingStation(imageViewTransit);
+                                card.setImageViewStartingStationColor(imageViewColor);
+                            }
                         }
                         if (!transitStations.containsKey(routeSteps.get(i).getArrivalStop())) {
                             List<Integer> stationDetails = new ArrayList<>();
                             stationDetails.add(imageViewTransit);
                             stationDetails.add(imageViewColor);
-                            transitStations.put(routeSteps.get(i).getArrivalStop(), stationDetails);
+                            transitStations.put(routeSteps.get(i).getArrivalStop(),stationDetails);
                         }
                         break;
                 }
                 timeTakenList.add(timeTakenEachStep);
             }
-                card.setTimeTaken(timeTakenList);
-                card.setTransitStations(transitStations);
-            }
+            card.setTimeTaken(timeTakenList);
+            card.setTransitStations(transitStations);
+        }
         return card;
     }
+
 
     private NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData) {
         NavigateWalkingCard card = new NavigateWalkingCard();
@@ -1727,66 +1693,4 @@ public class MainActivity extends AppCompatActivity
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
-    /*
-    ALL BUS STOPS FROM LTA
-
-    // Pull bus stop data
-    List<String> urlsList = new ArrayList<>();
-    urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-    Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-    JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-    ltaReply.delegate = MainActivity.this;
-    ltaReply.execute();
-
-
-
-    //Update bus time
-    for (Map.Entry<String, Map> entry : result.entrySet()) {
-                String key = entry.getKey(); // Bus stop ID
-                Map value = entry.getValue(); // Map with Bus to Timings
-                BusStopCards card = busStopMap.get(key);
-
-                Map<String, List<String>> finalData = new HashMap<>(value);
-                for (List<String> newData : finalData.values()){
-                    String toConvertID = newData.get(3);
-                    Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
-                    newData.set(3, allBusByID.get(toConvertID));
-                }
-                card.setBusServices(finalData);
-                card.setLastUpdated(Calendar.getInstance().getTime().toString());
-
-    Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
-                        +" Bus Stop Name: "+ card.getBusStopName()
-                        +" - "+card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-
-
-    // Get nearby
-    List<GoogleBusStopData> result = new AsyncTask() {
-    @Override
-    protected Object doInBackground(Object[] objects) {
-        List<String> urlsList = new ArrayList<>();
-        urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
-        Log.d(TAG, "FindNearbyBusStop: " + urlsList.get(0));
-        JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
-        googleReply.execute();
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        // Set the map's camera position to the current location of the device.
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                .build();                   // Creates a CameraPosition from the builder
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-    }
-}.execute().get();
-     */
-
-
-
 }
