@@ -7,9 +7,9 @@ public class Fares {
     private String MrtBefore745;
 
     public Fares(String busMrt, String expressBus, String mrtBefore745) {
-        BusMrt = busMrt;
-        ExpressBus = expressBus;
-        MrtBefore745 = mrtBefore745;
+        this.BusMrt = busMrt;
+        this.ExpressBus = expressBus;
+        this.MrtBefore745 = mrtBefore745;
     }
 
     public String getBusMrt() {
