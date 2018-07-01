@@ -60,23 +60,26 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
+import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
@@ -92,6 +95,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsP
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
+import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
@@ -221,7 +225,13 @@ public class MainActivity extends AppCompatActivity
     //Navigate
     boolean optionMode = true;
 
-    final public ArrayList<String> abc = new ArrayList<>();
+    //PlaceAutoCompleteAdapter
+    private PlaceAutoCompleteAdapter mPlaceAutoCompleteAdapter;
+    private GeoDataClient mGeoDataClient;
+    private AutocompleteFilter autoCompleteFilter;
+    private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
+            new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,6 +337,10 @@ public class MainActivity extends AppCompatActivity
 //        View mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
         scheduleJob();
+
+        mGeoDataClient = Places.getGeoDataClient(this, null);
+        autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
+        mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
     }
 
     @Override
@@ -488,9 +502,12 @@ public class MainActivity extends AppCompatActivity
                 setSupportActionBar(toolbarNavigate);
                 getSupportActionBar().show();
                 AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
+                startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
+                destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 optionButton.setOnClickListener(view -> {
                     if (!optionMode) {
                         optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
@@ -1360,7 +1377,7 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
-            card.setType(card.BUS_STOP_CARD);
+            card.setType(Card.BUS_STOP_CARD);
             card.setMajorUpdate(true);
             favCardList.add(card);
             Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
@@ -1462,13 +1479,11 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
                 NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
-                card.setType(card.NAVIGATE_TRANSIT_CARD);
+                card.setType(Card.NAVIGATE_TRANSIT_CARD);
                 transitCardList.add(card);
                 Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
@@ -1476,7 +1491,7 @@ public class MainActivity extends AppCompatActivity
     private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
         //TODO set card details here (route ID?)
         NavigateTransitCard card = new NavigateTransitCard();
-        card.setType(card.NAVIGATE_TRANSIT_CARD);
+        card.setType(Card.NAVIGATE_TRANSIT_CARD);
         //card.setTotalDistance(googleRoutesData.getTotalDistance());
         //card.setTotalTime(googleRoutesData.getTotalDuration());
         //need loop to get
@@ -1516,6 +1531,7 @@ public class MainActivity extends AppCompatActivity
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
 
+        //Jeremy's part, do not remove first
         //can work
         /*db.collection("adult")
                 .get()
@@ -1545,25 +1561,15 @@ public class MainActivity extends AppCompatActivity
             }
         });*/
 
-        db.collection("adult").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                
-                if (task.isSuccessful()) {
-                    abc.clear();
-                    QuerySnapshot querySnapShot = task.getResult();
-                    for (DocumentSnapshot doc : querySnapShot.getDocuments()) {
-                        if (Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < Double.valueOf(doc.getId())) {
-                            abc.add(String.valueOf(doc.getDouble("BusMrt")));
-                            break;
-                        }
-                    }
+        FareDetails fareDetails = new FareDetails();
+        fareDetails.populateMap();
 
-                }
-
+        for(Map.Entry<Double, AdultFares> entry : fareDetails.getAdultFaresMap().entrySet()) {
+            if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < entry.getKey()) {
+                card.setCost("$".concat(String.valueOf(entry.getValue().getBusMrt())));
+                break;
             }
-        });
-        //card.setCost(abc.get(0));
+        }
 
         //in Steps
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
@@ -1687,66 +1693,4 @@ public class MainActivity extends AppCompatActivity
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
-    /*
-    ALL BUS STOPS FROM LTA
-
-    // Pull bus stop data
-    List<String> urlsList = new ArrayList<>();
-    urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-    Log.d(TAG, "Look up bus timings for : " + newStop.getBusStopID());
-    JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, newStop.getBusStopID());
-    ltaReply.delegate = MainActivity.this;
-    ltaReply.execute();
-
-
-
-    //Update bus time
-    for (Map.Entry<String, Map> entry : result.entrySet()) {
-                String key = entry.getKey(); // Bus stop ID
-                Map value = entry.getValue(); // Map with Bus to Timings
-                BusStopCards card = busStopMap.get(key);
-
-                Map<String, List<String>> finalData = new HashMap<>(value);
-                for (List<String> newData : finalData.values()){
-                    String toConvertID = newData.get(3);
-                    Log.d(TAG, "processFinishFromLTA: toConvertID "+ toConvertID);
-                    newData.set(3, allBusByID.get(toConvertID));
-                }
-                card.setBusServices(finalData);
-                card.setLastUpdated(Calendar.getInstance().getTime().toString());
-
-    Log.d(TAG, "processFinishFromLTA: Bus stop ID:"+key
-                        +" Bus Stop Name: "+ card.getBusStopName()
-                        +" - "+card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
-
-
-    // Get nearby
-    List<GoogleBusStopData> result = new AsyncTask() {
-    @Override
-    protected Object doInBackground(Object[] objects) {
-        List<String> urlsList = new ArrayList<>();
-        urlsList.add("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + mLastKnownLocation.getLatitude() + "," + mLastKnownLocation.getLongitude() + "&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s");
-        Log.d(TAG, "FindNearbyBusStop: " + urlsList.get(0));
-        JSONGoogleNearbySearchParser googleReply = new JSONGoogleNearbySearchParser(MainActivity.this, urlsList);
-        googleReply.execute();
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        // Set the map's camera position to the current location of the device.
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                .build();                   // Creates a CameraPosition from the builder
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-    }
-}.execute().get();
-     */
-
-
-
 }
