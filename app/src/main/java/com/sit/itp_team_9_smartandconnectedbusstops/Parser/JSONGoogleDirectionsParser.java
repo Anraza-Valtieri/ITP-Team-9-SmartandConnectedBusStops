@@ -168,7 +168,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                     }else{
                         //TODO change to exception
                         GoogleRoutesData entry = new GoogleRoutesData();
-                        entry.setCopyrights("ZERO_RESULTS");
+                        entry.setError(response1.getString("status"));
                         routesList.add(entry);
                     }
                     urlConnection.disconnect();

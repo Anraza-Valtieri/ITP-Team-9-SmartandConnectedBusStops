@@ -20,6 +20,9 @@ public class GoogleRoutesData {
     private double totalBusDistance;
     private double totalTrainDistance;
 
+    //for no results found
+    private String error;
+
     public List<GoogleRoutesData> getRoutes() {
         return routes;
     }
@@ -99,5 +102,13 @@ public class GoogleRoutesData {
 
     public void setTotalTrainDistance(double totalTrainDistance) {
         this.totalTrainDistance = totalTrainDistance;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

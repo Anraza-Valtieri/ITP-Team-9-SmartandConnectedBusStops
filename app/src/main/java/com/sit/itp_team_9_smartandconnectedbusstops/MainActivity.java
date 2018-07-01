@@ -1527,9 +1527,10 @@ public class MainActivity extends AppCompatActivity
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(card.NAVIGATE_TRANSIT_CARD);
-        card.setID(googleRoutesData.getID());
-        card.setTotalDistance(googleRoutesData.getTotalDistance());
-        card.setTotalTime(googleRoutesData.getTotalDuration());
+        if (googleRoutesData.getError().isEmpty()){
+            card.setID(googleRoutesData.getID());
+            card.setTotalDistance(googleRoutesData.getTotalDistance());
+            card.setTotalTime(googleRoutesData.getTotalDuration());
 
         //Jeremy's part, do not remove first
         //can work
@@ -1667,6 +1668,9 @@ public class MainActivity extends AppCompatActivity
             }
             card.setTimeTaken(timeTakenList);
             card.setTransitStations(transitStations);
+            }
+        }else{
+            //card.set
         }
         return card;
     }
