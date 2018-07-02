@@ -77,12 +77,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.data.kml.KmlLayer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.Fares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.Fares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
@@ -98,6 +99,9 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerSer
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -119,13 +123,6 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
-
-//    // The entry points to the Places API.
-//    private GeoDataClient mGeoDataClient;
-//    private PlaceDetectionClient mPlaceDetectionClient;
-//
-//    // The entry point to the Fused Location Provider.
-//    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
@@ -321,15 +318,6 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-//        // Construct a GeoDataClient.
-//        mGeoDataClient = Places.getGeoDataClient(this, null);
-//
-//        // Construct a PlaceDetectionClient.
-//        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-//
-//        // Construct a FusedLocationProviderClient.
-//        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
         // Build the map.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapView);
@@ -466,8 +454,6 @@ public class MainActivity extends AppCompatActivity
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
         recyclerView.setAdapter(adapter);
-//        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
-//        recyclerView.setItemViewCacheSize(300000);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
@@ -671,92 +657,38 @@ public class MainActivity extends AppCompatActivity
         LocationSettingsRequest mLocationSettingsRequest = builder.build();
         if (mLocationPermissionGranted) {
             mSettingsClient
-                    .checkLocationSettings(mLocationSettingsRequest)
-                    .addOnSuccessListener(this, locationSettingsResponse -> {
-                        Log.i(TAG, "All location settings are satisfied.");
+                .checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, locationSettingsResponse -> {
+                    Log.i(TAG, "All location settings are satisfied.");
+                    //noinspection MissingPermission
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                            mLocationCallback, Looper.myLooper());
 
-//                            Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(this, e -> {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                    "location settings ");
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the
+                                // result in onActivityResult().
+                                ResolvableApiException rae = (ResolvableApiException) e;
+                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException sie) {
+                                Log.i(TAG, "PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            String errorMessage = "Location settings are inadequate, and cannot be " +
+                                    "fixed here. Fix in Settings.";
+                            Log.e(TAG, errorMessage);
 
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
+                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    }
 
-                    })
-                    .addOnFailureListener(this, e -> {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                        }
-
-                    });
-//            lookUpNearbyBusStops();
-            /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Location locationNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            long GPSLocationTime = 0;
-            if (null != locationGPS) { GPSLocationTime = locationGPS.getTime(); }
-
-            long NetLocationTime = 0;
-
-            if (null != locationNet) {
-                NetLocationTime = locationNet.getTime();
-            }
-
-            // Define a listener that responds to location updates
-            LocationListener locationListener = new LocationListener() {
-                public void onLocationChanged(Location location) {
-                    // Called when a new location is found by the network location provider.
-//                    mCurrentLocation.setLatitude(location.getLatitude());
-//                    mCurrentLocation.setLongitude(location.getLongitude());
-                    mCurrentLocation = location;
-                }
-
-                public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-                public void onProviderEnabled(String provider) {}
-
-                public void onProviderDisabled(String provider) {}
-            };
-
-            if ( 0 < GPSLocationTime - NetLocationTime ) {
-//                return locationGPS;
-                Log.d(TAG, "getDeviceLocation: GPS is more accurate");
-                // Register the listener with the Location Manager to receive location updates
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            }
-            else {
-//                return locationNet;
-                Log.d(TAG, "getDeviceLocation: Network is more accurate");
-                // Register the listener with the Location Manager to receive location updates
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-            }*/
+                });
         }
     }
 
@@ -857,13 +789,14 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_bus) {
+        /*if (id == R.id.nav_bus) {
             // Handle the camera action
         } else if (id == R.id.nav_bus_stops) {
 
         } else if (id == R.id.nav_trainstations) {
 
-        } else if (id == R.id.nav_setting) {
+        } else */
+        if (id == R.id.nav_setting) {
 
         }
 
@@ -972,6 +905,13 @@ public class MainActivity extends AppCompatActivity
         }else{
             showNoNetworkDialog(this);
         }
+
+        try {
+            KmlLayer layer = new KmlLayer(mMap, R.raw.rail_stn, getApplicationContext());
+//                layer.addLayerToMap();
+        } catch (XmlPullParserException | IOException e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void onCameraMove() {
@@ -1049,9 +989,6 @@ public class MainActivity extends AppCompatActivity
      */
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
-
-//        CollectionReference citiesRef = db.collection("data");
-
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -1070,7 +1007,6 @@ public class MainActivity extends AppCompatActivity
             for (Map.Entry<String,LTABusStopData> newData : allBusStops.entrySet()){
                 sortedLTABusStopData.add(newData.getValue());
             }
-//            LinkIDtoName();
             FillBusData();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1129,8 +1065,6 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 dialog.dismiss();
-//                bottomNav.setSelectedItemId(R.id.action_fav);
-//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
 
             @Override
@@ -1192,6 +1126,9 @@ public class MainActivity extends AppCompatActivity
         BusStopCards result = busStopMap.get(id);
         if(result == null){
             Log.e(TAG, "getBusStopData: No busStopMap!");
+            Toast.makeText(getApplicationContext(),
+                    "Failed to sync data from network!",
+                    Toast.LENGTH_SHORT).show();
             return null;
         }
 
@@ -1247,6 +1184,14 @@ public class MainActivity extends AppCompatActivity
         if(mCurrentLocation==null)
             return;
 
+        if(!haveNetworkConnection(getApplicationContext())){
+            Toast.makeText(getApplicationContext(),
+                    "No Network detected! Check your network!",
+                    Toast.LENGTH_SHORT).show();
+//            showNoNetworkDialog(mContext);
+            return;
+        }
+
         @SuppressLint("StaticFieldLeak")
         AsyncTask asyncTask = new AsyncTask() {
             @Override
@@ -1267,7 +1212,11 @@ public class MainActivity extends AppCompatActivity
                 super.onPostExecute(o);
                 List<LTABusStopData> toProcess = (List<LTABusStopData>) o;
                 if(toProcess.size() <= 0){
-                    Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+                    Log.d(TAG, "lookUpNearbyBusStops: SORTING returned no data");
+                    Toast.makeText(getApplicationContext(),
+                            "No response from servers! Check your network!",
+                            Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.INVISIBLE);
                     return;
                 }
                 nearbyCardList.clear();
@@ -1377,11 +1326,12 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
-            card.setType(Card.BUS_STOP_CARD);
-            card.setMajorUpdate(true);
-            favCardList.add(card);
-            Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
-//            }
+            if (card != null) {
+                card.setType(Card.BUS_STOP_CARD);
+                card.setMajorUpdate(true);
+                favCardList.add(card);
+                Log.d(TAG, "prepareFavoriteCards: adding " + card.getBusStopID() + " to favCardList");
+            }
         }
 
         @SuppressLint("StaticFieldLeak")
