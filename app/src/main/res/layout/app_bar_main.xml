@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/coordinatorlay"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -81,34 +82,45 @@
 
     </FrameLayout>
 
-    <FrameLayout
-        android:id="@+id/bottombar"
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="8dp"
-        app:layout_anchor="@+id/include2"
-        app:layout_anchorGravity="bottom|center">
+        android:layout_gravity="top|center_vertical|center"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        app:layout_anchor="@id/bottom_navigation" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:backgroundTint="@android:color/transparent"
+        card_view:cardElevation="40dp">
+
+        <FrameLayout
+            android:id="@+id/bottombar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|center_vertical|center"
-            android:paddingBottom="60dp"
-            android:visibility="gone" />
+            android:elevation="8dp"
+            app:layout_anchor="@+id/include2"
+            app:layout_anchorGravity="bottom|center">
 
-        <android.support.design.widget.BottomNavigationView
-            android:id="@+id/bottom_navigation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:background="@android:color/white"
-            android:elevation="5dp"
-            app:itemIconTint="@color/btm_tab_item_foreground"
-            app:itemTextColor="@color/btm_tab_item_foreground"
-            app:menu="@menu/bottom_navigation_menu" />
+            <android.support.design.widget.BottomNavigationView
+                android:id="@+id/bottom_navigation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@android:color/white"
+                android:elevation="5dp"
+                app:elevation="4dp"
+                app:itemIconTint="@color/btm_tab_item_foreground"
+                app:itemTextColor="@color/btm_tab_item_foreground"
+                app:menu="@menu/bottom_navigation_menu" />
+        </FrameLayout>
+    </android.support.v7.widget.CardView>
 
-    </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>
