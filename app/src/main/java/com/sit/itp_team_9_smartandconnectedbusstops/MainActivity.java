@@ -77,7 +77,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.data.kml.KmlLayer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -90,6 +89,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
@@ -99,9 +99,6 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerSer
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -229,6 +226,13 @@ public class MainActivity extends AppCompatActivity
     private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
             new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
 
+    // Weather
+    private SGWeather sgWeather;
+    TextView weather;
+    TextView temperature;
+    TextView psi25;
+    TextView psi10;
+    TextView uv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -243,6 +247,11 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         navHeader = navigationView.getHeaderView(0);
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
+        weather = navHeader.findViewById(R.id.tvWeather);
+        temperature = navHeader.findViewById(R.id.tvTemperature);
+        psi25 = navHeader.findViewById(R.id.tvPSI25);
+        psi10 = navHeader.findViewById(R.id.tvPSI10);
+        uv = navHeader.findViewById(R.id.tvUV);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
@@ -314,6 +323,38 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        drawer.addDrawerListener(
+                new DrawerLayout.DrawerListener() {
+                    @Override
+                    public void onDrawerSlide(View drawerView, float slideOffset) {
+                        // Respond when the drawer's position changes
+                    }
+
+                    @Override
+                    public void onDrawerOpened(View drawerView) {
+                        // Respond when the drawer is opened
+                    }
+
+                    @Override
+                    public void onDrawerClosed(View drawerView) {
+                        // Respond when the drawer is closed
+                    }
+
+                    @Override
+                    public void onDrawerStateChanged(int newState) {
+                        // Respond when the drawer motion state changes
+                        if(sgWeather != null) {
+                            sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            weather.setText(sgWeather.getmWeatherForecast());
+                            temperature.setText(sgWeather.getmTemperature()+"°C");
+                            psi25.setText("PM2.5: "+sgWeather.getmPM25());
+                            psi10.setText("PM10: "+sgWeather.getmPM10());
+                            uv.setText("UV Index: "+sgWeather.getmUV());
+                        }
+                    }
+                }
+        );
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -622,6 +663,9 @@ public class MainActivity extends AppCompatActivity
                 super.onLocationResult(locationResult);
                 // location is received
                 mCurrentLocation = locationResult.getLastLocation();
+//                if(sgWeather!=null)
+//                    sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
@@ -906,12 +950,7 @@ public class MainActivity extends AppCompatActivity
             showNoNetworkDialog(this);
         }
 
-        try {
-            KmlLayer layer = new KmlLayer(mMap, R.raw.rail_stn, getApplicationContext());
-//                layer.addLayerToMap();
-        } catch (XmlPullParserException | IOException e) {
-            e.printStackTrace();
-        }
+        sgWeather = new SGWeather();
     }
     @Override
     public void onCameraMove() {
