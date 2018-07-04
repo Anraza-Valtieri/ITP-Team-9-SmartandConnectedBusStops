@@ -2,13 +2,20 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Utils;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Fares;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class FareDetails {
 
+    ArrayList<Double> AdultFareDistance = new ArrayList<>();
+
     HashMap<Double, Fares> StudentFareDetails = new HashMap();
     HashMap<Double, Fares> AdultFareDetails = new HashMap();
     HashMap<Double, Fares> SeniorFareDetails = new HashMap();
+
+    public ArrayList<Double> getAdultFareDistance() {
+        return AdultFareDistance;
+    }
 
     public HashMap<Double, Fares> getStudentFaresMap() {
         return StudentFareDetails;
@@ -20,6 +27,48 @@ public class FareDetails {
 
     public HashMap<Double, Fares> getSeniorFaresMap() {
         return SeniorFareDetails;
+    }
+
+    public void populateAdultFareDistance() {
+        AdultFareDistance.add(3.2);
+        AdultFareDistance.add(4.2);
+        AdultFareDistance.add(5.2);
+        AdultFareDistance.add(6.2);
+        AdultFareDistance.add(7.2);
+        AdultFareDistance.add(8.2);
+        AdultFareDistance.add(9.2);
+        AdultFareDistance.add(10.2);
+        AdultFareDistance.add(11.2);
+        AdultFareDistance.add(12.2);
+        AdultFareDistance.add(13.2);
+        AdultFareDistance.add(14.2);
+        AdultFareDistance.add(15.2);
+        AdultFareDistance.add(16.2);
+        AdultFareDistance.add(17.2);
+        AdultFareDistance.add(18.2);
+        AdultFareDistance.add(19.2);
+        AdultFareDistance.add(20.2);
+        AdultFareDistance.add(21.2);
+        AdultFareDistance.add(22.2);
+        AdultFareDistance.add(23.2);
+        AdultFareDistance.add(24.2);
+        AdultFareDistance.add(25.2);
+        AdultFareDistance.add(26.2);
+        AdultFareDistance.add(27.2);
+        AdultFareDistance.add(28.2);
+        AdultFareDistance.add(29.2);
+        AdultFareDistance.add(30.2);
+        AdultFareDistance.add(31.2);
+        AdultFareDistance.add(32.2);
+        AdultFareDistance.add(33.2);
+        AdultFareDistance.add(34.2);
+        AdultFareDistance.add(35.2);
+        AdultFareDistance.add(36.2);
+        AdultFareDistance.add(37.2);
+        AdultFareDistance.add(38.2);
+        AdultFareDistance.add(39.2);
+        AdultFareDistance.add(40.2);
+        AdultFareDistance.add(40.3);
     }
 
     public void populateStudentFaresMap() {
