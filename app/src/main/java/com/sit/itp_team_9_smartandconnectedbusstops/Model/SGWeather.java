@@ -55,7 +55,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 getTemperature();
                 getForecast();
-//                getDataForPM25();
+                getDataForPM25();
                 getDataForPSI();
                 getDataForUV();
 //                updateByLocation(getLatLng());
@@ -75,6 +75,7 @@ public class SGWeather {
         updateForecast();
         updatePSI();
         updateUV();
+        updatePM25();
     }
 
     private void updateTemperature(){
@@ -82,6 +83,11 @@ public class SGWeather {
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
+                if(temperatureParser == null) {
+                    Log.e(TAG, "updateTemperature: No Metadata?");
+                    return null;
+                }
+
                 Metadata meta = temperatureParser.getMetadata();
                 Stations[] station = meta.getStations();
 
@@ -122,6 +128,11 @@ public class SGWeather {
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
+                if(weatherParser == null) {
+                    Log.e(TAG, "updateForecast: No Metadata?");
+                    return null;
+                }
+
                 Area_metadata[] meta = weatherParser.getArea_metadata();
 
                 Comparator comp = (Comparator<Area_metadata>) (o, o2) -> {
@@ -161,6 +172,11 @@ public class SGWeather {
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
+                if(psiParser == null) {
+                    Log.e(TAG, "updatePSI: No Metadata?");
+                    return null;
+                }
+
                 List<RegionMetadatum> meta = psiParser.getRegionMetadata();
 
                 Comparator comp = (Comparator<RegionMetadatum>) (o, o2) -> {
@@ -186,27 +202,21 @@ public class SGWeather {
                 String nearestZone = meta.get(0).getName();
                 switch (nearestZone){
                     case "west":
-                        setmPM25(data.getPm25SubIndex().getWest().toString());
                         setmPM10(data.getPm10SubIndex().getWest().toString());
                         break;
                     case "east":
-                        setmPM25(data.getPm25SubIndex().getEast().toString());
                         setmPM10(data.getPm10SubIndex().getEast().toString());
                         break;
                     case "south":
-                        setmPM25(data.getPm25SubIndex().getSouth().toString());
                         setmPM10(data.getPm10SubIndex().getSouth().toString());
                         break;
                     case "north":
-                        setmPM25(data.getPm25SubIndex().getNorth().toString());
                         setmPM10(data.getPm10SubIndex().getNorth().toString());
                         break;
                     case "central":
-                        setmPM25(data.getPm25SubIndex().getCentral().toString());
                         setmPM10(data.getPm10SubIndex().getCentral().toString());
                         break;
                     default:
-                        setmPM25(data.getPm25SubIndex().getNational().toString());
                         setmPM10(data.getPm10SubIndex().getNational().toString());
                         break;
                 }
@@ -223,9 +233,74 @@ public class SGWeather {
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
+                if(uvParser == null) {
+                    Log.e(TAG, "updateUV: No data?");
+                    return null;
+                }
                 List<com.sit.itp_team_9_smartandconnectedbusstops.SGUV.Item> item = uvParser.getItems();
                 setmUV(item.get(0).getIndex().get(0).getValue().toString());
                 Log.d(TAG, "updateUV: UV="+getmUV());
+
+                return null;
+            }
+        };
+        task.execute();
+    }
+
+    private void updatePM25(){
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(pm25Parser == null) {
+                    Log.e(TAG, "updatePM25: No data?");
+                    return null;
+                }
+
+                List<com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.RegionMetadatum> meta = pm25Parser.getRegionMetadata();
+
+                Comparator comp = (Comparator<com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.RegionMetadatum>) (o, o2) -> {
+                    float[] result1 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, o.getLabelLocation().getLatitude(), o.getLabelLocation().getLongitude(), result1);
+                    Float distance1 = result1[0];
+
+                    float[] result2 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, o2.getLabelLocation().getLatitude(), o2.getLabelLocation().getLongitude(), result2);
+                    Float distance2 = result2[0];
+                    return distance1.compareTo(distance2);
+                };
+
+                long start = System.currentTimeMillis();
+                Log.d(TAG, "updatePM25: BEGIN SORTING!");
+                Collections.sort(meta, comp);
+                long elapsedTime = System.currentTimeMillis() - start;
+                Log.d(TAG, "updatePM25: COMPLETED SORTING! "+elapsedTime+"ms");
+
+                List<com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.Item> psiParserItems = pm25Parser.getItems();
+                com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.Item readings = psiParserItems.get(0);
+                com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.Readings data = readings.getReadings();
+                String nearestZone = meta.get(0).getName();
+                switch (nearestZone){
+                    case "west":
+                        setmPM25(data.getPm25OneHourly().getWest().toString());
+                        break;
+                    case "east":
+                        setmPM25(data.getPm25OneHourly().getEast().toString());
+                        break;
+                    case "south":
+                        setmPM25(data.getPm25OneHourly().getSouth().toString());
+                        break;
+                    case "north":
+                        setmPM25(data.getPm25OneHourly().getNorth().toString());
+                        break;
+                    case "central":
+                        setmPM25(data.getPm25OneHourly().getCentral().toString());
+                        break;
+                    default:
+                        setmPM25(data.getPm25OneHourly().getCentral().toString());
+                        break;
+                }
+                Log.d(TAG, "updatePM25: Nearest "+meta.get(0).getName()+" PM 2.5:"+getmPM25());
 
                 return null;
             }

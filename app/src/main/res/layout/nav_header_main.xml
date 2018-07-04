@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/nav_header_height"
     android:background="@drawable/side_nav_bar"
+    android:backgroundTint="@color/error_red"
     android:gravity="bottom"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
@@ -21,19 +21,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/nav_header_subtitle"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@+id/tvWeather"
             app:layout_constraintTop_toBottomOf="@+id/tvWeather"
             tools:text="25.4C" />
 
         <TextView
             android:id="@+id/tvWeather"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
             android:text="@string/nav_header_title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-            app:layout_constraintStart_toEndOf="@+id/imageView"
-            app:layout_constraintTop_toTopOf="@+id/imageView"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView"
             tools:text="Cloudy" />
 
         <ImageView
@@ -44,6 +53,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:contentDescription="@string/nav_header_desc"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -53,8 +63,8 @@
             android:id="@+id/tvPSI25"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="TextView"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@+id/tvTemperature"
             app:layout_constraintTop_toBottomOf="@+id/tvTemperature"
             tools:text="PM2.5: 29" />
@@ -65,6 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="TextView"
+            android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/tvPSI25"
             app:layout_constraintTop_toTopOf="@+id/tvPSI25"
             tools:text="PM10: 10" />
@@ -73,11 +84,22 @@
             android:id="@+id/tvUV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="TextView"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@+id/tvPSI25"
             app:layout_constraintTop_toBottomOf="@+id/tvPSI25"
             tools:text="UV Index: 10" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:text="Current Weather"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </android.support.constraint.ConstraintLayout>
 
 </LinearLayout>

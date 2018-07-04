@@ -331,9 +331,24 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer's position changes
                     }
 
+                    @SuppressLint("SetTextI18n")
                     @Override
                     public void onDrawerOpened(View drawerView) {
                         // Respond when the drawer is opened
+                        if(sgWeather != null && mCurrentLocation != null) {
+                            sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
+                            handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
+                            handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
+                            handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
+                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                        }else{
+                            temperature.setText("-°C");
+                            psi25.setText("PM2.5: -");
+                            psi10.setText("PM10: -");
+                            uv.setText("UV Index: -");
+                            weather.setText("-");
+                        }
                     }
 
                     @Override
@@ -344,14 +359,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDrawerStateChanged(int newState) {
                         // Respond when the drawer motion state changes
-                        if(sgWeather != null) {
-                            sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-                            weather.setText(sgWeather.getmWeatherForecast());
-                            temperature.setText(sgWeather.getmTemperature()+"°C");
-                            psi25.setText("PM2.5: "+sgWeather.getmPM25());
-                            psi10.setText("PM10: "+sgWeather.getmPM10());
-                            uv.setText("UV Index: "+sgWeather.getmUV());
-                        }
+
                     }
                 }
         );
