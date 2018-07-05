@@ -1444,7 +1444,7 @@ public class MainActivity extends AppCompatActivity
             }else{
                 //FOR SUGGESTIONS
                 for(int i=0; i< result.size(); i++) {
-
+                    int times = 0;
                     if(getDistanceMatrix(result.get(i))){
                         NavigateTransitCard card = getRouteData(result.get(i));
                         card.setType(card.NAVIGATE_TRANSIT_CARD);
@@ -1457,7 +1457,6 @@ public class MainActivity extends AppCompatActivity
                     NavigateTransitCard card1 = getRouteData(result.get(i));
                     card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                     transitCardList.add(card1);
-//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
                     Log.d(TAG, "lookUpRoute: "+card1.toString());
                 }
                 updateAdapterList(transitCardList);
@@ -1516,7 +1515,7 @@ public class MainActivity extends AppCompatActivity
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
         Log.d(TAG, "duration "+ duration + " , duration traffic " + duration_in_traffic );
         // if (duration - duration_in_traffic > 0){ //no congestion.
-        if (duration - duration_in_traffic >= 2){
+        if (duration - duration_in_traffic >= 4){
             Log.d(TAG, "BOOLEAN NO CONGESTION");
             return true;
         }
@@ -1560,42 +1559,6 @@ public class MainActivity extends AppCompatActivity
         }
         return pass;
     }
-
-/*
-    private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
-        NavigateTransitCard card = new NavigateTransitCard();
-        card.setType(Card.NAVIGATE_TRANSIT_CARD);
-        //card.setTotalDistance(googleRoutesData.getTotalDistance());
-        //card.setTotalTime(googleRoutesData.getTotalDuration());
-        //need loop to get
-        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-
-        Log.d(TAG, "distanceData start add: "+distanceData.getStartAdd());
-        Log.d(TAG, "distanceData distance: "+distanceData.getDistance());
-        Log.d(TAG, "distanceData duration: "+distanceData.getDuration());
-        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
-        int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
-        int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
-        Log.d(TAG, "duration int: "+ duration );
-        if ((duration_in_traffic - duration) < 10){
-            Log.d(TAG, "No congestion" );
-        }
-        if (routeSteps != null) {
-            for (int i = 0; i < routeSteps.size(); i++) {
-                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
-                    Log.d(TAG, "IS A TRAIN" );
-                }
-                else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
-                    Log.d(TAG, "IS A BUS" );
-                    
-                }
-            }
-        }
-        else{
-            Log.d(TAG, "routeSteps EMPTY" );
-        }
-        return card;
-    }*/
 
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
         NavigateTransitCard card = new NavigateTransitCard();
