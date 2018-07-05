@@ -23,7 +23,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -37,11 +36,14 @@ import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
@@ -82,15 +84,14 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAd
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.Fares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.TransitModeDistances;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.TransitModeDistances;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
@@ -157,9 +158,6 @@ public class MainActivity extends AppCompatActivity
     private View navHeader;
     private LinearLayout navheaderbanner;
     private ActionBarDrawerToggle toggle;
-
-    // FAB
-    FloatingActionButton fab;
 
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
@@ -287,16 +285,18 @@ public class MainActivity extends AppCompatActivity
             window.setSustainedPerformanceMode(true);
         }
 
-        fab = findViewById(R.id.fab);
-        fab.hide();
-        fab.setOnClickListener(view -> {
-            nearbyCardList.clear();
-            updateBottomSheet();
-        });
-
         bottomNav = findViewById(R.id.bottom_navigation);
         progressBar = findViewById(R.id.progressBar);
         layer = findViewById(R.id.bg);
+
+        layer.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED)
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                return false;
+            }
+        });
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -476,15 +476,12 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-//                        fab.setVisibility(View.GONE);
                         Objects.requireNonNull(getSupportActionBar()).hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
                         Objects.requireNonNull(getSupportActionBar()).show();
-//                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         Objects.requireNonNull(getSupportActionBar()).hide();
-//                        fab.setVisibility(View.GONE);
                     }
                 }
 
@@ -531,7 +528,6 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
-                fab.hide();
                 toolbar.setVisibility(View.GONE);
                 getSupportActionBar().hide();
                 toolbarNavigate.setVisibility(View.VISIBLE);
@@ -551,6 +547,38 @@ public class MainActivity extends AppCompatActivity
                     } else{
                         optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
                         optionMode = false;
+                    }
+                });
+
+                destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                            if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
+                                Log.i(TAG,"lookUpRoutes!");
+                                String mode;
+                                if (optionMode){
+                                    mode = "transit";
+                                }else{
+                                    mode = "walking";
+                                }
+                                String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                                        + startingPointTextView.getText().toString() + "&destination="
+                                        + destinationTextView.getText().toString()
+                                        + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                        + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                                //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
+                                Log.i(TAG,query);
+                                hideKeyboard();
+                                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                                lookUpRoutes(query);
+
+                            }else{
+                                Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
+                            }
+                            return true;
+                        }
+                        return false;
                     }
                 });
                 searchButton.setOnClickListener(v -> {
@@ -583,7 +611,6 @@ public class MainActivity extends AppCompatActivity
                 toolbar.setVisibility(View.VISIBLE);
                 setSupportActionBar(toolbar);
                 Objects.requireNonNull(getSupportActionBar()).show();
-//                fab.show();
                 if(mCurrentLocation==null){
                     getDeviceLocation();
                     getLocationPermission();
@@ -1143,7 +1170,7 @@ public class MainActivity extends AppCompatActivity
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
-                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+//                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                         } else {
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
                         }
@@ -1277,7 +1304,13 @@ public class MainActivity extends AppCompatActivity
                     assert card != null;
                     Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
                 }
-                updateAdapterList(nearbyCardList);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateAdapterList(nearbyCardList);
+                    }
+                },400);
+//                updateAdapterList(nearbyCardList);
             }
         };
         asyncTask.execute();
@@ -1356,7 +1389,8 @@ public class MainActivity extends AppCompatActivity
         adapter.addAllCard(list);
         adapter.doAutoRefresh();
         progressBar.setVisibility(View.GONE);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED), 100);
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     /**
