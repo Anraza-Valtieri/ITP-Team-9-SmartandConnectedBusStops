@@ -233,6 +233,8 @@ public class MainActivity extends AppCompatActivity
             new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
 
 
+    String query;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme_NoActionBar);
@@ -527,7 +529,7 @@ public class MainActivity extends AppCompatActivity
                         }else{
                             mode = "walking";
                         }
-                        String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                         query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
                                 + destinationTextView.getText().toString()
                                 + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
@@ -1440,12 +1442,23 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
+                //FOR SUGGESTIONS
                 for(int i=0; i< result.size(); i++) {
-                    NavigateTransitCard card = getRouteData(result.get(i));
-                    card.setType(card.NAVIGATE_TRANSIT_CARD);
-                    transitCardList.add(card);
+
+                    if(getDistanceMatrix(result.get(i))){
+                        NavigateTransitCard card = getRouteData(result.get(i));
+                        card.setType(card.NAVIGATE_TRANSIT_CARD);
+                        transitCardList.add(card);
+                    }
+                   // Log.d(TAG, "lookUpRoute: "+card.toString());
+                }
+                //NORMAL ROUTES
+                for(int i=0; i< result.size(); i++) {
+                    NavigateTransitCard card1 = getRouteData(result.get(i));
+                    card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                    transitCardList.add(card1);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-                    Log.d(TAG, "lookUpRoute: "+card.toString());
+                    Log.d(TAG, "lookUpRoute: "+card1.toString());
                 }
                 updateAdapterList(transitCardList);
             }
@@ -1457,7 +1470,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void lookUpTrafficDuration(String queryMatrix, String queryDir){
+    private boolean lookUpTrafficDuration(String type, String queryMatrix, String queryDir){
+        boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
         List<String> directionsQuery = new ArrayList<>();
@@ -1473,23 +1487,82 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG,queryMatrix);
             if(result1.size() <= 0){
                 Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
-                return;
+                return pass;
             }
             Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
             Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
-                NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
-                card.setType(Card.NAVIGATE_TRANSIT_CARD);
-                transitCardList.add(card);
-                Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
+                Log.d("lookUpTrafficDuration", "ifelse");
+                if (type=="bus") {
+                    Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
+                    if (getMatrix(result1.get(0))) {
+                        Log.d(TAG, "lookUpTrafficDuration BUS MAT: " + i );
+                        pass = true;
+                        Log.d(TAG, "lookUpTrafficDuration: BUSBUSBUS");
+                    } else {
+                        Log.d(TAG, "getMatrix false");
+                        pass = false;
+                    }
+                }
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+        return pass;
+    }
+    private boolean getMatrix(DistanceData distanceData){
+        Log.d(TAG, "GetMatrix()");
+        int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
+        int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
+        Log.d(TAG, "duration "+ duration + " , duration traffic " + duration_in_traffic );
+        // if (duration - duration_in_traffic > 0){ //no congestion.
+        if (duration - duration_in_traffic >= 2){
+            Log.d(TAG, "BOOLEAN NO CONGESTION");
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    private boolean getDistanceMatrix(GoogleRoutesData googleRoutesData) {
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
+        boolean pass = false;
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                Log.d("getDistanceMatrix",String.valueOf(i));
+                if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
+                    Log.d(TAG, "IS A TRAIN" + i);
+                    String trainline = routeSteps.get(i).getTrainLine();
+                    Log.d(TAG, trainline);
+                    //MRT API FUNCTION
+
+                    //lookUpTrafficDuration("mrt","", googleRoutesData);
+                }
+                else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
+                    Log.d(TAG, "IS A BUS" + i);
+                    Log.d("BUS TRANSIT", routeSteps.get(i).toString());
+                    Double startLat = routeSteps.get(i).getStartLocationLat();
+                    Double startLng = routeSteps.get(i).getStartLocationLng();
+                    Double endLat = routeSteps.get(i).getEndLocationLat();
+                    Double endLng = routeSteps.get(i).getEndLocationLng();
+                    Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
+                    String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
+                    Log.d("DISTANCEMATRIX", "query");
+                    pass =  lookUpTrafficDuration("bus", queryMatrix, query);
+
+                }
+            }
+        }
+        else{
+            Log.d(TAG, "routeSteps EMPTY" );
+            pass = false;
+        }
+        return pass;
     }
 
+/*
     private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
-        //TODO set card details here (route ID?)
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         //card.setTotalDistance(googleRoutesData.getTotalDistance());
@@ -1522,7 +1595,7 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, "routeSteps EMPTY" );
         }
         return card;
-    }
+    }*/
 
     private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
         NavigateTransitCard card = new NavigateTransitCard();
