@@ -103,6 +103,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1443,14 +1444,26 @@ public class MainActivity extends AppCompatActivity
 
             }else{
                 //FOR SUGGESTIONS
+                List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
-                    int times = 0;
                     if(getDistanceMatrix(result.get(i))){
-                        NavigateTransitCard card = getRouteData(result.get(i));
+                        listMatrix.add(i);
+                        Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
+                    }
+                }
+                int size = listMatrix.size();
+                if (listMatrix.size() == result.size()) {
+                    Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                    return;
+                }
+                else {
+                    Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                    for (int i = 0; i < size; i++) {
+                        int j = (Integer) listMatrix.get(i);
+                        NavigateTransitCard card = getRouteData(result.get(j));
                         card.setType(card.NAVIGATE_TRANSIT_CARD);
                         transitCardList.add(card);
                     }
-                   // Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
                 //NORMAL ROUTES
                 for(int i=0; i< result.size(); i++) {
@@ -1469,7 +1482,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean lookUpTrafficDuration(String type, String queryMatrix, String queryDir){
+    private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
         boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
@@ -1484,7 +1497,7 @@ public class MainActivity extends AppCompatActivity
             result = directionsParser.execute().get();
             result1 = durationParser.execute().get();
             Log.d(TAG,queryMatrix);
-            if(result1.size() <= 0){
+            if(result.size() <= 0){
                 Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
                 return pass;
             }
@@ -1502,6 +1515,33 @@ public class MainActivity extends AppCompatActivity
                         Log.d(TAG, "getMatrix false");
                         pass = false;
                     }
+                }
+                else if (type == "mrt"){
+                    String trainLine = null;
+                    switch(train) {
+                        case("East West Line"):
+                            trainLine = "EWL";
+                            Log.d("LALALALLALALALA", "LALALALLAALALLAa");
+                            break;
+                        case("North South Line"):
+                            trainLine = "NSL";
+                            break;
+                        case("North East Line"):
+                            trainLine = "NEL";
+                            break;
+                        case("Downtown Line"):
+                            trainLine = "DTL";
+                            break;
+                        case ("Circle Line"):
+                            trainLine = "CCL";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    Log.d("LookUpTrafficDuration", train);
+                    Log.d("LookUpTrafficDuration", trainLine);
+                    pass = true;
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -1536,7 +1576,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, trainline);
                     //MRT API FUNCTION
 
-                    //lookUpTrafficDuration("mrt","", googleRoutesData);
+                    pass =  lookUpTrafficDuration("mrt", trainline, "", query);
                 }
                 else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
                     Log.d(TAG, "IS A BUS" + i);
@@ -1548,7 +1588,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     Log.d("DISTANCEMATRIX", "query");
-                    pass =  lookUpTrafficDuration("bus", queryMatrix, query);
+                    pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
 
                 }
             }
