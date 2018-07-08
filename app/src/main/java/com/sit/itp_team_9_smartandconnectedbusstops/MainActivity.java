@@ -1471,7 +1471,7 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
-                //FOR SUGGESTIONS
+                //FOR SUGGESTIONS, if no difference from normal routes then will not display 
                 List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
                     if(getDistanceMatrix(result.get(i))){
