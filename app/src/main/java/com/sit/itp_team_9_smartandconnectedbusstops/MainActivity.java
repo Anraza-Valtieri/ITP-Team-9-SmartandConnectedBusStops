@@ -259,7 +259,6 @@ public class MainActivity extends AppCompatActivity
     String mrtLine;
     //Twitter username of Mrt updates
     final static String ScreenName = "SMRT_Singapore";
-    List<String> twitterServiceList = new ArrayList<String>();
     List<String> twitterList = new ArrayList<String>();
 
     @Override
@@ -1483,7 +1482,6 @@ public class MainActivity extends AppCompatActivity
                 int size = listMatrix.size();
                 if (listMatrix.size() == result.size()) {
                     Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                    return;
                 }
                 else {
                     Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
@@ -1546,6 +1544,8 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
                 else if (type == "mrt"){
+                    List<String> twitterServiceList = new ArrayList<String>();
+
                     switch(train) {
                         case("East West Line"):
                             mrtLine = "EWL";
@@ -1599,13 +1599,12 @@ public class MainActivity extends AppCompatActivity
         return pass;
     }
     private boolean getMatrix(DistanceData distanceData){
-        Log.d(TAG, "GetMatrix()");
         int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
-        Log.d(TAG, "duration "+ duration + " , duration traffic " + duration_in_traffic );
-        // if (duration - duration_in_traffic > 0){ //no congestion.
+        Log.d("GetMatrix()", "duration "+ duration + " , duration traffic " + duration_in_traffic );
+        //if (duration - duration_in_traffic > 0){ //no congestion.
         if (duration - duration_in_traffic >= 4){
-            Log.d(TAG, "BOOLEAN NO CONGESTION");
+            Log.d("GetMatrix()", "BOOLEAN NO CONGESTION");
             return true;
         }
         else {
@@ -1851,7 +1850,7 @@ public class MainActivity extends AppCompatActivity
             }
             return result;
         }
-        // onPostExecute convert the JSON results into a Twitter object (which is an Array list of tweets
+
         @Override
         protected void onPostExecute(String result) {
             Log.e("result",result);
@@ -1914,7 +1913,7 @@ public class MainActivity extends AppCompatActivity
         private String getTwitterStream(String screenName) {
             String results = null;
 
-            // Step 1: Encode consumer key and secret
+            //Encode consumer key and secret
             try {
                 // URL encode the consumer key and secret
                 String urlApiKey = URLEncoder.encode(CONSUMER_KEY, "UTF-8");
@@ -1927,7 +1926,7 @@ public class MainActivity extends AppCompatActivity
                 // Base64 encode the string
                 String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
 
-                // Step 2: Obtain a bearer token
+                //Obtain a bearer token
                 HttpPost httpPost = new HttpPost(TwitterTokenURL);
                 httpPost.setHeader("Authorization", "Basic " + base64Encoded);
                 httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -1939,7 +1938,7 @@ public class MainActivity extends AppCompatActivity
                 // token_type key of the returned object is bearer
                 if (auth != null && auth.token_type.equals("bearer")) {
 
-                    // Step 3: Authenticate API requests with bearer token
+                    //Authenticate API requests with bearer token
                     HttpGet httpGet = new HttpGet(TwitterStreamURL + screenName);
 
                     // construct a normal HTTPS request and include an Authorization
