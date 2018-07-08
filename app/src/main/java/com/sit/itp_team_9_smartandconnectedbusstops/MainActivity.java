@@ -125,7 +125,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -257,8 +256,11 @@ public class MainActivity extends AppCompatActivity
 
     //direction query
     String query;
+    String mrtLine;
     //Twitter username of Mrt updates
     final static String ScreenName = "SMRT_Singapore";
+    List<String> twitterServiceList = new ArrayList<String>();
+    List<String> twitterList = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -368,7 +370,9 @@ public class MainActivity extends AppCompatActivity
         mGeoDataClient = Places.getGeoDataClient(this, null);
         autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
         mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
+
         downloadTweets();
+
     }
 
     @Override
@@ -1532,41 +1536,61 @@ public class MainActivity extends AppCompatActivity
                 Log.d("lookUpTrafficDuration", "ifelse");
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
-                    if (getMatrix(result1.get(0))) {
+                    if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
                         Log.d(TAG, "lookUpTrafficDuration BUS MAT: " + i );
                         pass = true;
                         Log.d(TAG, "lookUpTrafficDuration: BUSBUSBUS");
-                    } else {
+                    } else { // dont display
                         Log.d(TAG, "getMatrix false");
                         pass = false;
                     }
                 }
                 else if (type == "mrt"){
-                    String trainLine = null;
                     switch(train) {
                         case("East West Line"):
-                            trainLine = "EWL";
-                            Log.d("LALALALLALALALA", "LALALALLAALALLAa");
+                            mrtLine = "EWL";
                             break;
                         case("North South Line"):
-                            trainLine = "NSL";
+                            mrtLine = "NSL";
                             break;
                         case("North East Line"):
-                            trainLine = "NEL";
+                            mrtLine = "NEL";
                             break;
                         case("Downtown Line"):
-                            trainLine = "DTL";
+                            mrtLine = "DTL";
                             break;
                         case ("Circle Line"):
-                            trainLine = "CCL";
+                            mrtLine = "CCL";
                             break;
                         default:
                             break;
                     }
 
                     Log.d("LookUpTrafficDuration", train);
-                    Log.d("LookUpTrafficDuration", trainLine);
-                    pass = true;
+                    Log.d("LookUpTrafficDuration", mrtLine);
+                    String keyTwitter = "[" + mrtLine + "]";
+                    Log.d("MRTLINE", keyTwitter);
+                    for(String s : twitterList){
+                        if(s.contains(keyTwitter)){
+                            twitterServiceList.add(s);
+                            Log.d("CONTAINED", s);
+                        }
+                    }
+                    if (twitterServiceList.size() > 0) {
+                        Log.d("TWITTERSERVICELIST", twitterServiceList.get(0));
+                        if (twitterServiceList.get(0).contains("commenced") || twitterServiceList.get(0).contains("CLEARED") || twitterServiceList.get(0).contains("restored") || twitterServiceList.get(0).contains("resumed")) {
+                            Log.d("NO FAULT", "NO FAULT");
+                            pass = true;
+                        } else if (twitterServiceList.get(0).contains("Due to") || twitterServiceList.get(0).contains("pls add") || twitterServiceList.get(0).contains("train travel time") || twitterServiceList.get(0).contains("no train service")) {
+                            Log.d("GOT FAULT", "GOT FAULT");
+                            pass = false;
+                        } else {
+                            pass = false;
+                        }
+                    }
+                    else{
+                        pass = true;
+                    }
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -1599,8 +1623,6 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "IS A TRAIN" + i);
                     String trainline = routeSteps.get(i).getTrainLine();
                     Log.d(TAG, trainline);
-                    //MRT API FUNCTION
-
                     pass =  lookUpTrafficDuration("mrt", trainline, "", query);
                 }
                 else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
@@ -1803,20 +1825,17 @@ public class MainActivity extends AppCompatActivity
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         if (networkInfo != null && networkInfo.isConnected()) {
-            new DownloadTwitterTask().execute(ScreenName);
+            new JSONTwitterParser().execute(ScreenName);
         } else {
             Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
         }
     }
 
-    // Uses an AsyncTask to download a Twitter user's timeline
-    private class DownloadTwitterTask extends AsyncTask<String, Void, String> {
+    public class JSONTwitterParser extends AsyncTask<String, Void , String>{
         final static String CONSUMER_KEY = "nW88XLuFSI9DEfHOX2tpleHbR";
         final static String CONSUMER_SECRET = "hCg3QClZ1iLR13D3IeMvebESKmakIelp4vwFUICuj6HAfNNCer";
         final static String TwitterTokenURL = "https://api.twitter.com/oauth2/token";
         final static String TwitterStreamURL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
-        List<String> twitterList = new ArrayList<String>();
-        List<String> twitterServiceList = new ArrayList<String>();
 
         @Override
         protected void onPreExecute() {
@@ -1843,23 +1862,6 @@ public class MainActivity extends AppCompatActivity
 
                     JSONObject jsonObject = jsonArray_data.getJSONObject(i);
                     twitterList.add(jsonObject.getString("text"));
-                }
-                Log.d("TWITTERLIST", twitterList.get(0));
-                Log.d("TWITTERLIST", twitterList.get(4));
-                for(String s : twitterList){
-                    if(s.contains("[NSL]")){
-                        twitterServiceList.add(s);
-                        Log.d("CONTAINED", s);
-                    }
-                }
-                if (twitterServiceList.get(0).contains("commenced")||twitterServiceList.get(0).contains("CLEARED")||twitterServiceList.get(0).contains("restored")||twitterServiceList.get(0).contains("resumed")){
-                    Log.d("NO FAULT", "NO FAULT");
-                }
-                else if (twitterServiceList.get(0).contains("due to")||twitterServiceList.get(0).contains("pls add")||twitterServiceList.get(0).contains("train travel time")||twitterServiceList.get(0).contains("no train service")){
-                    Log.d("GOT FAULT", "GOT FAULT");
-                }
-                else{
-                    return;
                 }
             }catch (Exception e){
                 e.printStackTrace();
@@ -1953,5 +1955,4 @@ public class MainActivity extends AppCompatActivity
             return results;
         }
     }
-
 }
