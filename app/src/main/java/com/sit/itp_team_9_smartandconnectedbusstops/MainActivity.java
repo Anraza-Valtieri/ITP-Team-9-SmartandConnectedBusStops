@@ -1530,7 +1530,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
                     for (int i = 0; i < size; i++) {
                         int j = (Integer) listMatrix.get(i);
-                        NavigateTransitCard card = getRouteData(result.get(j));
+                        NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j));
                         card.setType(card.NAVIGATE_TRANSIT_CARD);
                         transitCardList.add(card);
                     }

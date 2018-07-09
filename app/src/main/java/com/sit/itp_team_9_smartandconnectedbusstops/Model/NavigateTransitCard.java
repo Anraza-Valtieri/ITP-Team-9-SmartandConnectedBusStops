@@ -197,6 +197,7 @@ public class NavigateTransitCard extends Card {
             if (routeSteps != null) {
                 Map<String,List<Object>> transitStations = new LinkedHashMap<>();
                 List<List<Object>> timeTakenList = new ArrayList<>();
+                List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
 
                 //find largest duration of each step for weights in breakdownBar
                 int largestDuration = 0;
