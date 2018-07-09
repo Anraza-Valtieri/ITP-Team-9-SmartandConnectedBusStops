@@ -191,47 +191,7 @@ public class NavigateTransitCard extends Card {
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
-
-            //Jeremy's part, do not remove first
-            //can work
-        /*db.collection("adult")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                String cost = "a";
-                if (task.isSuccessful()) {
-                    //Log.d(TAG, "WE ARE HERE");
-                    for(QueryDocumentSnapshot doc : task.getResult()) {
-                        //String intValue = googleRoutesData.getTotalDistance().replaceAll("[^0-9]", "");
-                        if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < Double.valueOf(doc.getId())) {
-                            Log.d(TAG, "HElo" + googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3));
-                            Log.d(TAG, "HElo" + doc.getId());
-                            Log.d(TAG, "HElo" + doc.getDouble("BusMrt"));
-                            cost = String.valueOf(doc.getDouble("BusMrt"));
-
-                            break;
-                        }
-
-                    }
-
-                } else {
-                    Log.d(TAG, "get failed with ", task.getException());
-                }
-                card.setCost(cost);
-            }
-        });*/
-
-            FareDetails fareDetails = new FareDetails();
-            fareDetails.populateMap();
-
-            for(Map.Entry<Double, AdultFares> entry : fareDetails.getAdultFaresMap().entrySet()) {
-                if(Double.valueOf(googleRoutesData.getTotalDistance().substring(0, googleRoutesData.getTotalDistance().length() - 3)) < entry.getKey()) {
-                    card.setCost("$".concat(String.valueOf(entry.getValue().getBusMrt())));
-                    break;
-                }
-            }
-
+            
             //in Steps
             List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
             if (routeSteps != null) {
@@ -274,6 +234,7 @@ public class NavigateTransitCard extends Card {
                             int imageViewTransit;
                             int imageViewColor;
                             if (trainLine != null) {
+                                listOfTransitModeAndDistances.add(new TransitModeDistances("Subway", trainLine, routeSteps.get(i).getDistance()));
                                 //if train
                                 imageViewTransit = R.drawable.ic_directions_train_black_24dp;
                                 switch (trainLine) {
@@ -327,6 +288,35 @@ public class NavigateTransitCard extends Card {
                     }
                     timeTakenList.add(timeTakenEachStep);
                 }
+                double transitDistance = 0.0;
+                for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
+
+                    transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
+                }
+
+                FareDetails fareDetails = new FareDetails();
+                fareDetails.populateAdultFareDistance();
+                fareDetails.populateAdultFaresMap();
+
+                String price = "";
+
+                if(transitDistance > 0.0) {
+                    for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+
+                        if(i == 0) {
+                            if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                            }
+                        }
+                        else {
+                            if(transitDistance > fareDetails.getAdultFareDistance().get(i-1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                            }
+                        }
+
+                    }
+                }
+                card.setCost(price);
                 card.setTimeTaken(timeTakenList);
                 card.setTransitStations(transitStations);
             }
