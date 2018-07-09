@@ -3,13 +3,13 @@ package com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +22,7 @@ public class JSONLTABusRoute {
     @Expose
     private List<Value> value = null;
 
-    private Map<String, Value> busRouteMap = new HashMap<>();
+    private Map<String, LinkedList<Value>> busRouteMap = new HashMap<>();
 
     private String getOdataMetadata() {
         return odataMetadata;
@@ -40,7 +40,7 @@ public class JSONLTABusRoute {
         this.value = value;
     }
 
-    public Map<String, Value> getBusRouteMap() {
+    public Map<String, LinkedList<Value>> getBusRouteMap() {
         return busRouteMap;
     }
 
@@ -62,9 +62,17 @@ public class JSONLTABusRoute {
                 while(iterator.hasNext()){
                     String busNo = iterator.next().getServiceNo();
                     Value data = iterator.next();
-//                    String busStopNo = iterator.next().getBusStopCode();
+//                    String data = iterator.next().getBusStopCode();
 //                    Log.d(TAG, "createMap: adding "+busNo+ " with "+data.toString());
-                    busRouteMap.put(busNo, data);
+                    if(busRouteMap.get(busNo) != null){
+                        LinkedList<Value> oldData = busRouteMap.get(busNo);
+                        oldData.add(data);
+                    }else{
+                        LinkedList<Value> listData = new LinkedList<>();
+                        listData.add(data);
+                        busRouteMap.put(busNo, listData);
+                    }
+
                 }
                 return null;
             }

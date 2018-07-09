@@ -1029,6 +1029,13 @@ public class MainActivity extends AppCompatActivity
         Gson gson = new Gson();
         busRoute =  gson.fromJson( Utils.loadBUSRouteJSONFromAsset(getApplicationContext()), JSONLTABusRoute.class );
         busRoute.createMap();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "createMap: "+busRoute.getBusRouteMap().toString());
+            }
+        }, 2000);
+
 
     }
     @Override
