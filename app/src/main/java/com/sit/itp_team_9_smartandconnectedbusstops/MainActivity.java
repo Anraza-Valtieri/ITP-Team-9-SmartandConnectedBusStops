@@ -85,7 +85,7 @@ import com.google.gson.Gson;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
+//import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
