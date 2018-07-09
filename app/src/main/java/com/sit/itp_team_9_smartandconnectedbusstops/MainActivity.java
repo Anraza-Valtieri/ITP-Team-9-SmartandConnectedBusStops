@@ -1208,7 +1208,7 @@ public class MainActivity extends AppCompatActivity
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
                             Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-                            card.setType(card.BUS_STOP_CARD);
+                            card.setType(Card.BUS_STOP_CARD);
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
@@ -1267,7 +1267,7 @@ public class MainActivity extends AppCompatActivity
                 String key = entryData.getKey(); // Bus stop ID
                 Map value = entryData.getValue(); // Map with Bus to Timings
                 BusStopCards card = busStopMap.get(key);
-                card.setType(card.BUS_STOP_CARD);
+                card.setType(Card.BUS_STOP_CARD);
                 card.setMajorUpdate(true);
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
@@ -1339,7 +1339,7 @@ public class MainActivity extends AppCompatActivity
                 nearbyCardList.clear();
                 for(int i=0; i< 11; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
-                    card.setType(card.BUS_STOP_CARD);
+                    card.setType(Card.BUS_STOP_CARD);
                     card.setMajorUpdate(true);
                     nearbyCardList.add(card);
 //            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
@@ -1506,8 +1506,8 @@ public class MainActivity extends AppCompatActivity
             if (!optionMode){
                 //walking
                 for(int i=0; i< result.size(); i++) {
-                    NavigateWalkingCard card = getRouteDataWalking(result.get(i));
-                    card.setType(card.NAVIGATE_WALKING_CARD);
+                    NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i));
+                    card.setType(Card.NAVIGATE_WALKING_CARD);
                     walkingCardList.add(card);
                     Log.d(TAG, "lookUpRoute: "+card.toString());
                 }
@@ -1537,7 +1537,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 //NORMAL ROUTES
                 for(int i=0; i< result.size(); i++) {
-                    NavigateTransitCard card1 = getRouteData(result.get(i));
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
                     card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                     transitCardList.add(card1);
                     Log.d(TAG, "lookUpRoute: "+card1.toString());
@@ -1545,9 +1545,7 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(transitCardList);
             }
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
@@ -1688,160 +1686,7 @@ public class MainActivity extends AppCompatActivity
         }
         return pass;
     }
-
-    private NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
-        NavigateTransitCard card = new NavigateTransitCard();
-        card.setType(card.NAVIGATE_TRANSIT_CARD);
-        card.setID(googleRoutesData.getID());
-        card.setTotalDistance(googleRoutesData.getTotalDistance());
-        card.setTotalTime(googleRoutesData.getTotalDuration());
-
-        //in Steps
-        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-        if (routeSteps != null) {
-            Map<String,List<Integer>> transitStations = new LinkedHashMap<>();
-            List<List<Object>> timeTakenList = new ArrayList<>();
-            List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
-
-            //find largest duration of each step for weights in breakdownBar
-            int largestDuration = 0;
-            for (int i = 0; i < routeSteps.size(); i++) {
-                Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
-                String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                int duration = Integer.parseInt(intValue);
-                if (largestDuration <= duration){
-                    largestDuration = duration;
-                }
-            }
-
-            for (int i = 0; i < routeSteps.size(); i++) {
-                List<Object> timeTakenEachStep = new ArrayList<>();
-                String travelMode = routeSteps.get(i).getTravelMode();
-                String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
-                Log.i(TAG,"largestDuration= "+largestDuration);
-                Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
-                timeTakenEachStep.add(routeSteps.get(i).getDuration());
-                timeTakenEachStep.add(timeTakenWeight);
-                switch (travelMode){
-                    case "WALKING":
-                        timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
-                        break;
-
-                    case "TRANSIT":
-                        String trainLine = routeSteps.get(i).getTrainLine();
-                        int imageViewTransit;
-                        int imageViewColor;
-                        if (trainLine != null) {
-                            listOfTransitModeAndDistances.add(new TransitModeDistances("Subway", trainLine, routeSteps.get(i).getDistance()));
-                            //if train
-                            imageViewTransit = R.drawable.ic_directions_train_black_24dp;
-                            switch (trainLine) {
-                                case "Downtown Line":
-                                    imageViewColor = NavigateTransitCard.DTL_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.DTL_COLOR);
-                                    break;
-                                case "North East Line":
-                                    imageViewColor = NavigateTransitCard.NEL_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.NEL_COLOR);
-                                    break;
-                                case "East West Line":
-                                    imageViewColor = NavigateTransitCard.EWL_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.EWL_COLOR);
-                                    break;
-                                case "North South Line":
-                                    imageViewColor = NavigateTransitCard.NSL_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.NSL_COLOR);
-                                    break;
-                                case "Circle Line":
-                                    imageViewColor = NavigateTransitCard.CCL_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.CCL_COLOR);
-                                    break;
-                                default:
-                                    //TODO LRT colour?
-                                    imageViewColor = NavigateTransitCard.WALKING_COLOR;
-                                    timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
-                                    break;
-                            }
-                        }else{
-                            //if bus
-                            String busNumber = routeSteps.get(i).getBusNum();
-                            listOfTransitModeAndDistances.add(new TransitModeDistances("Bus", busNumber, routeSteps.get(i).getDistance()));
-                            imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
-                            imageViewColor = NavigateTransitCard.BUS_COLOR;
-                            timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
-                        }
-
-                        if (i < 2){
-                            if(i==0 || !routeSteps.get(i - 1).getTravelMode().equals("TRANSIT") ) {
-                                //first public transport station
-                                card.setStartingStation(routeSteps.get(i).getDepartureStop());
-                                //card.setTransferStation(routeSteps.get(i).getArrivalStop());
-                                card.setNumStops("( " + String.valueOf(routeSteps.get(i).getNumStops()) + " stops)");
-                                card.setStartingStationTimeTaken(routeSteps.get(i).getDuration());
-                                card.setImageViewStartingStation(imageViewTransit);
-                                card.setImageViewStartingStationColor(imageViewColor);
-                            }
-                        }
-                        if (!transitStations.containsKey(routeSteps.get(i).getArrivalStop())) {
-                            List<Integer> stationDetails = new ArrayList<>();
-                            stationDetails.add(imageViewTransit);
-                            stationDetails.add(imageViewColor);
-                            transitStations.put(routeSteps.get(i).getArrivalStop(),stationDetails);
-                        }
-                        break;
-                }
-                timeTakenList.add(timeTakenEachStep);
-            }
-            double transitDistance = 0.0;
-            for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
-
-                transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
-            }
-
-            FareDetails fareDetails = new FareDetails();
-            fareDetails.populateAdultFareDistance();
-            fareDetails.populateAdultFaresMap();
-
-            String price = "";
-
-            if(transitDistance > 0.0) {
-                for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
-
-                    if(i == 0) {
-                        if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
-                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
-                        }
-                    }
-                    else {
-                        if(transitDistance > fareDetails.getAdultFareDistance().get(i-1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
-                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
-                        }
-                    }
-
-                }
-            }
-
-            card.setCost(price);
-            card.setTimeTaken(timeTakenList);
-            card.setTransitStations(transitStations);
-        }
-        return card;
-    }
-
-
-    private NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData) {
-        NavigateWalkingCard card = new NavigateWalkingCard();
-        card.setType(card.NAVIGATE_WALKING_CARD);
-//        card.setID(googleRoutesData.getID());
-        Log.i(TAG,"total distance= "+googleRoutesData.getTotalDistance());
-        card.setTotalDistance(googleRoutesData.getTotalDistance());
-        card.setTotalTime(googleRoutesData.getTotalDuration());
-        //card.setDescription(googleRoutesData.get);
-        return card;
-    }
-
-
+          
     public void hideKeyboard(){
         // Check if no view has focus:
         View view = getCurrentFocus();

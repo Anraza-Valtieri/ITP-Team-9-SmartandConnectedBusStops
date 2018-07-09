@@ -20,12 +20,13 @@
     <android.support.constraint.ConstraintLayout
         android:id="@+id/constraintLayout2"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/textViewWalkingTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             card_view:layout_constraintStart_toStartOf="parent"
             card_view:layout_constraintTop_toTopOf="parent"
@@ -35,20 +36,25 @@
             android:id="@+id/textViewWalkingDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             android:textColor="@color/browser_actions_title_color"
+            android:textSize="20sp"
             card_view:layout_constraintBaseline_toBaselineOf="@id/textViewWalkingTime"
             card_view:layout_constraintStart_toEndOf="@+id/textViewWalkingTime"
             tools:text="( XX km)" />
 
-        <TextView
-            android:id="@+id/textViewStartingRoad"
-            android:layout_width="wrap_content"
+        <ExpandableListView
+            android:id="@+id/listViewDetailedSteps"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            card_view:layout_constraintBottom_toBottomOf="parent"
             card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@id/textViewWalkingDistance"
-            tools:text="via XX Road" />
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewWalkingTime" />
 
 
     </android.support.constraint.ConstraintLayout>
