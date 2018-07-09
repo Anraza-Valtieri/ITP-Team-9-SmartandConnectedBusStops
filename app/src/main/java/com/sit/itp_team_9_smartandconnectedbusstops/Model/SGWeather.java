@@ -42,6 +42,9 @@ public class SGWeather {
     private String mWeatherForecast;
     private LatLng latLng;
 
+    private String mTempForLatLong;
+    private String mWeatherForLatLong;
+
     private JSONTemperatureParser temperatureParser;
     private JSONWeatherParser weatherParser;
     private JSONPSIParser psiParser;
@@ -76,6 +79,11 @@ public class SGWeather {
         updatePSI();
         updateUV();
         updatePM25();
+    }
+
+    public void updateForSpecificLocation(LatLng latLng){
+        getForecastForLatLong(latLng);
+        getTemperatureForLatLong(latLng);
     }
 
     private void updateTemperature(){
@@ -123,6 +131,51 @@ public class SGWeather {
         task.execute();
     }
 
+    private void getTemperatureForLatLong(LatLng latLng){
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(temperatureParser == null) {
+                    Log.e(TAG, "getTemperatureForLatLong: No Metadata?");
+                    return null;
+                }
+
+                Metadata meta = temperatureParser.getMetadata();
+                Stations[] station = meta.getStations();
+
+                Comparator comp = (Comparator<Stations>) (o, o2) -> {
+                    float[] result1 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, Double.parseDouble(o.getLocation().getLatitude()), Double.parseDouble(o.getLocation().getLongitude()), result1);
+                    Float distance1 = result1[0];
+
+                    float[] result2 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, Double.parseDouble(o2.getLocation().getLatitude()), Double.parseDouble(o2.getLocation().getLongitude()), result2);
+                    Float distance2 = result2[0];
+                    return distance1.compareTo(distance2);
+                };
+
+                long start = System.currentTimeMillis();
+                Log.d(TAG, "getTemperatureForLatLong: BEGIN SORTING!");
+                Collections.sort(Arrays.asList(station), comp);
+                long elapsedTime = System.currentTimeMillis() - start;
+                Log.d(TAG, "getTemperatureForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
+
+                Items[] temperatureItems = temperatureParser.getItems();
+                Readings[] readings = temperatureItems[0].getReadings();
+                for(Readings entry : readings){
+                    if(entry.getStation_id().equals(station[0].getId())) {
+                        setmTempForLatLong(entry.getValue());
+                        Log.d(TAG, "getTemperatureForLatLong: Nearest "+entry.getStation_id()+" "+station[0].getName()+" "+ getmTemperature());
+                        break;
+                    }
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }
+
     private void updateForecast(){
         @SuppressLint("StaticFieldLeak")
         AsyncTask task = new AsyncTask() {
@@ -158,6 +211,50 @@ public class SGWeather {
                     if(entry.getArea().equals(meta[0].getName())) {
                         setmWeatherForecast(entry.getForecast());
                         Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
+                        break;
+                    }
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }
+
+    private void getForecastForLatLong(LatLng latLng){
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask task = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                if(weatherParser == null) {
+                    Log.e(TAG, "getForecastForLatLong: No Metadata?");
+                    return null;
+                }
+
+                Area_metadata[] meta = weatherParser.getArea_metadata();
+
+                Comparator comp = (Comparator<Area_metadata>) (o, o2) -> {
+                    float[] result1 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, Double.parseDouble(o.getLabel_location().getLatitude()), Double.parseDouble(o.getLabel_location().getLongitude()), result1);
+                    Float distance1 = result1[0];
+
+                    float[] result2 = new float[3];
+                    Location.distanceBetween(latLng.latitude, latLng.longitude, Double.parseDouble(o2.getLabel_location().getLatitude()), Double.parseDouble(o2.getLabel_location().getLongitude()), result2);
+                    Float distance2 = result2[0];
+                    return distance1.compareTo(distance2);
+                };
+
+                long start = System.currentTimeMillis();
+                Log.d(TAG, "getForecastForLatLong: BEGIN SORTING!");
+                Collections.sort(Arrays.asList(meta), comp);
+                long elapsedTime = System.currentTimeMillis() - start;
+                Log.d(TAG, "getForecastForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
+
+                com.sit.itp_team_9_smartandconnectedbusstops.SGWeatherForecast.Items[] readings = weatherParser.getItems();
+                Forecasts[] forecasts = readings[0].getForecasts();
+                for(Forecasts entry : forecasts){
+                    if(entry.getArea().equals(meta[0].getName())) {
+                        setmWeatherForLatLong(entry.getForecast());
+                        Log.d(TAG, "getForecastForLatLong: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
                 }
@@ -602,5 +699,21 @@ public class SGWeather {
 
     private void setLatLng(LatLng latLng) {
         this.latLng = latLng;
+    }
+
+    public String getmTempForLatLong() {
+        return mTempForLatLong;
+    }
+
+    public String getmWeatherForLatLong() {
+        return mWeatherForLatLong;
+    }
+
+    public void setmTempForLatLong(String mTempForLatLong) {
+        this.mTempForLatLong = mTempForLatLong;
+    }
+
+    public void setmWeatherForLatLong(String mWeatherForLatLong) {
+        this.mWeatherForLatLong = mWeatherForLatLong;
     }
 }
