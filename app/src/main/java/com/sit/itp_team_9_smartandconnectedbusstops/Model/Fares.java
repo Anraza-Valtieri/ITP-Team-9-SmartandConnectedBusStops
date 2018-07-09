@@ -2,34 +2,25 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
 public class Fares {
 
-    public double BusMrt;
-    public double ExpressBus;
-    public double MrtBefore745;
+    private String BusMrt;
+    private String ExpressBus;
+    private String MrtBefore745;
 
-    public Fares() {
+    public Fares(String busMrt, String expressBus, String mrtBefore745) {
+        this.BusMrt = busMrt;
+        this.ExpressBus = expressBus;
+        this.MrtBefore745 = mrtBefore745;
     }
 
-    public double getBusMrt() {
+    public String getBusMrt() {
         return BusMrt;
     }
 
-    public void setBusMrt(double BusMrt) {
-        this.BusMrt = BusMrt;
-    }
-
-    public double getExpressBus() {
+    public String getExpressBus() {
         return ExpressBus;
     }
 
-    public void setExpressBus(double ExpressBus) {
-        this.ExpressBus = ExpressBus;
-    }
-
-    public double getMrtBefore745() {
+    public String getMrtBefore745() {
         return MrtBefore745;
-    }
-
-    public void setMrtBefore745(double MrtBefore745) {
-        this.MrtBefore745 = MrtBefore745;
     }
 }

@@ -554,7 +554,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             if (!value.get(1).equals("")) {
                                 duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
                                 if (value.get(4).equals(""))
-                                    wheel1.setVisibility(View.GONE);
+                                    wheel1.setVisibility(View.INVISIBLE);
 
                                 switch (value.get(2)) {
                                     case "SDA":
@@ -574,7 +574,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             if (!value.get(5).equals("")) {
                                 duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
                                 if (value.get(7).equals(""))
-                                    wheel2.setVisibility(View.GONE);
+                                    wheel2.setVisibility(View.INVISIBLE);
 
                                 switch (value.get(6)) {
                                     case "SDA":

@@ -13,6 +13,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,7 +25,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -35,13 +36,17 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
@@ -76,10 +81,12 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.gson.Gson;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
+import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
@@ -89,6 +96,8 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.TransitModeDistances;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
@@ -98,6 +107,23 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerSer
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -113,19 +139,14 @@ import java.util.concurrent.ExecutionException;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
 
+//import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
         GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
-
-//    // The entry points to the Places API.
-//    private GeoDataClient mGeoDataClient;
-//    private PlaceDetectionClient mPlaceDetectionClient;
-//
-//    // The entry point to the Fused Location Provider.
-//    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
@@ -163,9 +184,6 @@ public class MainActivity extends AppCompatActivity
     private LinearLayout navheaderbanner;
     private ActionBarDrawerToggle toggle;
 
-    // FAB
-    FloatingActionButton fab;
-
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
     RecyclerView recyclerView;
@@ -193,6 +211,9 @@ public class MainActivity extends AppCompatActivity
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
+
+    // Bus Routes
+    private JSONLTABusRoute busRoute;
 
     // UserData
     UserData userData;
@@ -232,6 +253,19 @@ public class MainActivity extends AppCompatActivity
     private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
             new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
 
+    //direction query
+    String query;
+    String mrtLine;
+    //Twitter username of Mrt updates
+    final static String ScreenName = "SMRT_Singapore";
+    List<String> twitterList = new ArrayList<String>();
+    // Weather
+    private SGWeather sgWeather;
+    TextView weather;
+    TextView temperature;
+    TextView psi25;
+    TextView psi10;
+    TextView uv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,6 +280,11 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         navHeader = navigationView.getHeaderView(0);
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
+        weather = navHeader.findViewById(R.id.tvWeather);
+        temperature = navHeader.findViewById(R.id.tvTemperature);
+        psi25 = navHeader.findViewById(R.id.tvPSI25);
+        psi10 = navHeader.findViewById(R.id.tvPSI10);
+        uv = navHeader.findViewById(R.id.tvUV);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
 
@@ -280,16 +319,18 @@ public class MainActivity extends AppCompatActivity
             window.setSustainedPerformanceMode(true);
         }
 
-        fab = findViewById(R.id.fab);
-        fab.hide();
-        fab.setOnClickListener(view -> {
-            nearbyCardList.clear();
-            updateBottomSheet();
-        });
-
         bottomNav = findViewById(R.id.bottom_navigation);
         progressBar = findViewById(R.id.progressBar);
         layer = findViewById(R.id.bg);
+
+        layer.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED)
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                return false;
+            }
+        });
 
         /*
         (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
@@ -318,17 +359,48 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        drawer.addDrawerListener(
+                new DrawerLayout.DrawerListener() {
+                    @Override
+                    public void onDrawerSlide(View drawerView, float slideOffset) {
+                        // Respond when the drawer's position changes
+                    }
+
+                    @SuppressLint("SetTextI18n")
+                    @Override
+                    public void onDrawerOpened(View drawerView) {
+                        // Respond when the drawer is opened
+                        if(sgWeather != null && mCurrentLocation != null) {
+                            sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
+                            handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
+                            handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
+                            handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
+                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                        }else{
+                            temperature.setText("-°C");
+                            psi25.setText("PM2.5: -");
+                            psi10.setText("PM10: -");
+                            uv.setText("UV Index: -");
+                            weather.setText("-");
+                        }
+                    }
+
+                    @Override
+                    public void onDrawerClosed(View drawerView) {
+                        // Respond when the drawer is closed
+                    }
+
+                    @Override
+                    public void onDrawerStateChanged(int newState) {
+                        // Respond when the drawer motion state changes
+
+                    }
+                }
+        );
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-//        // Construct a GeoDataClient.
-//        mGeoDataClient = Places.getGeoDataClient(this, null);
-//
-//        // Construct a PlaceDetectionClient.
-//        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-//
-//        // Construct a FusedLocationProviderClient.
-//        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Build the map.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -341,6 +413,9 @@ public class MainActivity extends AppCompatActivity
         mGeoDataClient = Places.getGeoDataClient(this, null);
         autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
         mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
+
+        downloadTweets();
+
     }
 
     @Override
@@ -438,15 +513,12 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-//                        fab.setVisibility(View.GONE);
                         Objects.requireNonNull(getSupportActionBar()).hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
                         Objects.requireNonNull(getSupportActionBar()).show();
-//                        fab.setVisibility(View.GONE);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         Objects.requireNonNull(getSupportActionBar()).hide();
-//                        fab.setVisibility(View.GONE);
                     }
                 }
 
@@ -466,8 +538,6 @@ public class MainActivity extends AppCompatActivity
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
         recyclerView.setAdapter(adapter);
-//        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 0);
-//        recyclerView.setItemViewCacheSize(300000);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         RecyclerView.ItemAnimator animator = recyclerView.getItemAnimator();
@@ -495,7 +565,6 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
-                fab.hide();
                 toolbar.setVisibility(View.GONE);
                 getSupportActionBar().hide();
                 toolbarNavigate.setVisibility(View.VISIBLE);
@@ -517,6 +586,38 @@ public class MainActivity extends AppCompatActivity
                         optionMode = false;
                     }
                 });
+
+                destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                            if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
+                                Log.i(TAG,"lookUpRoutes!");
+                                String mode;
+                                if (optionMode){
+                                    mode = "transit";
+                                }else{
+                                    mode = "walking";
+                                }
+                                String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                                        + startingPointTextView.getText().toString() + "&destination="
+                                        + destinationTextView.getText().toString()
+                                        + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                        + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                                //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
+                                Log.i(TAG,query);
+                                hideKeyboard();
+                                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                                lookUpRoutes(query);
+
+                            }else{
+                                Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+                });
                 searchButton.setOnClickListener(v -> {
                 Log.i(TAG,"onClickListener!");
                     if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
@@ -527,7 +628,7 @@ public class MainActivity extends AppCompatActivity
                         }else{
                             mode = "walking";
                         }
-                        String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                         query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
                                 + destinationTextView.getText().toString()
                                 + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
@@ -547,7 +648,6 @@ public class MainActivity extends AppCompatActivity
                 toolbar.setVisibility(View.VISIBLE);
                 setSupportActionBar(toolbar);
                 Objects.requireNonNull(getSupportActionBar()).show();
-//                fab.show();
                 if(mCurrentLocation==null){
                     getDeviceLocation();
                     getLocationPermission();
@@ -636,6 +736,9 @@ public class MainActivity extends AppCompatActivity
                 super.onLocationResult(locationResult);
                 // location is received
                 mCurrentLocation = locationResult.getLastLocation();
+//                if(sgWeather!=null)
+//                    sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
@@ -671,92 +774,38 @@ public class MainActivity extends AppCompatActivity
         LocationSettingsRequest mLocationSettingsRequest = builder.build();
         if (mLocationPermissionGranted) {
             mSettingsClient
-                    .checkLocationSettings(mLocationSettingsRequest)
-                    .addOnSuccessListener(this, locationSettingsResponse -> {
-                        Log.i(TAG, "All location settings are satisfied.");
+                .checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, locationSettingsResponse -> {
+                    Log.i(TAG, "All location settings are satisfied.");
+                    //noinspection MissingPermission
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                            mLocationCallback, Looper.myLooper());
 
-//                            Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(this, e -> {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                    "location settings ");
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the
+                                // result in onActivityResult().
+                                ResolvableApiException rae = (ResolvableApiException) e;
+                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException sie) {
+                                Log.i(TAG, "PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            String errorMessage = "Location settings are inadequate, and cannot be " +
+                                    "fixed here. Fix in Settings.";
+                            Log.e(TAG, errorMessage);
 
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
+                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    }
 
-                    })
-                    .addOnFailureListener(this, e -> {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                        }
-
-                    });
-//            lookUpNearbyBusStops();
-            /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            Location locationNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            long GPSLocationTime = 0;
-            if (null != locationGPS) { GPSLocationTime = locationGPS.getTime(); }
-
-            long NetLocationTime = 0;
-
-            if (null != locationNet) {
-                NetLocationTime = locationNet.getTime();
-            }
-
-            // Define a listener that responds to location updates
-            LocationListener locationListener = new LocationListener() {
-                public void onLocationChanged(Location location) {
-                    // Called when a new location is found by the network location provider.
-//                    mCurrentLocation.setLatitude(location.getLatitude());
-//                    mCurrentLocation.setLongitude(location.getLongitude());
-                    mCurrentLocation = location;
-                }
-
-                public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-                public void onProviderEnabled(String provider) {}
-
-                public void onProviderDisabled(String provider) {}
-            };
-
-            if ( 0 < GPSLocationTime - NetLocationTime ) {
-//                return locationGPS;
-                Log.d(TAG, "getDeviceLocation: GPS is more accurate");
-                // Register the listener with the Location Manager to receive location updates
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            }
-            else {
-//                return locationNet;
-                Log.d(TAG, "getDeviceLocation: Network is more accurate");
-                // Register the listener with the Location Manager to receive location updates
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-            }*/
+                });
         }
     }
 
@@ -857,13 +906,14 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_bus) {
+        /*if (id == R.id.nav_bus) {
             // Handle the camera action
         } else if (id == R.id.nav_bus_stops) {
 
         } else if (id == R.id.nav_trainstations) {
 
-        } else if (id == R.id.nav_setting) {
+        } else */
+        if (id == R.id.nav_setting) {
 
         }
 
@@ -972,6 +1022,13 @@ public class MainActivity extends AppCompatActivity
         }else{
             showNoNetworkDialog(this);
         }
+
+        sgWeather = new SGWeather();
+
+        // Loads Bus Routes from json file, data is accessable from busRoute.getBusRouteMap()
+        Gson gson = new Gson();
+        busRoute =  gson.fromJson( Utils.loadBUSRouteJSONFromAsset(getApplicationContext()), JSONLTABusRoute.class );
+        busRoute.createMap();
     }
     @Override
     public void onCameraMove() {
@@ -1049,9 +1106,6 @@ public class MainActivity extends AppCompatActivity
      */
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
-
-//        CollectionReference citiesRef = db.collection("data");
-
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -1070,7 +1124,6 @@ public class MainActivity extends AppCompatActivity
             for (Map.Entry<String,LTABusStopData> newData : allBusStops.entrySet()){
                 sortedLTABusStopData.add(newData.getValue());
             }
-//            LinkIDtoName();
             FillBusData();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1129,8 +1182,6 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 dialog.dismiss();
-//                bottomNav.setSelectedItemId(R.id.action_fav);
-//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
 
             @Override
@@ -1161,7 +1212,7 @@ public class MainActivity extends AppCompatActivity
                             singleCardList.clear();
                             singleCardList.add(card);
                             updateAdapterList(singleCardList);
-                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+//                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                         } else {
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
                         }
@@ -1192,6 +1243,9 @@ public class MainActivity extends AppCompatActivity
         BusStopCards result = busStopMap.get(id);
         if(result == null){
             Log.e(TAG, "getBusStopData: No busStopMap!");
+            Toast.makeText(getApplicationContext(),
+                    "Failed to sync data from network!",
+                    Toast.LENGTH_SHORT).show();
             return null;
         }
 
@@ -1247,6 +1301,14 @@ public class MainActivity extends AppCompatActivity
         if(mCurrentLocation==null)
             return;
 
+        if(!haveNetworkConnection(getApplicationContext())){
+            Toast.makeText(getApplicationContext(),
+                    "No Network detected! Check your network!",
+                    Toast.LENGTH_SHORT).show();
+//            showNoNetworkDialog(mContext);
+            return;
+        }
+
         @SuppressLint("StaticFieldLeak")
         AsyncTask asyncTask = new AsyncTask() {
             @Override
@@ -1267,7 +1329,11 @@ public class MainActivity extends AppCompatActivity
                 super.onPostExecute(o);
                 List<LTABusStopData> toProcess = (List<LTABusStopData>) o;
                 if(toProcess.size() <= 0){
-                    Log.d(TAG, "lookUpNearbyBusStops: Google returned no data");
+                    Log.d(TAG, "lookUpNearbyBusStops: SORTING returned no data");
+                    Toast.makeText(getApplicationContext(),
+                            "No response from servers! Check your network!",
+                            Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.INVISIBLE);
                     return;
                 }
                 nearbyCardList.clear();
@@ -1280,7 +1346,13 @@ public class MainActivity extends AppCompatActivity
                     assert card != null;
                     Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
                 }
-                updateAdapterList(nearbyCardList);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateAdapterList(nearbyCardList);
+                    }
+                },400);
+//                updateAdapterList(nearbyCardList);
             }
         };
         asyncTask.execute();
@@ -1359,7 +1431,8 @@ public class MainActivity extends AppCompatActivity
         adapter.addAllCard(list);
         adapter.doAutoRefresh();
         progressBar.setVisibility(View.GONE);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED), 100);
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     /**
@@ -1377,11 +1450,12 @@ public class MainActivity extends AppCompatActivity
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
-            card.setType(Card.BUS_STOP_CARD);
-            card.setMajorUpdate(true);
-            favCardList.add(card);
-            Log.d(TAG, "prepareFavoriteCards: adding "+card.getBusStopID()+ " to favCardList");
-//            }
+            if (card != null) {
+                card.setType(Card.BUS_STOP_CARD);
+                card.setMajorUpdate(true);
+                favCardList.add(card);
+                Log.d(TAG, "prepareFavoriteCards: adding " + card.getBusStopID() + " to favCardList");
+            }
         }
 
         @SuppressLint("StaticFieldLeak")
@@ -1440,12 +1514,33 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
+                //FOR SUGGESTIONS, if no difference from normal routes then will not display 
+                List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
-                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(i));
-                    card.setType(Card.NAVIGATE_TRANSIT_CARD);
-                    transitCardList.add(card);
-//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-                    Log.d(TAG, "lookUpRoute: "+card.toString());
+                    if(getDistanceMatrix(result.get(i))){
+                        listMatrix.add(i);
+                        Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
+                    }
+                }
+                int size = listMatrix.size();
+                if (listMatrix.size() == result.size()) {
+                    Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                }
+                else {
+                    Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                    for (int i = 0; i < size; i++) {
+                        int j = (Integer) listMatrix.get(i);
+                        NavigateTransitCard card = getRouteData(result.get(j));
+                        card.setType(card.NAVIGATE_TRANSIT_CARD);
+                        transitCardList.add(card);
+                    }
+                }
+                //NORMAL ROUTES
+                for(int i=0; i< result.size(); i++) {
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
+                    card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                    transitCardList.add(card1);
+                    Log.d(TAG, "lookUpRoute: "+card1.toString());
                 }
                 updateAdapterList(transitCardList);
             }
@@ -1455,7 +1550,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void lookUpTrafficDuration(String queryMatrix, String queryDir){
+    private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
+        boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
         List<String> directionsQuery = new ArrayList<>();
@@ -1469,59 +1565,128 @@ public class MainActivity extends AppCompatActivity
             result = directionsParser.execute().get();
             result1 = durationParser.execute().get();
             Log.d(TAG,queryMatrix);
-            if(result1.size() <= 0){
+            if(result.size() <= 0){
                 Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
-                return;
+                return pass;
             }
             Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
             Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
-                NavigateTransitCard card = getDistanceMatrix(result1.get(i), result.get(i));
-                card.setType(Card.NAVIGATE_TRANSIT_CARD);
-                transitCardList.add(card);
-                Log.d(TAG, "lookUpTrafficDuration: " + card.toString());
+                Log.d("lookUpTrafficDuration", "ifelse");
+                if (type=="bus") {
+                    Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
+                    if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
+                        Log.d(TAG, "lookUpTrafficDuration BUS MAT: " + i );
+                        pass = true;
+                        Log.d(TAG, "lookUpTrafficDuration: BUSBUSBUS");
+                    } else { // dont display
+                        Log.d(TAG, "getMatrix false");
+                        pass = false;
+                    }
+                }
+                else if (type == "mrt"){
+                    List<String> twitterServiceList = new ArrayList<String>();
+
+                    switch(train) {
+                        case("East West Line"):
+                            mrtLine = "EWL";
+                            break;
+                        case("North South Line"):
+                            mrtLine = "NSL";
+                            break;
+                        case("North East Line"):
+                            mrtLine = "NEL";
+                            break;
+                        case("Downtown Line"):
+                            mrtLine = "DTL";
+                            break;
+                        case ("Circle Line"):
+                            mrtLine = "CCL";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    Log.d("LookUpTrafficDuration", train);
+                    Log.d("LookUpTrafficDuration", mrtLine);
+                    String keyTwitter = "[" + mrtLine + "]";
+                    Log.d("MRTLINE", keyTwitter);
+                    for(String s : twitterList){
+                        if(s.contains(keyTwitter)){
+                            twitterServiceList.add(s);
+                            Log.d("CONTAINED", s);
+                        }
+                    }
+                    if (twitterServiceList.size() > 0) {
+                        Log.d("TWITTERSERVICELIST", twitterServiceList.get(0));
+                        if (twitterServiceList.get(0).contains("commenced") || twitterServiceList.get(0).contains("CLEARED") || twitterServiceList.get(0).contains("restored") || twitterServiceList.get(0).contains("resumed")) {
+                            Log.d("NO FAULT", "NO FAULT");
+                            pass = true;
+                        } else if (twitterServiceList.get(0).contains("Due to") || twitterServiceList.get(0).contains("pls add") || twitterServiceList.get(0).contains("train travel time") || twitterServiceList.get(0).contains("no train service")) {
+                            Log.d("GOT FAULT", "GOT FAULT");
+                            pass = false;
+                        } else {
+                            pass = false;
+                        }
+                    }
+                    else{
+                        pass = true;
+                    }
+                }
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+        return pass;
     }
-
-    private NavigateTransitCard getDistanceMatrix(DistanceData distanceData, GoogleRoutesData googleRoutesData) {
-        //TODO set card details here (route ID?)
-        NavigateTransitCard card = new NavigateTransitCard();
-        card.setType(Card.NAVIGATE_TRANSIT_CARD);
-        //card.setTotalDistance(googleRoutesData.getTotalDistance());
-        //card.setTotalTime(googleRoutesData.getTotalDuration());
-        //need loop to get
-        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-
-        Log.d(TAG, "distanceData start add: "+distanceData.getStartAdd());
-        Log.d(TAG, "distanceData distance: "+distanceData.getDistance());
-        Log.d(TAG, "distanceData duration: "+distanceData.getDuration());
-        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
+    private boolean getMatrix(DistanceData distanceData){
         int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
-        Log.d(TAG, "duration int: "+ duration );
-        if ((duration_in_traffic - duration) < 10){
-            Log.d(TAG, "No congestion" );
+        Log.d("GetMatrix()", "duration "+ duration + " , duration traffic " + duration_in_traffic );
+        //if (duration - duration_in_traffic > 0){ //no congestion.
+        if (duration - duration_in_traffic >= 4){
+            Log.d("GetMatrix()", "BOOLEAN NO CONGESTION");
+            return true;
         }
+        else {
+            return false;
+        }
+    }
+    private boolean getDistanceMatrix(GoogleRoutesData googleRoutesData) {
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
+        boolean pass = false;
         if (routeSteps != null) {
             for (int i = 0; i < routeSteps.size(); i++) {
+                Log.d("getDistanceMatrix",String.valueOf(i));
                 if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
-                    Log.d(TAG, "IS A TRAIN" );
+                    Log.d(TAG, "IS A TRAIN" + i);
+                    String trainline = routeSteps.get(i).getTrainLine();
+                    Log.d(TAG, trainline);
+                    pass =  lookUpTrafficDuration("mrt", trainline, "", query);
                 }
                 else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
-                    Log.d(TAG, "IS A BUS" );
-                    
+                    Log.d(TAG, "IS A BUS" + i);
+                    Log.d("BUS TRANSIT", routeSteps.get(i).toString());
+                    Double startLat = routeSteps.get(i).getStartLocationLat();
+                    Double startLng = routeSteps.get(i).getStartLocationLng();
+                    Double endLat = routeSteps.get(i).getEndLocationLat();
+                    Double endLng = routeSteps.get(i).getEndLocationLng();
+                    Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
+                    String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
+                    Log.d("DISTANCEMATRIX", "query");
+                    pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
+
                 }
             }
         }
         else{
             Log.d(TAG, "routeSteps EMPTY" );
+            pass = false;
         }
-        return card;
+        return pass;
     }
-
+          
     public void hideKeyboard(){
         // Check if no view has focus:
         View view = getCurrentFocus();
@@ -1529,6 +1694,145 @@ public class MainActivity extends AppCompatActivity
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             assert imm != null;
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+
+
+    // download twitter timeline after first checking to see if there is a network connection
+    public void downloadTweets() {
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+            new JSONTwitterParser().execute(ScreenName);
+        } else {
+            Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public class JSONTwitterParser extends AsyncTask<String, Void , String>{
+        final static String CONSUMER_KEY = "nW88XLuFSI9DEfHOX2tpleHbR";
+        final static String CONSUMER_SECRET = "hCg3QClZ1iLR13D3IeMvebESKmakIelp4vwFUICuj6HAfNNCer";
+        final static String TwitterTokenURL = "https://api.twitter.com/oauth2/token";
+        final static String TwitterStreamURL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... screenNames) {
+            String result = null;
+
+            if (screenNames.length > 0) {
+                result = getTwitterStream(screenNames[0]);
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Log.e("result",result);
+
+            try {
+                JSONArray jsonArray_data = new JSONArray(result);
+                for (int i=0; i<jsonArray_data.length();i++){
+
+                    JSONObject jsonObject = jsonArray_data.getJSONObject(i);
+                    twitterList.add(jsonObject.getString("text"));
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+
+        // convert a JSON authentication object into an Authenticated object
+        private Authenticated jsonToAuthenticated(String rawAuthorization) {
+            Authenticated auth = null;
+            if (rawAuthorization != null && rawAuthorization.length() > 0) {
+                try {
+                    Gson gson = new Gson();
+                    auth = gson.fromJson(rawAuthorization, Authenticated.class);
+                } catch (IllegalStateException ex) {
+                    // just eat the exception
+                }
+            }
+            return auth;
+        }
+
+        private String getResponseBody(HttpRequestBase request) {
+            StringBuilder sb = new StringBuilder();
+            try {
+
+                DefaultHttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
+                HttpResponse response = httpClient.execute(request);
+                int statusCode = response.getStatusLine().getStatusCode();
+                String reason = response.getStatusLine().getReasonPhrase();
+
+                if (statusCode == 200) {
+
+                    HttpEntity entity = response.getEntity();
+                    InputStream inputStream = entity.getContent();
+
+                    BufferedReader bReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
+                    String line = null;
+                    while ((line = bReader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                } else {
+                    sb.append(reason);
+                }
+            } catch (UnsupportedEncodingException ex) {
+            }  catch (IOException ex2) {
+            }
+            return sb.toString();
+        }
+
+        private String getTwitterStream(String screenName) {
+            String results = null;
+
+            //Encode consumer key and secret
+            try {
+                // URL encode the consumer key and secret
+                String urlApiKey = URLEncoder.encode(CONSUMER_KEY, "UTF-8");
+                String urlApiSecret = URLEncoder.encode(CONSUMER_SECRET, "UTF-8");
+
+                // Concatenate the encoded consumer key, a colon character, and the
+                // encoded consumer secret
+                String combined = urlApiKey + ":" + urlApiSecret;
+
+                // Base64 encode the string
+                String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
+
+                //Obtain a bearer token
+                HttpPost httpPost = new HttpPost(TwitterTokenURL);
+                httpPost.setHeader("Authorization", "Basic " + base64Encoded);
+                httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+                httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
+                String rawAuthorization = getResponseBody(httpPost);
+                Authenticated auth = jsonToAuthenticated(rawAuthorization);
+
+                // Applications should verify that the value associated with the
+                // token_type key of the returned object is bearer
+                if (auth != null && auth.token_type.equals("bearer")) {
+
+                    //Authenticate API requests with bearer token
+                    HttpGet httpGet = new HttpGet(TwitterStreamURL + screenName);
+
+                    // construct a normal HTTPS request and include an Authorization
+                    // header with the value of Bearer <>
+                    httpGet.setHeader("Authorization", "Bearer " + auth.access_token);
+                    httpGet.setHeader("Content-Type", "application/json");
+                    // update the results with the body of the response
+                    results = getResponseBody(httpGet);
+                }
+            } catch (UnsupportedEncodingException ex) {
+            } catch (IllegalStateException ex1) {
+            }
+            return results;
         }
     }
 }
