@@ -1,6 +1,9 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
@@ -25,6 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -39,16 +43,19 @@ import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -129,7 +136,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -271,6 +277,13 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
         toolbarNavigate = findViewById(R.id.navigate_toolbar);
+        CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, 0);
+        toolbarNavigate.setLayoutParams(params);
+        setSupportActionBar(toolbarNavigate);
         setSupportActionBar(toolbar);
         View rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -310,6 +323,7 @@ public class MainActivity extends AppCompatActivity
         window.setNavigationBarColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -510,12 +524,19 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).hide();
+//                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        if(getSupportActionBar().isShowing())
+                            hideActionBar();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).show();
+//                        Objects.requireNonNull(getSupportActionBar()).show();
+                        if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
+                            showActionBar(toolbarNavigate);
+                        if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
+                            showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        hideActionBar();
+//                        Objects.requireNonNull(getSupportActionBar()).hide();
                     }
                 }
 
@@ -543,13 +564,32 @@ public class MainActivity extends AppCompatActivity
         }
 
         loadFavoritesFromDB();
-        bottomNav.setOnNavigationItemSelectedListener(item -> {
+        bottomNav.setOnNavigationItemSelectedListener((MenuItem item) -> {
             int id = item.getItemId();
             if (id == R.id.action_fav) {
-                toolbarNavigate.setVisibility(View.INVISIBLE);
-                toolbar.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbar);
-                getSupportActionBar().show();
+
+//                getSupportActionBar().hide();
+//                setSupportActionBar(toolbar);
+//                getSupportActionBar().show();
+                if(toolbar.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbar), 350);
+                }
+
+                //STATUS Bar
+                Window window = this.getWindow();
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.setStatusBarColor(Color.TRANSPARENT);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    int flags = window.getDecorView().getSystemUiVisibility();
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    window.getDecorView().setSystemUiVisibility(flags);
+                }
+
+                hideKeyboard();
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
@@ -562,18 +602,37 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
-                toolbar.setVisibility(View.GONE);
-                getSupportActionBar().hide();
-                toolbarNavigate.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbarNavigate);
-                getSupportActionBar().show();
+                if(toolbarNavigate.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
+                }
+                //STATUS Bar
+                Window window = this.getWindow();
+//                window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                }
+                window.setStatusBarColor(Color.WHITE);
+
                 AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        startingPointTextView.setSelectAllOnFocus(true);
+                        startingPointTextView.requestFocus();
+                        showKeyboard(startingPointTextView);
+                    }
+                },600);
+
+
+                handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
                 optionButton.setOnClickListener(view -> {
                     if (!optionMode) {
                         optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
@@ -641,15 +700,34 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
             } else if (id == R.id.action_nearby) {
-                toolbarNavigate.setVisibility(View.INVISIBLE);
-                toolbar.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbar);
-                Objects.requireNonNull(getSupportActionBar()).show();
+//                getSupportActionBar().hide();
+//                setSupportActionBar(toolbar);
+//                getSupportActionBar().show();
+                if(toolbar.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbar), 350);
+                }
+
+                //STATUS Bar
+                Window window = this.getWindow();
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.setStatusBarColor(Color.TRANSPARENT);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    int flags = window.getDecorView().getSystemUiVisibility();
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    window.getDecorView().setSystemUiVisibility(flags);
+                }
+
                 if(mCurrentLocation==null){
                     getDeviceLocation();
                     getLocationPermission();
                     return false;
                 }
+
+                hideKeyboard();
 
                 @SuppressLint("StaticFieldLeak")
                 AsyncTask asyncTask = new AsyncTask() {
@@ -1703,6 +1781,110 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void showKeyboard(EditText editText){
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+
+    int mToolbarHeightBackUp = 0;
+    ValueAnimator mVaActionBar2 = null;
+    void hideActionBar() {
+        // holds the original Toolbar height.
+        // this can also be obtained via (an)other method(s)
+        int mToolbarHeight = 0;
+        int mAnimDuration = 200/* milliseconds */;
+//        ValueAnimator mVaActionBar = null;
+        // initialize `mToolbarHeight`
+        mToolbarHeight = getSupportActionBar().getHeight();
+        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
+        if(mToolbarHeight == 0)
+            mToolbarHeight = mToolbarHeightBackUp;
+
+        if (mVaActionBar2 != null && mVaActionBar2.isRunning()) {
+            // we are already animating a transition - block here
+            return;
+        }
+
+        // animate `Toolbar's` height to zero.
+        mVaActionBar2 = ValueAnimator.ofInt(mToolbarHeight , 0);
+        mVaActionBar2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // update LayoutParams
+                ((CoordinatorLayout.LayoutParams)toolbar.getLayoutParams()).height
+                        = (Integer)animation.getAnimatedValue();
+                toolbar.requestLayout();
+            }
+        });
+
+        mVaActionBar2.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+
+                if (getSupportActionBar() != null) { // sanity check
+                    getSupportActionBar().hide();
+                }
+            }
+        });
+
+        mVaActionBar2.setDuration(mAnimDuration);
+        mVaActionBar2.start();
+    }
+
+    ValueAnimator mVaActionBar1 = null;
+    void showActionBar(Toolbar bar) {
+        int mToolbarHeight = 0;
+        int mAnimDuration = 150/* milliseconds */;
+//        ValueAnimator mVaActionBar = null;
+        if (mVaActionBar1 != null && mVaActionBar1.isRunning() && bar != null) {
+            // we are already animating a transition - block here
+            return;
+        }
+
+        if(bar.equals(toolbar)) {
+            TypedValue tv = new TypedValue();
+//            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+                mToolbarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            }
+        }
+        else {
+            if (bar.getHeight() == 0)
+                mToolbarHeight = bar.getMinimumHeight();
+            else
+                mToolbarHeight = bar.getHeight();
+
+            mToolbarHeightBackUp = mToolbarHeight;
+        }
+
+        // restore `Toolbar's` height
+        mVaActionBar1 = ValueAnimator.ofInt(0 , mToolbarHeight);
+        mVaActionBar1.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // update LayoutParams
+                ((CoordinatorLayout.LayoutParams)bar.getLayoutParams()).height
+                        = (Integer)animation.getAnimatedValue();
+                bar.requestLayout();
+            }
+        });
+
+        mVaActionBar1.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                setSupportActionBar(bar);
+                if (getSupportActionBar() != null) { // sanity check
+                    getSupportActionBar().show();
+                }
+            }
+        });
+
+        mVaActionBar1.setDuration(mAnimDuration);
+        mVaActionBar1.start();
+    }
 
 
     // download twitter timeline after first checking to see if there is a network connection
