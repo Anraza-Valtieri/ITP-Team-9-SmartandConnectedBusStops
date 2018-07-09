@@ -9,7 +9,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v7.widget.CardView;
 import android.text.format.DateUtils;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -23,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
+    private static ViewGroup.LayoutParams params;
+
     public static boolean isBeforeDay(Date date1, Date date2) {
         if (date1 == null || date2 == null) {
             throw new IllegalArgumentException("The dates must not be null");
@@ -188,4 +195,41 @@ public class Utils {
                 .show();
     }
 
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        // for navigate cards: allow card to expand to accommodate expandable list
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        int totalHeight = 0;
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        params = listView.getLayoutParams();
+        ViewGroup.LayoutParams paramsToSet = listView.getLayoutParams();
+        paramsToSet.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(paramsToSet);
+        listView.requestLayout();
+    }
+
+    public static void setListViewToOriginal(ListView listView) {
+        // for navigate cards: allow card to go back to original height
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        ViewGroup.LayoutParams paramsToSet = listView.getLayoutParams();
+        paramsToSet.height = 50; //TODO change hardcoded height
+        listView.setLayoutParams(paramsToSet);
+        listView.requestLayout();
+
+    }
 }

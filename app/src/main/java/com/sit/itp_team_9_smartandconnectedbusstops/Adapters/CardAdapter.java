@@ -19,9 +19,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,9 +45,11 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
@@ -57,6 +62,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheet;
     private RecyclerView recyclerView;
+    private View view;
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
@@ -96,8 +102,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        //TODO switch case
-        View view;
+        //View view;
         ViewHolder viewHolder = null;
         switch(viewType){
             default:
@@ -169,100 +174,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 break;
             case NAVIGATE_TRANSIT_CARD:
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
-                transitCard.setType(transitCard.NAVIGATE_TRANSIT_CARD);
+                transitCard.setType(NavigateTransitCard.NAVIGATE_TRANSIT_CARD);
                 holder.setItem(transitCard);
-                final View transitCardView = holder.itemView.findViewById(R.id.transitcard);
-                TextView totalTime = transitCardView.findViewById(R.id.textViewTotalTime);
-                TextView totalDistance = transitCardView.findViewById(R.id.textViewTotalDistance);
-                TextView cost = transitCardView.findViewById(R.id.textViewCost);
-                //View breakdownBar = transitCardView.findViewById(R.id.breakdownBar);
-                TextView startingStation = transitCardView.findViewById(R.id.textViewStartingStation);
-                TextView timeTaken = transitCardView.findViewById(R.id.textViewTimeTaken);
-                TextView numStops = transitCardView.findViewById(R.id.textViewNumStops);
-                ImageView imageViewStartingStation = transitCardView.findViewById(R.id.imageViewStartingStation);
-
-                totalTime.setText(transitCard.getTotalTime());
-                totalDistance.setText(transitCard.getTotalDistance());
-                cost.setText(transitCard.getCost());
-                startingStation.setText(transitCard.getStartingStation());
-                timeTaken.setText(transitCard.getStartingStationTimeTaken());
-                numStops.setText(transitCard.getNumStops());
-                imageViewStartingStation.setImageResource(transitCard.getImageViewStartingStation());
-                imageViewStartingStation.setColorFilter(transitCard.getImageViewStartingStationColor(), PorterDuff.Mode.SRC_IN);
-
-                //Creates layout for transit stations
-                LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
-                transit_layout.setOrientation(LinearLayout.VERTICAL);
-
-                transit_layout.removeAllViewsInLayout();
-                for (Map.Entry<String, List<Integer>> entry : transitCard.getTransitStations().entrySet()) {
-                    String stationName = entry.getKey();
-                    //List<Integer> stationImageStationColor = entry.getValue();
-                    Integer stationImage = entry.getValue().get(0);
-                    Integer stationColor = entry.getValue().get(1);
-
-                    LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    assert inflater != null;
-                    View to_add_navigate = inflater.inflate(R.layout.navigate_transit_card_transit_stops, (ViewGroup) holder.itemView.getRootView(), false);
-                    TextView transitStation = to_add_navigate.findViewById(R.id.textViewTransitStation);
-                    ImageView imageViewTransitStation = to_add_navigate.findViewById(R.id.imageViewTransitStation);
-
-                    transitStation.setText(stationName);
-                    imageViewTransitStation.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
-                    imageViewTransitStation.setImageResource(stationImage);
-                    Log.i(TAG,"transitStationString="+stationName);
-                    transit_layout.addView(to_add_navigate);
-                }
-
-                //Creates layout for breakdown bar (summary bar below the total distance)
-                LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
-                breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
-
-                breakdown_bar_layout.removeAllViewsInLayout();
-                for (int i=0; i < transitCard.getTimeTaken().size();i++){
-                    String breakdownBarPartActualTime = (String) transitCard.getTimeTaken().get(i).get(0);
-                    float breakdownBarPartWeight = (Float)transitCard.getTimeTaken().get(i).get(1);
-                    int breakdownBarPartColor = (Integer) transitCard.getTimeTaken().get(i).get(2);
-
-                    LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    assert inflater2 != null;
-                    View to_add_breakdown = inflater2.inflate(R.layout.navigate_transit_card_breakdown_bar, (ViewGroup) holder.itemView.getRootView(), false);
-                    View breakdownBarPart = to_add_breakdown.findViewById(R.id.breakdownBar);
-                    TextView breakdownBarPartTime = to_add_breakdown.findViewById(R.id.textViewTime);
-
-                    Log.i(TAG,"breakdownBarPartWeight: "+breakdownBarPartWeight);
-                    breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
-                    breakdownBarPartTime.setText(breakdownBarPartActualTime);
-                    to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
-                    breakdown_bar_layout.addView(to_add_breakdown);
-                }
-                transitCardView.setOnClickListener(v -> {
-                    //TODO open new detailed card, get route ID
-                    Log.d(TAG,"onClick NavigateTransitCard");
-                    //trigger method in MainActivity to set card, card adapter return
-                });
                 break;
 
             case NAVIGATE_WALKING_CARD:
-                //TODO complete code here
                 NavigateWalkingCard walkingCard = (NavigateWalkingCard) mCard.get(position);
-                walkingCard.setType(walkingCard.NAVIGATE_WALKING_CARD);
+                walkingCard.setType(NavigateWalkingCard.NAVIGATE_WALKING_CARD);
                 holder.setItem(walkingCard);
-                final View walkingCardView = holder.itemView.findViewById(R.id.walkingCard);
-                TextView walkingTime = walkingCardView.findViewById(R.id.textViewWalkingTime);
-                TextView walkingDistance = walkingCardView.findViewById(R.id.textViewWalkingDistance);
-                TextView startingRoad = walkingCardView.findViewById(R.id.textViewStartingRoad);
-
-                walkingTime.setText(walkingCard.getTotalTime());
-                walkingDistance.setText(walkingCard.getTotalDistance());
-                //startingRoad.setText(walkingCard.getDescription());
-
-                walkingCardView.setOnClickListener(v -> {
-                    //TODO open new detailed card
-                    Log.d(TAG,"onClick NavigateTransitCard");
-                    bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                });
-                break;
         }
 
     }
@@ -462,8 +381,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        //TODO switch case here
+    class ViewHolder extends RecyclerView.ViewHolder {
         //For bus card
 //        ImageView appIcon;
 //        TextView appName;
@@ -486,16 +404,19 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView totalTime;
         TextView totalDistance;
         TextView cost;
-        ProgressBar breakdownBar;
+        View breakdownBar;
         TextView startingStation;
+        ImageView imageViewStartingStation;
         TextView transitStation;
         TextView timeTaken;
         TextView numStops;
+        ExpandableListView listViewNumStops;
 
         //For navigate walking card
         TextView walkingTime;
         TextView walkingDistance;
         TextView startingRoad;
+        ExpandableListView listViewDetailedSteps;
 
         int cardType = 0;
         //BusStopCards card;
@@ -528,16 +449,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             totalTime = itemView.findViewById(R.id.textViewTotalTime);
             totalDistance = itemView.findViewById(R.id.textViewTotalDistance);
             cost = itemView.findViewById(R.id.textViewCost);
-            breakdownBar = itemView.findViewById(R.id.progressBar);
-            startingStation = itemView.findViewById(R.id.textViewStartingStation);
+            breakdownBar = itemView.findViewById(R.id.breakdownBar);
+            //startingStation = itemView.findViewById(R.id.textViewStartingStation);
+            //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
-            timeTaken = itemView.findViewById(R.id.textViewTimeTaken);
-            numStops = itemView.findViewById(R.id.textViewNumStops);
+            //timeTaken = itemView.findViewById(R.id.textViewTimeTaken);
+            //numStops = itemView.findViewById(R.id.textViewNumStops);
 
             //For navigate walking card
             walkingTime = itemView.findViewById(R.id.textViewWalkingTime);
             walkingDistance = itemView.findViewById(R.id.textViewWalkingDistance);
-            startingRoad = itemView.findViewById(R.id.textViewStartingRoad);
+            listViewDetailedSteps = itemView.findViewById(R.id.listViewDetailedSteps);
 
             cardType = type;
         }
@@ -547,7 +469,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             switch (this.cardType) {
                 case BUS_STOP_CARD:
                     BusStopCards cards = (BusStopCards)card;
-                    cards.setType(card.BUS_STOP_CARD);
+                    cards.setType(Card.BUS_STOP_CARD);
                     this.busStopName.setText(cards.getBusStopName());
                     this.busStopID.setText(cards.getBusStopID());
                     this.busLastUpdated.setText(Utils.dateCheck(Utils.formatCardTime(cards.getLastUpdated())));
@@ -702,35 +624,153 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     //        doDataRefresh(holder, position);
                     break;
                 case NAVIGATE_TRANSIT_CARD:
-                    NavigateTransitCard cards2 = (NavigateTransitCard)card;
-                    cards2.setType(card.NAVIGATE_TRANSIT_CARD);
-                    this.totalTime.setText(cards2.getTotalTime());
-                    this.totalDistance.setText(cards2.getTotalDistance());
-                    this.cost.setText(cards2.getCost());
-                    this.startingStation.setText(cards2.getStartingStation());
-                    //this.transitStation.setText(cards2.getTransferStation());
-                    this.numStops.setText(cards2.getNumStops());
-                    this.timeTaken.setText(cards2.getStartingStationTimeTaken());
+                    NavigateTransitCard cardsTransit = (NavigateTransitCard)card;
+                    cardsTransit.setType(Card.NAVIGATE_TRANSIT_CARD);
+                    if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
+                        this.totalTime.setText(cardsTransit.getTotalTime());
+                        this.totalDistance.setText(cardsTransit.getTotalDistance());
+                        this.cost.setText(cardsTransit.getCost());
+                        //this.startingStation.setText(cardsTransit.getStartingStation());
+                        //this.numStops.setText(cardsTransit.getNumStops());
+                        //this.imageViewStartingStation.setImageResource(cardsTransit.getImageViewStartingStation());
+                        //this.imageViewStartingStation.setColorFilter(cardsTransit.getImageViewStartingStationColor(),PorterDuff.Mode.SRC_IN);
+                        //this.timeTaken.setText(cardsTransit.getStartingStationTimeTaken());
+                        //this.listViewNumStops.set
+                        //TODO set expandable list view
+                        //listDataHeader: list of titles (X mins (X stops) )
+                        //childMap: map of listHeader,list of stops
+                        /*List<String> startingStationHeader = new ArrayList<>();
+                        startingStationHeader.add(cardsTransit.getStartingStationTimeTaken()+cardsTransit.getNumStops());
+                        LinkedHashMap startingStationAllStops = new LinkedHashMap();
+                        ExpandableListAdapter listAdapter = new ExpandableListAdapter(this,startingStationHeader,mapChild);
+                        listViewNumStops.setAdapter(listAdapter);*/
+
+                        //Creates layout for transit stations
+                        final View transitCardView = itemView.findViewById(R.id.transitcard);
+                        LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
+                        transit_layout.setOrientation(LinearLayout.VERTICAL);
+
+                        transit_layout.removeAllViewsInLayout();
+                        for (Map.Entry<String, List<Object>> entry : cardsTransit.getTransitStations().entrySet()) {
+                            String key = entry.getKey();
+                            //List<Integer> stationImageStationColor = entry.getValue();
+                            Integer stationImage = (Integer) entry.getValue().get(0);
+                            Integer stationColor = (Integer) entry.getValue().get(1);
+                            String lineName = null, arrivalStop = null;
+                            if (entry.getValue().size() > 3) {
+                                lineName = (String) entry.getValue().get(2);
+                                arrivalStop = (String) entry.getValue().get(3);
+                            }
+
+                            LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                            assert inflater2 != null;
+                            if (stationImage.equals(R.drawable.ic_baseline_directions_walk_24px)){
+                                //walking layout
+                                View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_walking,
+                                        (ViewGroup) itemView.getRootView(), false);
+                                TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
+                                //ImageView imageViewWalking = to_add_navigate.findViewById(R.id.imageViewWalking);
+                                ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
+                                String walkingInstructions = "Walk " + key;
+                                textViewWalking.setText(walkingInstructions);
+                                //imageViewWalking.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
+                                //imageViewWalking.setImageResource(stationImage);
+                                //TODO set expandable list view
+                                Log.i(TAG, "transitStationString=" + key);
+                                transit_layout.addView(to_add_navigate);
+
+                            }else {
+                                //transit layout
+                                View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_stops,
+                                        (ViewGroup) itemView.getRootView(), false);
+                                TextView textViewDepartureStop = to_add_navigate.findViewById(R.id.textViewDepartureStop);
+                                TextView textViewArrivalStop = to_add_navigate.findViewById(R.id.textViewArrivalStop);
+                                ImageView imageViewTransitStation = to_add_navigate.findViewById(R.id.imageViewTransitStation);
+                                ExpandableListView listViewNumStops = to_add_navigate.findViewById(R.id.listViewNumStops);
+                                TextView transitLine = to_add_navigate.findViewById(R.id.textViewLine);
+                                View transitLineBackground = to_add_navigate.findViewById(R.id.viewLine);
+
+                                textViewDepartureStop.setText(key);
+                                textViewArrivalStop.setText(arrivalStop);
+                                transitLine.setText(lineName);
+                                transitLineBackground.setBackgroundColor(stationColor);
+                                imageViewTransitStation.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
+                                imageViewTransitStation.setImageResource(stationImage);
+                                //TODO set expandable list view
+                                Log.i(TAG, "transitStationString=" + key);
+                                transit_layout.addView(to_add_navigate);
+                            }
+                        }
+
+                        //Creates layout for breakdown bar (summary bar below the total distance)
+                        LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
+                        breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
+
+                        breakdown_bar_layout.removeAllViewsInLayout();
+                        for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
+                            String breakdownBarPartActualTime = (String) cardsTransit.getTimeTaken().get(i).get(0);
+                            float breakdownBarPartWeight = (Float) cardsTransit.getTimeTaken().get(i).get(1);
+                            int breakdownBarPartColor = (Integer) cardsTransit.getTimeTaken().get(i).get(2);
+
+                            LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                            assert inflater2 != null;
+                            View to_add_breakdown = inflater2.inflate(R.layout.navigate_transit_card_breakdown_bar, (ViewGroup) itemView.getRootView(), false);
+                            View breakdownBarPart = to_add_breakdown.findViewById(R.id.breakdownBar);
+                            TextView breakdownBarPartTime = to_add_breakdown.findViewById(R.id.textViewTime);
+
+                            Log.i(TAG, "breakdownBarPartWeight: " + breakdownBarPartWeight);
+                            breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
+                            breakdownBarPartTime.setText(breakdownBarPartActualTime);
+                            to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
+                            breakdown_bar_layout.addView(to_add_breakdown);
+                        }
+                    }else{
+                        //No routes available
+                        this.totalDistance.setPadding(300,0,300,0);
+                        this.totalDistance.setText(R.string.transit_error);
+                    }
                     break;
                 case NAVIGATE_WALKING_CARD:
-                    NavigateWalkingCard cards3 = (NavigateWalkingCard)card;
-                    cards3.setType(card.NAVIGATE_WALKING_CARD);
-                    this.walkingTime.setText(cards3.getTotalTime());
-                    this.walkingDistance.setText(cards3.getTotalDistance());
-                    this.startingRoad.setText(cards3.getDescription());
+                    NavigateWalkingCard cardsWalking = (NavigateWalkingCard)card;
+                    cardsWalking.setType(Card.NAVIGATE_WALKING_CARD);
+                    Log.i(TAG,"navigate walking card");
+                    this.walkingTime.setText(cardsWalking.getTotalTime());
+                    String walkingDistance = "( " + cardsWalking.getTotalDistance() +")";
+                    this.walkingDistance.setText(walkingDistance);
+
+                    //For detailed steps (expandable list adapter and listeners)
+                    ExpandableListAdapter walkingListAdapter = new ExpandableListAdapter(mContext,
+                            cardsWalking.getDescription(),cardsWalking.getDetailedSteps());
+                    this.listViewDetailedSteps.setAdapter(walkingListAdapter);
+
+                    this.listViewDetailedSteps.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+                        @Override
+                        public void onGroupExpand(int groupPosition) {
+                            Log.i(TAG,"on group expand");
+                            Utils.setListViewHeightBasedOnChildren(listViewDetailedSteps);
+                            listViewDetailedSteps.smoothScrollToPosition(groupPosition);
+
+                            /*if (listViewDetailedSteps.isGroupExpanded(groupPosition)) {
+                                listViewDetailedSteps.collapseGroup(groupPosition);
+                            } else {
+                                listViewDetailedSteps.expandGroup(groupPosition);
+                            }*/
+
+                        }
+                    });
+
+                    this.listViewDetailedSteps.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+                        @Override
+                        public void onGroupCollapse(int groupPosition) {
+                            Log.i(TAG,"on group collapse");
+                            Utils.setListViewToOriginal(listViewDetailedSteps);
+                        }
+                    });
+
+                    //TODO walking route on map
                     break;
             }
         }
-
-        /*private void setItem(NavigateTransitCard card){
-
-        }
-
-        private void setItem(NavigateWalkingCard card) {
-            this.walkingTime.setText(card.getTotalTime());
-            this.walkingDistance.setText(card.getTotalDistance());
-            this.startingRoad.setText(card.getDescription());
-        }*/
-
     }
 }

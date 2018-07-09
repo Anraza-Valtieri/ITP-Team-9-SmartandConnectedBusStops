@@ -12,11 +12,10 @@
         android:id="@+id/dividerBeforeTransitStation"
         android:layout_width="0dp"
         android:layout_height="2dp"
-        android:layout_marginStart="50dp"
+        android:layout_marginStart="55dp"
         android:layout_marginTop="8dp"
         android:background="?android:attr/listDivider"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@id/imageViewTransitStation"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -33,7 +32,7 @@
         app:srcCompat="@drawable/ic_directions_bus_black_24dp" />
 
     <TextView
-        android:id="@+id/textViewTransitStation"
+        android:id="@+id/textViewDepartureStop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -41,5 +40,49 @@
         app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
         app:layout_constraintTop_toTopOf="@+id/imageViewTransitStation"
         tools:text="Dhoby Ghaut MRT" />
+
+    <RelativeLayout
+        android:layout_width="50dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
+        app:layout_constraintTop_toBottomOf="@+id/textViewDepartureStop">
+
+        <View
+            android:id="@+id/viewLine"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimaryDark" />
+
+        <TextView
+            android:id="@+id/textViewLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/white"
+            tools:text="text" />
+
+    </RelativeLayout>
+
+    <ExpandableListView
+        android:id="@+id/listViewNumStops"
+        style="@android:style/Widget.ExpandableListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="64dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewTransitStation" />
+
+    <TextView
+        android:id="@+id/textViewArrivalStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
+        app:layout_constraintTop_toBottomOf="@id/listViewNumStops"
+        tools:text="TextView" />
 
 </android.support.constraint.ConstraintLayout>
