@@ -97,14 +97,12 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.TransitModeDistances;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
-import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import org.apache.http.HttpEntity;
@@ -129,7 +127,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1208,10 +1205,12 @@ public class MainActivity extends AppCompatActivity
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
                             Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-                            card.setType(Card.BUS_STOP_CARD);
-                            singleCardList.clear();
-                            singleCardList.add(card);
-                            updateAdapterList(singleCardList);
+                            if(card != null) {
+                                card.setType(Card.BUS_STOP_CARD);
+                                singleCardList.clear();
+                                singleCardList.add(card);
+                                updateAdapterList(singleCardList);
+                            }
 //                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                         } else {
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
@@ -1243,6 +1242,14 @@ public class MainActivity extends AppCompatActivity
         BusStopCards result = busStopMap.get(id);
         if(result == null){
             Log.e(TAG, "getBusStopData: No busStopMap!");
+            Toast.makeText(getApplicationContext(),
+                    "Failed to sync data from network!",
+                    Toast.LENGTH_SHORT).show();
+            return null;
+        }
+
+        prepareBottomSheet();
+        if(!haveNetworkConnection(this)) {
             Toast.makeText(getApplicationContext(),
                     "Failed to sync data from network!",
                     Toast.LENGTH_SHORT).show();
@@ -1320,7 +1327,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             protected Object doInBackground(Object[] objects) {
-//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                 return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             }
 
@@ -1339,12 +1345,12 @@ public class MainActivity extends AppCompatActivity
                 nearbyCardList.clear();
                 for(int i=0; i< 11; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
-                    card.setType(Card.BUS_STOP_CARD);
-                    card.setMajorUpdate(true);
-                    nearbyCardList.add(card);
-//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-                    assert card != null;
-                    Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                    if(card != null) {
+                        card.setType(Card.BUS_STOP_CARD);
+                        card.setMajorUpdate(true);
+                        nearbyCardList.add(card);
+                        Log.d(TAG, "lookUpNearbyBusStops: " + card.toString());
+                    }
                 }
                 handler.postDelayed(new Runnable() {
                     @Override
