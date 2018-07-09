@@ -709,11 +709,11 @@ public class SGWeather {
         return mWeatherForLatLong;
     }
 
-    public void setmTempForLatLong(String mTempForLatLong) {
+    private void setmTempForLatLong(String mTempForLatLong) {
         this.mTempForLatLong = mTempForLatLong;
     }
 
-    public void setmWeatherForLatLong(String mWeatherForLatLong) {
+    private void setmWeatherForLatLong(String mWeatherForLatLong) {
         this.mWeatherForLatLong = mWeatherForLatLong;
     }
 }
