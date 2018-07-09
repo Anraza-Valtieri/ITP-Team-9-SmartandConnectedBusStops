@@ -20,12 +20,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.widget.ExpandableListView;
-import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,11 +42,9 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
@@ -339,7 +334,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     @Override
     public void processFinishFromLTA(Map<String, Map> result) {
 //        Log.d(TAG, "processFinishFromLTA: Received");
-        if(result.size() < 1){
+        if(result.size() < 1 || mCard.size() < 1){
             Log.e(TAG, "processFinishFromLTA: LTA returned no data");
         }else {
             @SuppressLint("StaticFieldLeak")
