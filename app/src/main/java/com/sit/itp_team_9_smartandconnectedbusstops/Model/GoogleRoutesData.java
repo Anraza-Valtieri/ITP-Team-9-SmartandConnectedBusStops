@@ -9,6 +9,7 @@ public class GoogleRoutesData {
     private int ID;
     private String copyrights;
     private JSONArray warnings;
+    private String summary;
     //public JSONArray legs;
 
     //within legs
@@ -19,6 +20,9 @@ public class GoogleRoutesData {
 
     private double totalBusDistance;
     private double totalTrainDistance;
+
+    //for no results found
+    private String error;
 
     public List<GoogleRoutesData> getRoutes() {
         return routes;
@@ -99,5 +103,21 @@ public class GoogleRoutesData {
 
     public void setTotalTrainDistance(double totalTrainDistance) {
         this.totalTrainDistance = totalTrainDistance;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

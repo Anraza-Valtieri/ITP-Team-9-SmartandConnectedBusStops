@@ -15,7 +15,6 @@
             android:id="@+id/breakdownBar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
             android:background="#a40404"
             tools:layout_editor_absoluteX="0dp" />
 
@@ -27,6 +26,7 @@
             android:layout_centerInParent="true"
             android:textAlignment="center"
             android:textColor="@android:color/white"
+            android:textSize="12sp"
             tools:text="6 mins" />
     </RelativeLayout>
 

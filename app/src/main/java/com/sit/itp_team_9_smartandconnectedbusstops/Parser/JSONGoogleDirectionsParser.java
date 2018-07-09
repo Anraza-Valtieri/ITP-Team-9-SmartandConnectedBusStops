@@ -84,6 +84,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                             entry.setID(i);
                             entry.setCopyrights(obj.getString("copyrights"));
                             entry.setWarnings(obj.getJSONArray("warnings"));
+                            entry.setSummary(obj.getString("summary"));
                             JSONArray legsArray = obj.getJSONArray("legs");
                             for (int j = 0; j < legsArray.length(); j++) {
                                 JSONObject legsObject = legsArray.getJSONObject(j);
@@ -111,7 +112,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                         Log.i(TAG, "NUMSTOPS: " + steps.getNumStops().toString());
                                         String vehicle = stepsObject.getJSONObject("transit_details")
                                                 .getJSONObject("line").getJSONObject("vehicle").getString("type");
-                                        if (vehicle.equals("SUBWAY")) {
+                                        if (vehicle.equals("SUBWAY") || vehicle.equals("TRAM")) {
                                             steps.setTrainLine(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("line").optString("name"));
                                             steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
@@ -131,10 +132,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }
                                     } else if (steps.getTravelMode().matches("WALKING")) {
-                                        JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
-                                        List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
+                                        //JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
+                                        //List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
                                         //to store walking steps
-                                        for (int l = 0; l < detailedStepsArray.length(); l++) {
+                                        /*for (int l = 0; l < detailedStepsArray.length(); l++) {
                                             JSONObject detailedStepsObject = detailedStepsArray.getJSONObject(l);
                                             GoogleRoutesSteps detailedSteps = new GoogleRoutesSteps();
                                             detailedSteps.setDistance(detailedStepsObject
@@ -145,7 +146,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                                     .optString("html_instructions"));
                                             detailedStepsList.add(detailedSteps);
                                         }
-                                        steps.setDetailedSteps(detailedStepsList);
+                                        steps.setDetailedSteps(detailedStepsList);*/
+                                        //steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                        steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
+                                        steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     }
                                     Log.i(TAG, "STEP: " + steps.toString());
                                     stepsList.add(steps);
@@ -166,9 +170,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                             routesList.add(entry);
                         }
                     }else{
-                        //TODO change to exception
                         GoogleRoutesData entry = new GoogleRoutesData();
-                        entry.setCopyrights("ZERO_RESULTS");
+                        entry.setError(response1.getString("status"));
                         routesList.add(entry);
                     }
                     urlConnection.disconnect();
