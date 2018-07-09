@@ -1248,7 +1248,7 @@ public class MainActivity extends AppCompatActivity
             return null;
         }
 
-        prepareBottomSheet();
+//        prepareBottomSheet();
         if(!haveNetworkConnection(this)) {
             Toast.makeText(getApplicationContext(),
                     "Failed to sync data from network!",
