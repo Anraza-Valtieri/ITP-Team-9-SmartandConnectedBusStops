@@ -63,7 +63,7 @@ public class JSONLTABusRoute {
                     String busNo = iterator.next().getServiceNo();
                     Value data = iterator.next();
 //                    String busStopNo = iterator.next().getBusStopCode();
-                    Log.d(TAG, "createMap: adding "+busNo+ " with "+data.toString());
+//                    Log.d(TAG, "createMap: adding "+busNo+ " with "+data.toString());
                     busRouteMap.put(busNo, data);
                 }
                 return null;
