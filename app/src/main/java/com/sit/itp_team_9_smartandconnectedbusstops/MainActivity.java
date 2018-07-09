@@ -85,7 +85,7 @@ import com.google.gson.Gson;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
-//import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
+import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -138,6 +138,8 @@ import java.util.concurrent.ExecutionException;
 
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
+
+//import com.sit.itp_team_9_smartandconnectedbusstops.Model.AdultFares;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
@@ -209,6 +211,9 @@ public class MainActivity extends AppCompatActivity
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
+
+    // Bus Routes
+    private JSONLTABusRoute busRoute;
 
     // UserData
     UserData userData;
@@ -1019,6 +1024,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         sgWeather = new SGWeather();
+
+        // Loads Bus Routes from json file, data is accessable from busRoute.getBusRouteMap()
+        Gson gson = new Gson();
+        busRoute =  gson.fromJson( Utils.loadBUSRouteJSONFromAsset(getApplicationContext()), JSONLTABusRoute.class );
+        busRoute.createMap();
+
     }
     @Override
     public void onCameraMove() {

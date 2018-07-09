@@ -11,6 +11,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.text.format.DateUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -193,6 +195,33 @@ public class Utils {
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setCancelable(false)
                 .show();
+    }
+
+    public static String loadBUSRouteJSONFromAsset(Context context) {
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                String json = null;
+                try {
+                    InputStream is = context.getAssets().open("bus_routes.json");
+                    int size = is.available();
+                    byte[] buffer = new byte[size];
+                    is.read(buffer);
+                    is.close();
+                    json = new String(buffer, "UTF-8");
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    return null;
+                }
+                return json;
+            }
+        };
+        try {
+            return asyncTask.execute().get().toString();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
