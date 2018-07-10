@@ -622,13 +622,10 @@ public class MainActivity extends AppCompatActivity
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
 
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        startingPointTextView.setSelectAllOnFocus(true);
-                        startingPointTextView.requestFocus();
-                        showKeyboard(startingPointTextView);
-                    }
+                handler.postDelayed(() -> {
+                    startingPointTextView.setSelectAllOnFocus(true);
+                    startingPointTextView.requestFocus();
+                    showKeyboard(startingPointTextView);
                 },600);
 
 
