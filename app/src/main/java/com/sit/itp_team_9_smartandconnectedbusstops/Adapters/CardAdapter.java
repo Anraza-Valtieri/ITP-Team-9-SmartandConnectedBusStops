@@ -302,7 +302,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //        for(int i = 0; i < mCard.size(); i++){
 //            updateUI();
 //        }
-        doAutoRefresh();
+//        doAutoRefresh();
+        handler2.removeCallbacksAndMessages(null);
+        handler2.postDelayed(runnable2, 1000);
     }
 
     Runnable runnable2 = new Runnable() {
