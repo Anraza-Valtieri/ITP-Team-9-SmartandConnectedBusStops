@@ -264,6 +264,7 @@ public class MainActivity extends AppCompatActivity
     List<String> twitterList = new ArrayList<String>();
     // Weather
     private SGWeather sgWeather;
+    TextView location;
     TextView weather;
     TextView temperature;
     TextView psi25;
@@ -292,6 +293,7 @@ public class MainActivity extends AppCompatActivity
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         weather = navHeader.findViewById(R.id.tvWeather);
         temperature = navHeader.findViewById(R.id.tvTemperature);
+        location = navHeader.findViewById(R.id.tvLocation);
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
@@ -383,12 +385,14 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            handler.postDelayed(() -> location.setText(sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
                             handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
                             handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
                             handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                         }else{
+                            location.setText("Updating..");
                             temperature.setText("-°C");
                             psi25.setText("PM2.5: -");
                             psi10.setText("PM10: -");
@@ -822,6 +826,8 @@ public class MainActivity extends AppCompatActivity
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
+                        sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        bottomNav.setSelectedItemId(R.id.action_fav);
                     }
                 }
                 try {
@@ -1160,7 +1166,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     adapter.setFavBusStopID(favBusStopID);
 
-                    bottomNav.setSelectedItemId(R.id.action_fav);
+//                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
                     Log.d(TAG, "No such document");
                 }
@@ -1269,6 +1275,7 @@ public class MainActivity extends AppCompatActivity
                     newStop.setBusStopName(value.getDescription());
                     newStop.setBusStopLat(value.getBusStopLat());
                     newStop.setBusStopLong(value.getBusStopLong());
+                    newStop.setBusStopDesc(value.getRoadName());
                     busStopMap.put(newStop.getBusStopID(), newStop);
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
@@ -1351,20 +1358,26 @@ public class MainActivity extends AppCompatActivity
                 BusStopCards card = busStopMap.get(key);
                 card.setType(Card.BUS_STOP_CARD);
                 card.setMajorUpdate(true);
+                card.setBusStopDesc(result.getBusStopDesc());
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(0);
                     Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
-                    if(allBusStops.get(toConvertID).getRoadName() != null)
+                    if(allBusStops.get(toConvertID).getRoadName() != null) {
                         newData.set(3, allBusStops.get(toConvertID).getDescription());
+//                        Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getRoadName());
+                    }
+//                    Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getDescription());
                 }
                 result.setBusServices(finalData);
+                result.setBusStopDesc(result.getBusStopDesc());
                 result.setLastUpdated(Calendar.getInstance().getTime().toString());
 
                 Log.d(TAG, "getBusStopData: Bus stop ID:" + key
                         + " Bus Stop Name: " + card.getBusStopName()
-                        + " - " + card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+                        + " Bus Stop Desc: " + card.getBusStopDesc()
+                        + " - " + card.getBusServices()
+                        + " - Last Updated: " + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1595,7 +1608,7 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
-                //FOR SUGGESTIONS, if no difference from normal routes then will not display 
+                //FOR SUGGESTIONS, if no difference from normal routes then will not display
                 List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
                     if(getDistanceMatrix(result.get(i))){

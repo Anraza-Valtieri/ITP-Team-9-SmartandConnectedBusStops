@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/headerbanner"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/nav_header_height"
+    android:layout_height="190dp"
     android:background="@drawable/side_nav_bar"
     android:backgroundTint="@color/error_red"
     android:gravity="bottom"
@@ -20,6 +20,7 @@
             android:id="@+id/tvTemperature"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text=""
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -40,7 +41,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView"
+            app:layout_constraintTop_toBottomOf="@+id/tvLocation"
             tools:text="Cloudy" />
 
         <ImageView
@@ -91,10 +92,19 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="24dp"
-            android:text="Current Weather"
+            android:text="@string/current_weather"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            app:layout_constraintStart_toStartOf="@+id/textView"
+            app:layout_constraintTop_toBottomOf="@+id/textView"
+            tools:text="Pasir Ris" />
     </android.support.constraint.ConstraintLayout>
 
 </LinearLayout>
