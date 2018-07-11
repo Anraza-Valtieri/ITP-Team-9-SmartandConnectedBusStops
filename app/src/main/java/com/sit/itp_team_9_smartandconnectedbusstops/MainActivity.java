@@ -1679,8 +1679,6 @@ public class MainActivity extends AppCompatActivity
                 if (sgWeather!=null) {
                     Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
                     sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
-                    handler.postDelayed(() -> sgWeather.getmTempForLatLong(), 500);
-                    handler.postDelayed(() -> sgWeather.getmWeatherForLatLong(), 500);
                     String temp = sgWeather.getmTempForLatLong();
                     String weather = sgWeather.getmWeatherForLatLong();
                     Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
