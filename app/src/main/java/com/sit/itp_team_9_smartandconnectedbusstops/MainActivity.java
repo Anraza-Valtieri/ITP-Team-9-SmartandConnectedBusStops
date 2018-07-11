@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<Card> favCardList = new ArrayList<>(); // Favorite cards
     private ArrayList<Card> singleCardList = new ArrayList<>(); // single cards (POI)
     public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
-    public ArrayList<String> favBusStopID;
+    public ArrayList<String> favBusStopID = new ArrayList<>();
 
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
@@ -443,34 +443,19 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             getDeviceLocation();
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Window window = this.getWindow();
-//            window.setSustainedPerformanceMode(true);
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        handler.removeCallbacks(runnable);
-        if (adapter != null)
-            adapter.pauseHandlers();
 
         if (adapter != null)
-            setFavBusStopID(adapter.getFavBusStopID());
+            adapter.pauseHandlers();
 
         if (mLocationPermissionGranted) {
             // pausing location updates
             stopLocationUpdates();
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Window window = this.getWindow();
-            window.setSustainedPerformanceMode(false);
-        }
-
-
     }
 
     @Override
@@ -563,6 +548,9 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
+
+        adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
+
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
@@ -598,8 +586,8 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 hideKeyboard();
-                if (adapter != null)
-                    setFavBusStopID(adapter.getFavBusStopID());
+//                if (adapter != null)
+//                    setFavBusStopID(adapter.getFavBusStopID());
 
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
@@ -615,8 +603,8 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
 
-                if (adapter != null)
-                    setFavBusStopID(adapter.getFavBusStopID());
+//                if (adapter != null)
+//                    setFavBusStopID(adapter.getFavBusStopID());
 
                 //STATUS Bar
                 Window window = this.getWindow();
@@ -826,7 +814,7 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
-
+                        loadFavoritesFromDB();
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
@@ -1163,6 +1151,7 @@ public class MainActivity extends AppCompatActivity
      * Fills up favBusStopID and syncs it to adapter
      */
     private void loadFavoritesFromDB(){
+        Log.d(TAG, "loadFavoritesFromDB: UUIDStr: "+UUIDStr);
         DocumentReference docRef = db.collection("user").document(UUIDStr);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -1805,9 +1794,9 @@ public class MainActivity extends AppCompatActivity
     }
     private boolean getDistanceMatrix(GoogleRoutesData googleRoutesData) {
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
         boolean pass = false;
         if (routeSteps != null) {
+            Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
             for (int i = 0; i < routeSteps.size(); i++) {
                 Log.d("getDistanceMatrix",String.valueOf(i));
                 if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {

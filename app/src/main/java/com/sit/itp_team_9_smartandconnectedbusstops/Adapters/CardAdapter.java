@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -63,6 +64,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
+    private OnFavoriteClick mOnFavoriteClickListener;
+
+    public void setOnFavoriteClickListener(OnFavoriteClick l) {
+        mOnFavoriteClickListener = l;
+    }
+
     public ArrayList<String> getFavBusStopID() {
         return favBusStopID;
     }
@@ -90,8 +97,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
         this.recyclerView = rv;
-//        updateUI();
-//        mPackageManager = mContext.getPackageManager();
     }
 
     @NonNull
@@ -153,6 +158,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         card.setFavorite(true);
                         favorite.setImageResource(R.drawable.ic_favorite_red);
                         favBusStopID.add(card.getBusStopID());
+                    }
+
+                    if (mOnFavoriteClickListener != null) {
+                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
