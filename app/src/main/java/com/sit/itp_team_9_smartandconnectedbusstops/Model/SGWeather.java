@@ -41,6 +41,7 @@ public class SGWeather {
     private String mUV;
     private String mWeatherForecast;
     private LatLng latLng;
+    private String mLocation;
 
     private String mTempForLatLong;
     private String mWeatherForLatLong;
@@ -79,6 +80,7 @@ public class SGWeather {
         updatePSI();
         updateUV();
         updatePM25();
+        updateForSpecificLocation(getLatLng());
     }
 
     public void updateForSpecificLocation(LatLng latLng){
@@ -211,6 +213,7 @@ public class SGWeather {
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
                         setmWeatherForecast(entry.getForecast());
+                        setmLocation(entry.getArea());
                         Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
@@ -716,5 +719,13 @@ public class SGWeather {
 
     private void setmWeatherForLatLong(String mWeatherForLatLong) {
         this.mWeatherForLatLong = mWeatherForLatLong;
+    }
+
+    public String getmLocation() {
+        return mLocation;
+    }
+
+    public void setmLocation(String mLocation) {
+        this.mLocation = mLocation;
     }
 }

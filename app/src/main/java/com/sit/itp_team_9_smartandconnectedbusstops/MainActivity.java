@@ -264,6 +264,7 @@ public class MainActivity extends AppCompatActivity
     List<String> twitterList = new ArrayList<String>();
     // Weather
     private SGWeather sgWeather;
+    TextView location;
     TextView weather;
     TextView temperature;
     TextView psi25;
@@ -292,6 +293,7 @@ public class MainActivity extends AppCompatActivity
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         weather = navHeader.findViewById(R.id.tvWeather);
         temperature = navHeader.findViewById(R.id.tvTemperature);
+        location = navHeader.findViewById(R.id.tvLocation);
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
@@ -327,7 +329,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            window.setSustainedPerformanceMode(true);
+//            window.setSustainedPerformanceMode(true);
         }
 
         bottomNav = findViewById(R.id.bottom_navigation);
@@ -383,12 +385,14 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            handler.postDelayed(() -> location.setText(sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
                             handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
                             handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
                             handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                         }else{
+                            location.setText("Updating..");
                             temperature.setText("-°C");
                             psi25.setText("PM2.5: -");
                             psi10.setText("PM10: -");
@@ -442,7 +446,7 @@ public class MainActivity extends AppCompatActivity
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Window window = this.getWindow();
-            window.setSustainedPerformanceMode(true);
+//            window.setSustainedPerformanceMode(true);
         }
     }
 
@@ -453,6 +457,8 @@ public class MainActivity extends AppCompatActivity
         if (adapter != null)
             adapter.pauseHandlers();
 
+        if (adapter != null)
+            setFavBusStopID(adapter.getFavBusStopID());
 
         if (mLocationPermissionGranted) {
             // pausing location updates
@@ -463,6 +469,8 @@ public class MainActivity extends AppCompatActivity
             Window window = this.getWindow();
             window.setSustainedPerformanceMode(false);
         }
+
+
     }
 
     @Override
@@ -606,6 +614,10 @@ public class MainActivity extends AppCompatActivity
                     hideActionBar();
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
+
+                if (adapter != null)
+                    setFavBusStopID(adapter.getFavBusStopID());
+
                 //STATUS Bar
                 Window window = this.getWindow();
 //                window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -622,13 +634,10 @@ public class MainActivity extends AppCompatActivity
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
 
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        startingPointTextView.setSelectAllOnFocus(true);
-                        startingPointTextView.requestFocus();
-                        showKeyboard(startingPointTextView);
-                    }
+                handler.postDelayed(() -> {
+                    startingPointTextView.setSelectAllOnFocus(true);
+                    startingPointTextView.requestFocus();
+                    showKeyboard(startingPointTextView);
                 },600);
 
 
@@ -825,6 +834,8 @@ public class MainActivity extends AppCompatActivity
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
+                        sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        bottomNav.setSelectedItemId(R.id.action_fav);
                     }
                 }
                 try {
@@ -988,8 +999,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_trainstations) {
 
         } else */
-        if (id == R.id.nav_setting) {
-
+        if (id == R.id.nav_about) {
+            Log.d(TAG, "onNavigationItemSelected: Settings");
+//            this.setTheme(R.style.Theme_AppCompat_NoActionBar);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -1163,7 +1175,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     adapter.setFavBusStopID(favBusStopID);
 
-                    bottomNav.setSelectedItemId(R.id.action_fav);
+//                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
                     Log.d(TAG, "No such document");
                 }
@@ -1181,6 +1193,11 @@ public class MainActivity extends AppCompatActivity
      */
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
+
+        if(!haveNetworkConnection(this)) {
+            showNoNetworkDialog(this);
+        }
+
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -1203,6 +1220,7 @@ public class MainActivity extends AppCompatActivity
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+
     }
 
     private void LinkIDtoName(){
@@ -1215,8 +1233,8 @@ public class MainActivity extends AppCompatActivity
                     String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
                     allBusByID.put(value.getBusStopCode(),key);
-                    sortedLTABusStopData.add(value);
-                    Log.d(TAG, "doInBackground: LinkIDtoName");
+//                    sortedLTABusStopData.add(value);
+//                    Log.d(TAG, "doInBackground: LinkIDtoName");
                 }
                 return null;
             }
@@ -1256,6 +1274,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
+                LinkIDtoName();
                 dialog.dismiss();
             }
 
@@ -1272,6 +1291,7 @@ public class MainActivity extends AppCompatActivity
                     newStop.setBusStopName(value.getDescription());
                     newStop.setBusStopLat(value.getBusStopLat());
                     newStop.setBusStopLong(value.getBusStopLong());
+                    newStop.setBusStopDesc(value.getRoadName());
                     busStopMap.put(newStop.getBusStopID(), newStop);
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
@@ -1343,7 +1363,7 @@ public class MainActivity extends AppCompatActivity
         // Pull bus stop data
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-        Log.d(TAG, "Look up bus timings for : " + result.getBusStopID());
+//        Log.d(TAG, "Look up bus timings for : " + result.getBusStopID());
         JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, result.getBusStopID());
         Map<String, Map> entry;
         try {
@@ -1354,20 +1374,26 @@ public class MainActivity extends AppCompatActivity
                 BusStopCards card = busStopMap.get(key);
                 card.setType(Card.BUS_STOP_CARD);
                 card.setMajorUpdate(true);
+                card.setBusStopDesc(result.getBusStopDesc());
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(0);
-                    Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
-                    if(allBusStops.get(toConvertID).getRoadName() != null)
+//                    Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
+                    if(allBusStops.get(toConvertID).getRoadName() != null) {
                         newData.set(3, allBusStops.get(toConvertID).getDescription());
+//                        Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getRoadName());
+                    }
+//                    Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getDescription());
                 }
                 result.setBusServices(finalData);
+                result.setBusStopDesc(result.getBusStopDesc());
                 result.setLastUpdated(Calendar.getInstance().getTime().toString());
 
-                Log.d(TAG, "getBusStopData: Bus stop ID:" + key
-                        + " Bus Stop Name: " + card.getBusStopName()
-                        + " - " + card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+//                Log.d(TAG, "getBusStopData: Bus stop ID:" + key
+//                        + " Bus Stop Name: " + card.getBusStopName()
+//                        + " Bus Stop Desc: " + card.getBusStopDesc()
+//                        + " - " + card.getBusServices()
+//                        + " - Last Updated: " + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1465,7 +1491,7 @@ public class MainActivity extends AppCompatActivity
             return distance1.compareTo(distance2);
         };
         long start = System.currentTimeMillis();
-        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+//        Log.d(TAG, "sortLocations: BEGIN SORTING!");
         Collections.sort(locations, comp);
         long elapsedTime = System.currentTimeMillis() - start;
         Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -1494,7 +1520,7 @@ public class MainActivity extends AppCompatActivity
             return distance1.compareTo(distance2);
         };
         long start = System.currentTimeMillis();
-        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+//        Log.d(TAG, "sortLocations: BEGIN SORTING!");
         Collections.sort(locations, comp);
         long elapsedTime = System.currentTimeMillis() - start;
         Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -1607,7 +1633,7 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
-                //FOR SUGGESTIONS, if no difference from normal routes then will not display 
+                //FOR SUGGESTIONS, if no difference from normal routes then will not display
                 List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
                     if(getDistanceMatrix(result.get(i))){
@@ -1957,7 +1983,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(String result) {
-            Log.e("result",result);
+//            Log.e("result",result);
 
             try {
                 JSONArray jsonArray_data = new JSONArray(result);

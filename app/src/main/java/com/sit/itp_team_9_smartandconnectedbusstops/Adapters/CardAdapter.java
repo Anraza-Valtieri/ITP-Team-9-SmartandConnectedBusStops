@@ -206,25 +206,24 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void addAllCard(ArrayList<? extends Card> card){
         this.mCard.addAll(card);
         Refresh();
-        Log.d(TAG, "addAllCard: called adds "+mCard.size());
+//        Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
 
     public void addCard(Card card){
         mCard.add(card);
         notifyItemInserted(mCard.size());
         Refresh();
-        Log.d(TAG, "addCard: called adds "+mCard.size());
+//        Log.d(TAG, "addCard: called adds "+mCard.size());
     }
 
     public void Clear(){
-        Log.d(TAG, "Clear: called "+mCard.size());
+//        Log.d(TAG, "Clear: called "+mCard.size());
         this.mCard.clear();
         Refresh();
     }
 
     public void Refresh(){
-        Log.d(TAG, "Refresh: called");
-        handler.removeCallbacksAndMessages(null);
+//        Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
 //        doAutoRefresh();
 //        updateUI();
@@ -245,7 +244,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 for (BusStopCards card : cards) {
                     List<String> urlsList = new ArrayList<>();
                     urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-                    Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
+//                    Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
                     JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
                     ltaReply.delegate2 = CardAdapter.this;
                     ltaReply.execute();
@@ -256,53 +255,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         asyncTask.execute();
     }
 
-    private void updateUI(){
-//        Log.d(TAG, "updateUI: ");
-        @SuppressLint("StaticFieldLeak")
-        AsyncTask asyncTask = new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                if(mCard.size() > 0) {
-//            Log.d(TAG, "updateUI: mCard.size() > 0");
-                    switch (getItemViewType(0)) {
-                        case BUS_STOP_CARD:
-                            BusStopCards card = (BusStopCards) mCard.get(0);
-                            if (card != null && card.getLastUpdated() != null) {
-//                        Log.d(TAG, "updateUI: " + card.getLastUpdated());
-                                ArrayList<String> payload = new ArrayList<>();
-                                payload.add(card.getLastUpdated());
-                                return payload;
-                            }
-                            break;
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Object o) {
-                super.onPostExecute(o);
-//                notifyItemRangeChanged(0, mCard.size(), o);
-            }
-        };
-
-        asyncTask.execute();
-
-//        updateUI();
-        handler.postDelayed(() -> updateUI(), 1000);
-
-    }
-
     public void pauseHandlers(){
-        handler.removeCallbacksAndMessages(null);
         handler2.removeCallbacksAndMessages(null);
     }
 
     public void resumeHandlers(){
-//        for(int i = 0; i < mCard.size(); i++){
-//            updateUI();
-//        }
-        doAutoRefresh();
+//        handler2.removeCallbacksAndMessages(null);
+//        handler2.post(runnable2);
+        handler2.postDelayed(runnable2, 1000);
     }
 
     Runnable runnable2 = new Runnable() {
@@ -585,26 +545,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 }
                             } else
                                 card2.setVisibility(View.INVISIBLE);
-
-                        /*if (!value.get(9).equals("")) {
-                            duration3.setText(Utils.dateCheck(Utils.formatTime(value.get(9))));
-                            if (value.get(11).equals(""))
-                                wheel3.setVisibility(View.GONE);
-
-                            switch (value.get(10)) {
-                                case "SDA":
-                                    card1.setBackgroundColor(Color.parseColor("#c9bc1f"));
-                                    break;
-                                case "LSD":
-                                    card1.setBackgroundColor(Color.parseColor("#c63f17"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        } else
-                            card3.setVisibility(View.INVISIBLE);*/
-                            direction.setText(value.get(0));
-                            options_layout.addView(to_add);
+                                direction.setText(value.get(0));
+                                options_layout.addView(to_add);
                         }
                     } else {
                         LinearLayout options_layout = itemView.findViewById(R.id.busdetailLayout);
