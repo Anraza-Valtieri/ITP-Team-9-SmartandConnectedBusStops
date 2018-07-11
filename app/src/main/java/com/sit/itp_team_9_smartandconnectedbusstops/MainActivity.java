@@ -54,11 +54,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -615,6 +617,14 @@ public class MainActivity extends AppCompatActivity
                 }
                 window.setStatusBarColor(Color.WHITE);
 
+                Spinner fareTypesSpinner = (Spinner) findViewById(R.id.fare_type_spinner);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                        R.array.fare_types_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the adapter to the spinner
+                fareTypesSpinner.setAdapter(adapter);
                 AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
@@ -661,7 +671,7 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                                lookUpRoutes(query);
+                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -690,7 +700,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,query);
                         hideKeyboard();
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                        lookUpRoutes(query);
+                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -1586,7 +1596,7 @@ public class MainActivity extends AppCompatActivity
 //        updateAdapterList(favCardList);
     }
 
-    private void lookUpRoutes(String query){
+    private void lookUpRoutes(String query, String fareTypes){
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
@@ -1643,14 +1653,14 @@ public class MainActivity extends AppCompatActivity
                             Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
                             for (int i = 0; i < size; i++) {
                                 int j = (Integer) listMatrix.get(i);
-                                NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j));
+                                NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j), fareTypes);
                                 card.setType(card.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card);
                             }
                         }
                         //NORMAL ROUTES
                         for(int i=0; i< result.size(); i++) {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes);
                             card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                             transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: "+card1.toString());

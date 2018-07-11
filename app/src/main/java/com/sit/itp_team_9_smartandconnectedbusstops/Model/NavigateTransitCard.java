@@ -198,7 +198,7 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
+    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes) {
         AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected void onPreExecute() {
@@ -390,27 +390,80 @@ public class NavigateTransitCard extends Card {
                         }
 
                         FareDetails fareDetails = new FareDetails();
+
+                        fareDetails.populateStudentFareDistance();
+                        fareDetails.populateStudentFaresMap();
+
                         fareDetails.populateAdultFareDistance();
                         fareDetails.populateAdultFaresMap();
+
+                        fareDetails.populateSeniorFareDistance();
+                        fareDetails.populateSeniorFaresMap();
 
                         String price = "";
 
                         if(transitDistance > 0.0) {
-                            for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+                            if(fareTypes.equals("Student")) {
 
-                                if(i == 0) {
-                                    if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
-                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                for(int i = 0; i < fareDetails.getStudentFareDistance().size(); i++) {
+
+                                    if(i == 0) {
+                                        if(transitDistance <= fareDetails.getStudentFareDistance().get(0)) {
+                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(0)).getBusMrt();
+                                        }
+                                    }
+                                    else {
+                                        if(transitDistance > fareDetails.getStudentFareDistance().get(i-1) && transitDistance <= fareDetails.getStudentFareDistance().get(i)) {
+                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                        }
+                                        else if(transitDistance > fareDetails.getStudentFareDistance().get(fareDetails.getStudentFareDistance().size() - 1)){
+                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                        }
+                                    }
+
+                                }
+                            }
+                            else if(fareTypes.equals("Adult")) {
+
+                                for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+
+                                    if(i == 0) {
+                                        if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                        }
+                                    }
+                                    else {
+                                        if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                        }
+                                        else if(transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)){
+                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                        }
                                     }
                                 }
-                                else {
-                                    if(transitDistance > fareDetails.getAdultFareDistance().get(i-1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
-                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
-                                    }
-                                }
+                            }
+                            else if(fareTypes.equals("Senior Citizens")) {
 
+                                for(int i = 0; i < fareDetails.getSeniorFareDistance().size(); i++) {
+
+                                    if(i == 0) {
+                                        if(transitDistance <= fareDetails.getSeniorFareDistance().get(0)) {
+                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(0)).getBusMrt();
+                                        }
+                                    }
+                                    else {
+                                        if(transitDistance > fareDetails.getSeniorFareDistance().get(i-1) && transitDistance <= fareDetails.getSeniorFareDistance().get(i)) {
+                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                        }
+                                        else if(transitDistance > fareDetails.getSeniorFareDistance().get(fareDetails.getSeniorFareDistance().size() - 1)){
+                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                        }
+                                    }
+
+                                }
                             }
                         }
+
                         card.setCost(price);
                         card.setTimeTaken(timeTakenList);
                         card.setTransitStations(transitStations);

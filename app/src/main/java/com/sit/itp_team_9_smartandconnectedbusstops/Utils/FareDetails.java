@@ -7,14 +7,24 @@ import java.util.HashMap;
 
 public class FareDetails {
 
+    ArrayList<Double> StudentFareDistance = new ArrayList<>();
     ArrayList<Double> AdultFareDistance = new ArrayList<>();
+    ArrayList<Double> SeniorFareDistance = new ArrayList<>();
 
     HashMap<Double, Fares> StudentFareDetails = new HashMap();
     HashMap<Double, Fares> AdultFareDetails = new HashMap();
     HashMap<Double, Fares> SeniorFareDetails = new HashMap();
 
+    public ArrayList<Double> getStudentFareDistance() {
+        return StudentFareDistance;
+    }
+
     public ArrayList<Double> getAdultFareDistance() {
         return AdultFareDistance;
+    }
+
+    public ArrayList<Double> getSeniorFareDistance() {
+        return SeniorFareDistance;
     }
 
     public HashMap<Double, Fares> getStudentFaresMap() {
@@ -27,6 +37,15 @@ public class FareDetails {
 
     public HashMap<Double, Fares> getSeniorFaresMap() {
         return SeniorFareDetails;
+    }
+
+    public void populateStudentFareDistance() {
+        StudentFareDistance.add(3.2);
+        StudentFareDistance.add(4.2);
+        StudentFareDistance.add(5.2);
+        StudentFareDistance.add(6.2);
+        StudentFareDistance.add(7.2);
+        StudentFareDistance.add(7.3);
     }
 
     public void populateAdultFareDistance() {
@@ -69,6 +88,15 @@ public class FareDetails {
         AdultFareDistance.add(39.2);
         AdultFareDistance.add(40.2);
         AdultFareDistance.add(40.3);
+    }
+
+    public void populateSeniorFareDistance() {
+        SeniorFareDistance.add(3.2);
+        SeniorFareDistance.add(4.2);
+        SeniorFareDistance.add(5.2);
+        SeniorFareDistance.add(6.2);
+        SeniorFareDistance.add(7.2);
+        SeniorFareDistance.add(7.3);
     }
 
     public void populateStudentFaresMap() {
@@ -122,12 +150,12 @@ public class FareDetails {
         AdultFareDetails.put(40.3,new Fares("2.02","2.62","1.52"));
     }
 
-    public void populateSenuorFaresMap() {
-        StudentFareDetails.put(3.2, new Fares("0.37", "0.67", "0.00"));
-        StudentFareDetails.put(4.2, new Fares("0.42", "0.72", "0.00"));
-        StudentFareDetails.put(5.2, new Fares("0.47", "0.77", "0.00"));
-        StudentFareDetails.put(6.2, new Fares("0.52", "0.82", "0.02"));
-        StudentFareDetails.put(7.2, new Fares("0.55", "0.85", "0.05"));
-        StudentFareDetails.put(7.3, new Fares("0.58", "0.88", "0.08"));
+    public void populateSeniorFaresMap() {
+        SeniorFareDetails.put(3.2, new Fares("0.54", "0.99", "0.04"));
+        SeniorFareDetails.put(4.2, new Fares("0.61", "1.06", "0.11"));
+        SeniorFareDetails.put(5.2, new Fares("0.68", "1.13", "0.18"));
+        SeniorFareDetails.put(6.2, new Fares("0.75", "1.20", "0.25"));
+        SeniorFareDetails.put(7.2, new Fares("0.81", "1.26", "0.31"));
+        SeniorFareDetails.put(7.3, new Fares("0.87", "1.32", "0.37"));
     }
 }
