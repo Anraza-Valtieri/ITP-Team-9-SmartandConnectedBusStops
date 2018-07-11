@@ -17,7 +17,7 @@
     <string name="starting_point">Starting point</string>
     <string name="destination">Destination</string>
     <string name="transit_error">No routes available</string>
-
+    <string name="stops">stops</string>
 
     <string name="large_text">
         "Material is the metaphor.\n\n"

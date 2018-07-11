@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity
     // Key Roadname Value LTABusStopData Object
     private Map<String, LTABusStopData> allBusStops = new HashMap<>();
     // Key: Bus stop ID Value: Bus stop name
-    private Map<String, String> allBusByID = new HashMap<>();
+    public static Map<String, String> allBusByID = new HashMap<>();
     // Key: Bus stop ID Value BusStopCards Object
     private Map<String, BusStopCards> busStopMap = new HashMap<>();
     // Sorted LTABusStopData
@@ -1223,7 +1223,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void LinkIDtoName(){
+    public void LinkIDtoName(){
         @SuppressLint("StaticFieldLeak")
         @SuppressWarnings("unchecked")
         AsyncTask task = new AsyncTask() {
@@ -2049,4 +2049,5 @@ public class MainActivity extends AppCompatActivity
             return results;
         }
     }
+
 }

@@ -23,7 +23,7 @@ import java.util.List;
 public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<GoogleRoutesData>> {
 
     private static final String TAG = JSONGoogleDirectionsParser.class.getSimpleName();
-    private Activity activity;
+    //private Activity activity;
     private List<String> urls;
     private List<GoogleRoutesData> routesList = new ArrayList<>();
     public JSONGoogleResponseRoute delegate = null;
@@ -31,7 +31,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
     public JSONGoogleDirectionsParser(Activity activity, List<String> urls){
         this.urls = urls;
-        this.activity = activity;
+        //this.activity = activity;
     }
 
     public List<String> getUrls() {
@@ -42,26 +42,28 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
         this.urls = urls;
     }
 
+    /**
+     * Uses query to get JSON data from Google and sets in GoogleRoutesData
+     *
+     * @param voids
+     * @return routesList List<GoogleRoutesData>
+     */
     @Override
     protected List<GoogleRoutesData> doInBackground(Void... voids) {
         GoogleRoutesData response;
         try {
             for(String url : getUrls()) {
                 URL link = new URL(url);
-                /*
-                https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=1.3736638,103.9554456&rankby=distance&type=transit_station&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s
-                 */
                 HttpURLConnection urlConnection = (HttpURLConnection) link.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.connect();
-                String authKey = "AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
-                Log.i(TAG, "Sent : " + authKey);
+                //String authKey = "AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                //Log.i(TAG, "Sent : " + authKey);
                 Log.i(TAG,url);
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
                 if (statusCode >= 200 && statusCode < 400) {
-                    //Log.d(TAG, "doInBackground: statusCode >= 200 && statusCode < 400");
                     // Create an InputStream in order to extract the response object
                     InputStream in = urlConnection.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -71,14 +73,13 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
                     while ((line = reader.readLine()) != null) {
                         buffer.append(line + "\n");
-                        //Log.d("Response: ", "> " + line);
                     }
                     JSONObject response1 = new JSONObject(buffer.toString());
                     JSONArray jsonArray = response1.getJSONArray("routes");
                     Log.i(TAG, "jsonArray");
                     if(response1.getString("status").equals("OK")) {
+                        //if response is normal
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            Log.i(TAG, "THIS IS DIRECTIONS PARSER");
                             JSONObject obj = jsonArray.getJSONObject(i);
                             GoogleRoutesData entry = new GoogleRoutesData();
                             entry.setID(i);
@@ -93,6 +94,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                 JSONArray stepsArray = legsObject.getJSONArray("steps");
                                 List<GoogleRoutesSteps> stepsList = new ArrayList<>(); //to store steps
                                 for (int k = 0; k < stepsArray.length(); k++) {
+                                    //steps stored using GoogleRoutesSteps
                                     GoogleRoutesSteps steps = new GoogleRoutesSteps();
                                     JSONObject stepsObject = stepsArray.getJSONObject(k);
                                     steps.setEndLocationLat(stepsObject.getJSONObject("end_location").getDouble("lat"));
@@ -104,8 +106,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
                                     steps.setTravelMode(stepsObject.getString("travel_mode"));
 
-                                    //step-by-step instructions
-                                    //TODO CHECK THIS WHOLE SECTION especially optString parts
+                                    //detailed, step-by-step instructions
                                     if (steps.getTravelMode().matches("TRANSIT")) {
                                         steps.setNumStops(stepsObject.getJSONObject("transit_details")
                                                 .getInt("num_stops"));
@@ -113,14 +114,13 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                         String vehicle = stepsObject.getJSONObject("transit_details")
                                                 .getJSONObject("line").getJSONObject("vehicle").getString("type");
                                         if (vehicle.equals("SUBWAY") || vehicle.equals("TRAM")) {
+                                            //subway = mrt, tram = lrt
                                             steps.setTrainLine(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("line").optString("name"));
                                             steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("departure_stop").optString("name"));
                                             steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("arrival_stop").optString("name"));
-                                            //Double newTrainDistance = entry.getTotalTrainDistance() + Double.valueOf(steps.getDistance());
-                                            //entry.setTotalTrainDistance(newTrainDistance);
                                         } else if (vehicle.equals("BUS")) {
                                             steps.setBusNum(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("line").optString("short_name"));
@@ -170,6 +170,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                             routesList.add(entry);
                         }
                     }else{
+                        //if there is an error in Google response
                         GoogleRoutesData entry = new GoogleRoutesData();
                         entry.setError(response1.getString("status"));
                         routesList.add(entry);
