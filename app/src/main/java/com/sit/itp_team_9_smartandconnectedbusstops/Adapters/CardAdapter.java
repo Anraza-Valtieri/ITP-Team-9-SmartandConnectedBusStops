@@ -206,24 +206,24 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void addAllCard(ArrayList<? extends Card> card){
         this.mCard.addAll(card);
         Refresh();
-        Log.d(TAG, "addAllCard: called adds "+mCard.size());
+//        Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
 
     public void addCard(Card card){
         mCard.add(card);
         notifyItemInserted(mCard.size());
         Refresh();
-        Log.d(TAG, "addCard: called adds "+mCard.size());
+//        Log.d(TAG, "addCard: called adds "+mCard.size());
     }
 
     public void Clear(){
-        Log.d(TAG, "Clear: called "+mCard.size());
+//        Log.d(TAG, "Clear: called "+mCard.size());
         this.mCard.clear();
         Refresh();
     }
 
     public void Refresh(){
-        Log.d(TAG, "Refresh: called");
+//        Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
 //        doAutoRefresh();
 //        updateUI();
@@ -244,7 +244,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 for (BusStopCards card : cards) {
                     List<String> urlsList = new ArrayList<>();
                     urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-                    Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
+//                    Log.d(TAG, "Look up bus timings for : " + card.getBusStopID());
                     JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, card.getBusStopID());
                     ltaReply.delegate2 = CardAdapter.this;
                     ltaReply.execute();

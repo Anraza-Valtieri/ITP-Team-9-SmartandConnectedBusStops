@@ -125,4 +125,5 @@
     <string name="nearby">Nearby</string>
     <string name="directions">Directions</string>
     <string name="current_weather">Current Weather</string>
+    <string name="about">About</string>
 </resources>
