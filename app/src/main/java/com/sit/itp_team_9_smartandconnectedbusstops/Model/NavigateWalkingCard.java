@@ -58,6 +58,14 @@ public class NavigateWalkingCard extends Card {
         this.description = description;
     }
 
+    /**
+     * Sets and returns a NavigateWalkingCard card
+     * <p>
+     * This method always returns immediately
+     *
+     * @param googleRoutesData GoogleRoutesData
+     * @return card NavigateWalkingCard
+     */
     public static NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData) {
         NavigateWalkingCard card = new NavigateWalkingCard();
         card.setType(Card.NAVIGATE_WALKING_CARD);
@@ -74,10 +82,8 @@ public class NavigateWalkingCard extends Card {
         }
         walkingDetailedSteps.put(description,walkingDetailedStepsChildren);
 //        card.setID(googleRoutesData.getID());
-        //Log.i(TAG,"total distance= "+googleRoutesData.getTotalDistance());
         card.setDescription(walkingDescription);
         card.setDetailedSteps(walkingDetailedSteps);
-        //card.setDescription(googleRoutesData.getSteps().get(0).getHtmlInstructions()); //first instruction
         return card;
     }
 }

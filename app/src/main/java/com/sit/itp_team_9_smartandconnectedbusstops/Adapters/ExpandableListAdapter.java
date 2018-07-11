@@ -51,7 +51,10 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        return this.mListDataChild.get(this.mListDataHeader.get(groupPosition)).size();
+        if (this.mListDataChild != null && !this.mListDataChild.isEmpty()) {
+            return this.mListDataChild.get(this.mListDataHeader.get(groupPosition)).size();
+        }else
+            return 0;
     }
 
     @Override
@@ -78,9 +81,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
             view = infalInflater.inflate(R.layout.navigate_transit_card_expandable_list_title,
                     (ViewGroup) parent.getRootView(), false);
         }
-        TextView lblListNumStops = (TextView) view.findViewById(R.id.textViewNumStops);
+        TextView lblListTimeTakenNumStops = (TextView) view.findViewById(R.id.textViewTime);
         //lblListNumStops.setTypeface(null, Typeface.BOLD);
-        lblListNumStops.setText(headerTitle);
+        lblListTimeTakenNumStops.setText(headerTitle);
         return view;
     }
 

@@ -3,11 +3,16 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.Value;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -184,6 +189,14 @@ public class NavigateTransitCard extends Card {
         this.error = error;
     }
 
+    /**
+     * Sets and returns a NavigateTransitCard card
+     * <p>
+     * This method always returns immediately
+     *
+     * @param googleRoutesData GoogleRoutesData
+     * @return card NavigateTransitCard
+     */
     public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
@@ -230,8 +243,10 @@ public class NavigateTransitCard extends Card {
                             break;
 
                         case "TRANSIT":
+                            //train, lrt and bus
                             String trainLine = routeSteps.get(i).getTrainLine();
                             String lineName = null;
+                            card.setNumStops(String.valueOf(routeSteps.get(i).getNumStops()));
                             int imageViewTransit;
                             int imageViewColor;
                             if (trainLine != null) {
@@ -265,6 +280,7 @@ public class NavigateTransitCard extends Card {
                                         lineName = NavigateTransitCard.CIRCLE_LINE;
                                         break;
                                     default:
+                                        //if lrt
                                         imageViewColor = NavigateTransitCard.LRT_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.LRT_COLOR);
                                         lineName = NavigateTransitCard.LRT_LINE;
@@ -278,17 +294,78 @@ public class NavigateTransitCard extends Card {
                                 timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
                             }
                             if (!transitStations.containsKey(routeSteps.get(i).getDepartureStop())) {
+                                //sets transport type image, color and line name/bus num for each part of the journey
                                 List<Object> stationDetails = new ArrayList<>();
                                 stationDetails.add(imageViewTransit);
                                 stationDetails.add(imageViewColor);
-                                stationDetails.add(lineName);
+                                stationDetails.add(lineName); //line name is bus num
+                                //get in between bus stops
+                                List<String> busStopNames = new ArrayList<>();
+                                if (imageViewColor == NavigateTransitCard.BUS_COLOR) {
+                                    Log.i(TAG,"is this a bus?");
+                                    //get departure stop's code
+                                    //go into linkedlist to get the next X stops
+                                    // then get bus stop name
+                                    //MainActivity mainActivity = new MainActivity();
+                                    Map<String, String> allBusByIdMap = MainActivity.allBusByID;
+                                    Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
+                                    String departureBusStopCode = null;
+                                    for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
+                                        Log.i(TAG,"allBusByIdMap.entrySet()");
+                                        String busStopIDCode = entry.getKey();
+                                        Log.i(TAG,"busStopIDCode "+busStopIDCode);
+                                        String busStopName = entry.getValue();
+                                        if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
+                                            departureBusStopCode = busStopIDCode;
+                                            Log.i(TAG,"DEPARTURE CODE "+ departureBusStopCode);
+                                        }
+                                    }
+
+                                    List<String> busStopCodes = new ArrayList<>();
+                                    JSONLTABusRoute busRoute = new JSONLTABusRoute();
+                                    Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
+                                    for (int j = 0; j < busMap.size(); j++) {
+                                        Log.i(TAG,"this is busMap loop" );
+                                        if (busMap.get(lineName) != null) {
+                                            //if bus route exists
+                                            LinkedList<Value> busValue = busMap.get(lineName);
+                                            for (int k = 0; k < busValue.size(); k++) {
+                                                Log.i(TAG,"this is busMap loop + busValueSize" );
+                                                if (busValue.get(k).getBusStopCode().equals(departureBusStopCode)){
+                                                    //if departure stop is found, save the next X num of stops
+                                                    for (int l = 0; l < Integer.parseInt(card.getNumStops()); l++){
+                                                        busStopCodes.add(busValue.get(k+l).getBusStopCode());
+                                                        Log.i(TAG,"busStopCodes:"+busStopCodes);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    for (int k = 0; k < busStopCodes.size(); k++){
+                                        Log.i(TAG,"busStopCodes k loop");
+                                        //Find names of all in busStopCodes
+                                        // Key: Bus stop ID Value: Bus stop name
+                                        //key: busStopCodes.get(l);
+                                        String busStopName = allBusByIdMap.get(busStopCodes.get(k));
+                                        busStopNames.add(busStopName);
+                                        Log.i(TAG,"Bus stop name (add 1): "+busStopName);
+                                    }
+                                }
+                                 //key is bus num, value: linkedlist, get bus stop number
+                                //bus stop number get bus stop name from hashmap allBusById
                                 stationDetails.add(routeSteps.get(i).getArrivalStop());
+                                stationDetails.add(routeSteps.get(i).getDuration());
+                                if (!busStopNames.isEmpty()){
+                                    stationDetails.add(busStopNames);
+                                    Log.i(TAG,"BUS STOP NAMES: "+busStopNames);
+                                }
                                 transitStations.put(routeSteps.get(i).getDepartureStop(),stationDetails);
                             }
                             break;
                     }
                     timeTakenList.add(timeTakenEachStep);
                 }
+                //fare calculation
                 double transitDistance = 0.0;
                 for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
 
