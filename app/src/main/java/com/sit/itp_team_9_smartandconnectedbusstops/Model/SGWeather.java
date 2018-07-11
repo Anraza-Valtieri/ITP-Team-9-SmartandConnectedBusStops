@@ -84,7 +84,7 @@ public class SGWeather {
     }
 
     public void updateForSpecificLocation(LatLng latLng){
-        Log.d("SGWEATHER -------------", latLng.latitude + ", " + latLng.longitude);
+//        Log.d("SGWEATHER -------------", latLng.latitude + ", " + latLng.longitude);
         getForecastForLatLong(latLng);
         getTemperatureForLatLong(latLng);
     }
@@ -96,6 +96,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "updateTemperature: No Metadata?");
+                    getTemperature();
                     return null;
                 }
 
@@ -114,7 +115,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updateTemperature: BEGIN SORTING!");
+//                Log.d(TAG, "updateTemperature: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(station), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updateTemperature: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -141,6 +142,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "getTemperatureForLatLong: No Metadata?");
+                    getTemperature();
                     return null;
                 }
 
@@ -159,7 +161,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "getTemperatureForLatLong: BEGIN SORTING!");
+//                Log.d(TAG, "getTemperatureForLatLong: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(station), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "getTemperatureForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -186,6 +188,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "updateForecast: No Metadata?");
+                    getForecast();
                     return null;
                 }
 
@@ -203,7 +206,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updateForecast: BEGIN SORTING!");
+//                Log.d(TAG, "updateForecast: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(meta), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updateForecast: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -214,7 +217,7 @@ public class SGWeather {
                     if(entry.getArea().equals(meta[0].getName())) {
                         setmWeatherForecast(entry.getForecast());
                         setmLocation(entry.getArea());
-                        Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
+//                        Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
                 }
@@ -231,6 +234,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "getForecastForLatLong: No Metadata?");
+                    getForecast();
                     return null;
                 }
 
@@ -248,7 +252,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "getForecastForLatLong: BEGIN SORTING!");
+//                Log.d(TAG, "getForecastForLatLong: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(meta), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "getForecastForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -258,7 +262,7 @@ public class SGWeather {
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
                         setmWeatherForLatLong(entry.getForecast());
-                        Log.d(TAG, "getForecastForLatLong: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
+//                        Log.d(TAG, "getForecastForLatLong: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
                 }
@@ -275,6 +279,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(psiParser == null) {
                     Log.e(TAG, "updatePSI: No Metadata?");
+                    getDataForPSI();
                     return null;
                 }
 
@@ -292,7 +297,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updatePSI: BEGIN SORTING!");
+//                Log.d(TAG, "updatePSI: BEGIN SORTING!");
                 Collections.sort(meta, comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updatePSI: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -321,7 +326,7 @@ public class SGWeather {
                         setmPM10(data.getPm10SubIndex().getNational().toString());
                         break;
                 }
-                Log.d(TAG, "updatePSI: Nearest "+meta.get(0).getName()+" PM 10: "+ getmPM10()+" PM 2.5:"+getmPM25());
+//                Log.d(TAG, "updatePSI: Nearest "+meta.get(0).getName()+" PM 10: "+ getmPM10()+" PM 2.5:"+getmPM25());
 
                 return null;
             }
@@ -340,7 +345,7 @@ public class SGWeather {
                 }
                 List<com.sit.itp_team_9_smartandconnectedbusstops.SGUV.Item> item = uvParser.getItems();
                 setmUV(item.get(0).getIndex().get(0).getValue().toString());
-                Log.d(TAG, "updateUV: UV="+getmUV());
+                Log.d(TAG, "updateUV: UV = "+getmUV());
 
                 return null;
             }
@@ -372,7 +377,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updatePM25: BEGIN SORTING!");
+//                Log.d(TAG, "updatePM25: BEGIN SORTING!");
                 Collections.sort(meta, comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updatePM25: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -401,7 +406,7 @@ public class SGWeather {
                         setmPM25(data.getPm25OneHourly().getCentral().toString());
                         break;
                 }
-                Log.d(TAG, "updatePM25: Nearest "+meta.get(0).getName()+" PM 2.5:"+getmPM25());
+                Log.d(TAG, "updatePM25: Nearest "+meta.get(0).getName()+" PM 2.5 : "+getmPM25());
 
                 return null;
             }
