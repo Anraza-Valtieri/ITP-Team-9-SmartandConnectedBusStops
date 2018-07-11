@@ -1602,7 +1602,7 @@ public class MainActivity extends AppCompatActivity
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
         JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        List<GoogleRoutesData> result; //= new ArrayList<>(); //result from parser
         try {
             result = directionsParser.execute().get();
             Log.d(TAG,query);
@@ -1613,56 +1613,63 @@ public class MainActivity extends AppCompatActivity
             transitCardList.clear();
             walkingCardList.clear();
             progressBar.setVisibility(View.VISIBLE);
-            if (!optionMode){
-                //walking
-                for(int i=0; i< result.size(); i++) {
-                    if (getWeatherData(result.get(i))) {
-                        String msg = "Remember to bring an umbrella with you!";
-                        NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
-                        card.setType(Card.NAVIGATE_WALKING_CARD);
-                        walkingCardList.add(card);
-                        Log.d(TAG, "lookUpRoute: " + card.toString());
-                    }
-                    else{
-                        NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), "");
-                        card.setType(Card.NAVIGATE_WALKING_CARD);
-                        walkingCardList.add(card);
-                        Log.d(TAG, "lookUpRoute: " + card.toString());
-                    }
-                }
-                updateAdapterList(walkingCardList);
 
-            }else{
-                //FOR SUGGESTIONS, if no difference from normal routes then will not display
-                List listMatrix = new ArrayList();
-                for(int i=0; i< result.size(); i++) {
-                    if(getDistanceMatrix(result.get(i))){
-                        listMatrix.add(i);
-                        Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!optionMode){
+                        //walking
+                        for(int i=0; i< result.size(); i++) {
+                            if (getWeatherData(result.get(i))) {
+                                String msg = "Remember to bring an umbrella with you!";
+                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                                card.setType(Card.NAVIGATE_WALKING_CARD);
+                                walkingCardList.add(card);
+                                Log.d(TAG, "lookUpRoute: " + card.toString());
+                            }
+                            else{
+                                String msg = "Weather looks good!";
+                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                                card.setType(Card.NAVIGATE_WALKING_CARD);
+                                walkingCardList.add(card);
+                                Log.d(TAG, "lookUpRoute: " + card.toString());
+                            }
+                        }
+                        updateAdapterList(walkingCardList);
+
+                    }else{
+                        //FOR SUGGESTIONS, if no difference from normal routes then will not display
+                        List listMatrix = new ArrayList();
+                        for(int i=0; i< result.size(); i++) {
+                            if(getDistanceMatrix(result.get(i))){
+                                listMatrix.add(i);
+                                Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
+                            }
+                        }
+                        int size = listMatrix.size();
+                        if (listMatrix.size() == result.size()) {
+                            Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                        }
+                        else {
+                            Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
+                            for (int i = 0; i < size; i++) {
+                                int j = (Integer) listMatrix.get(i);
+                                NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j));
+                                card.setType(card.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card);
+                            }
+                        }
+                        //NORMAL ROUTES
+                        for(int i=0; i< result.size(); i++) {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
+                            Log.d(TAG, "lookUpRoute: "+card1.toString());
+                        }
+                        updateAdapterList(transitCardList);
                     }
                 }
-                int size = listMatrix.size();
-                if (listMatrix.size() == result.size()) {
-                    Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                }
-                else {
-                    Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                    for (int i = 0; i < size; i++) {
-                        int j = (Integer) listMatrix.get(i);
-                        NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j));
-                        card.setType(card.NAVIGATE_TRANSIT_CARD);
-                        transitCardList.add(card);
-                    }
-                }
-                //NORMAL ROUTES
-                for(int i=0; i< result.size(); i++) {
-                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
-                    card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                    transitCardList.add(card1);
-                    Log.d(TAG, "lookUpRoute: "+card1.toString());
-                }
-                updateAdapterList(transitCardList);
-            }
+            }, 1500);
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1684,7 +1691,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
                     Log.d("WALKing -------------- ", "WEATHER " + weather);
                     if (weather != null) {
-                        if (weather.contains("Cloudy") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
                             umbrella = true;
                         } else {
                             umbrella = false;
