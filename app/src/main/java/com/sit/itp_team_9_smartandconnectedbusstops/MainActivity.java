@@ -1300,7 +1300,7 @@ public class MainActivity extends AppCompatActivity
                     markerMap.put(value.getDescription(), infoWindowItem);
                     mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+//                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
                             if(card != null) {
                                 card.setType(Card.BUS_STOP_CARD);
@@ -1556,6 +1556,8 @@ public class MainActivity extends AppCompatActivity
             Log.e(TAG, "prepareFavoriteCards: list is empty!");
             return;
         }
+
+        favCardList.clear();
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
@@ -1862,7 +1864,7 @@ public class MainActivity extends AppCompatActivity
 //        ValueAnimator mVaActionBar = null;
         // initialize `mToolbarHeight`
         mToolbarHeight = getSupportActionBar().getHeight();
-        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
+//        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
         if(mToolbarHeight == 0)
             mToolbarHeight = mToolbarHeightBackUp;
 
