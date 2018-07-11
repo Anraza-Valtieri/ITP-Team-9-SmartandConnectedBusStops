@@ -357,7 +357,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
         //For navigate transit card
         TextView totalTime;
-        TextView totalDistance;
+        TextView totalDistance, remark;
         TextView cost;
         View breakdownBar;
         TextView startingStation;
@@ -416,6 +416,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             walkingTime = itemView.findViewById(R.id.textViewWalkingTime);
             walkingDistance = itemView.findViewById(R.id.textViewWalkingDistance);
             listViewDetailedSteps = itemView.findViewById(R.id.listViewDetailedSteps);
+            remark = itemView.findViewById(R.id.textViewRemark);
 
             cardType = type;
         }
@@ -714,6 +715,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     this.walkingTime.setText(cardsWalking.getTotalTime());
                     String walkingDistance = "( " + cardsWalking.getTotalDistance() +")";
                     this.walkingDistance.setText(walkingDistance);
+                    this.remark.setText(cardsWalking.getRemark());
 
                     //For detailed steps (expandable list adapter and listeners)
                     ExpandableListAdapter walkingListAdapter = new ExpandableListAdapter(mContext,

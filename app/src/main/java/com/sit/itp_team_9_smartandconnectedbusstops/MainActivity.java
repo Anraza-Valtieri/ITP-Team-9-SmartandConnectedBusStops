@@ -1616,10 +1616,19 @@ public class MainActivity extends AppCompatActivity
             if (!optionMode){
                 //walking
                 for(int i=0; i< result.size(); i++) {
-                    NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i));
-                    card.setType(Card.NAVIGATE_WALKING_CARD);
-                    walkingCardList.add(card);
-                    Log.d(TAG, "lookUpRoute: "+card.toString());
+                    if (getWeatherData(result.get(i))) {
+                        String msg = "Remember to bring an umbrella with you!";
+                        NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                        card.setType(Card.NAVIGATE_WALKING_CARD);
+                        walkingCardList.add(card);
+                        Log.d(TAG, "lookUpRoute: " + card.toString());
+                    }
+                    else{
+                        NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), "");
+                        card.setType(Card.NAVIGATE_WALKING_CARD);
+                        walkingCardList.add(card);
+                        Log.d(TAG, "lookUpRoute: " + card.toString());
+                    }
                 }
                 updateAdapterList(walkingCardList);
 
@@ -1660,6 +1669,37 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public boolean getWeatherData(GoogleRoutesData googleRoutesData){
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+        boolean umbrella = false;
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                double startLat = routeSteps.get(i).getStartLocationLat();
+                double startLng = routeSteps.get(i).getStartLocationLng();
+                if (sgWeather!=null) {
+                    Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
+                    sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
+                    String temp = sgWeather.getmTempForLatLong();
+                    String weather = sgWeather.getmWeatherForLatLong();
+                    Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
+                    Log.d("WALKing -------------- ", "WEATHER " + weather);
+                    if (weather != null) {
+                        if (weather.contains("Cloudy") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                            umbrella = true;
+                        } else {
+                            umbrella = false;
+                        }
+                    } else {
+                        umbrella = false;
+                    }
+                }
+            }
+        }
+        else{
+            Log.d(TAG, "routeSteps EMPTY" );
+        }
+        return umbrella;
+    }
     private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
         boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
@@ -1679,18 +1719,12 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
                 return pass;
             }
-            Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
-            Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
-                Log.d("lookUpTrafficDuration", "ifelse");
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
                     if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
-                        Log.d(TAG, "lookUpTrafficDuration BUS MAT: " + i );
                         pass = true;
-                        Log.d(TAG, "lookUpTrafficDuration: BUSBUSBUS");
                     } else { // dont display
-                        Log.d(TAG, "getMatrix false");
                         pass = false;
                     }
                 }
@@ -1786,7 +1820,6 @@ public class MainActivity extends AppCompatActivity
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     Log.d("DISTANCEMATRIX", "query");
                     pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
-
                 }
             }
         }
