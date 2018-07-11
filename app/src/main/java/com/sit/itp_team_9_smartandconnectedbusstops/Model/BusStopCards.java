@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BusStopCards {
+public class BusStopCards extends Card {
     private static final String TAG = BusStopCards.class.getSimpleName();
     String busStopID;
     String busStopName;
@@ -15,6 +15,8 @@ public class BusStopCards {
     String busStopLong;
     String lastUpdated;
     boolean isFavorite;
+    boolean majorUpdate = true;
+
     ArrayList<String> sortedKeys;
 
     // Create map to store
@@ -22,6 +24,14 @@ public class BusStopCards {
     // create list one and store values
     //2018-05-23T15:13:44+08:00
     List<String> busTiming = new ArrayList<>();
+
+    public boolean isMajorUpdate() {
+        return majorUpdate;
+    }
+
+    public void setMajorUpdate(boolean majorUpdate) {
+        this.majorUpdate = majorUpdate;
+    }
 
     // yyyy-MM-dd'T'HH:mm:ss.SSSXXX
     public String getLastUpdated() {

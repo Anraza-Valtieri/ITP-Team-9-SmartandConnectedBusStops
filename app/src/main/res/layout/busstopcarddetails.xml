@@ -6,6 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <View
+        android:id="@+id/dividerTop"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/busnumber"
         android:layout_width="40dp"
@@ -14,6 +23,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="#669900"
+        android:minWidth="40dp"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
         android:text="555e"
@@ -28,58 +38,173 @@
         android:id="@+id/direction"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:text="Pasir Ris Int"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/duration1"
-        app:layout_constraintStart_toEndOf="@+id/busnumber"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="gone" />
 
     <TextView
-        android:id="@+id/duration1"
-        android:layout_width="wrap_content"
+        android:id="@+id/operator"
+        android:layout_width="45dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/chip_shape"
-        android:backgroundTint="#e0e0e0  "
-        android:paddingBottom="1dp"
-        android:paddingEnd="6dp"
-        android:paddingLeft="0dp"
-        android:paddingRight="0dp"
-        android:paddingStart="8dp"
-        android:paddingTop="1dp"
-        android:text="4 min"
+        android:layout_marginStart="8dp"
+        android:minWidth="45dp"
+        android:text="SBS"
+        android:textAlignment="center"
+        android:textAllCaps="true"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/duration2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintStart_toEndOf="@+id/busnumber"
+        app:layout_constraintTop_toTopOf="@+id/busnumber" />
 
-    <TextView
-        android:id="@+id/duration2"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/buscard1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
+        android:layout_marginEnd="8dp"
+        android:minWidth="93dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toStartOf="@+id/buscard2"
+        app:layout_constraintTop_toTopOf="@+id/operator">
+
+        <TextView
+            android:id="@+id/duration1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="60dp"
+            android:paddingBottom="1dp"
+            android:paddingEnd="8dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingStart="8dp"
+            android:paddingTop="1dp"
+            android:text="@string/_4_min"
+            android:textAlignment="center"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/wheel1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="30dp"
+            tools:text="24 mins" />
+
+        <ImageView
+            android:id="@+id/wheel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:adjustViewBounds="false"
+            android:padding="0dp"
+            android:src="@drawable/ic_accessible_black_24dp"
+            android:tint="@android:color/darker_gray"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="10dp" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/buscard2"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_marginEnd="8dp"
+        android:minWidth="93dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/buscard1">
+
+        <TextView
+            android:id="@+id/duration2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="60dp"
+            android:paddingBottom="1dp"
+            android:paddingEnd="8dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingStart="8dp"
+            android:paddingTop="1dp"
+            android:text="@string/_4_min"
+            android:textAlignment="center"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/wheel2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="30dp"
+            tools:text="36 mins" />
+
+        <ImageView
+            android:id="@+id/wheel2"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_margin="0dp"
+            android:src="@drawable/ic_accessible_black_24dp"
+            android:tint="@android:color/darker_gray"
+            app:layout_constraintBottom_toBottomOf="@+id/duration2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/duration2"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="10dp" />
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/buscard3"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/chip_shape"
-        android:backgroundTint="#e0e0e0  "
-        android:paddingBottom="1dp"
-        android:paddingEnd="6dp"
-        android:paddingLeft="0dp"
-        android:paddingRight="0dp"
-        android:paddingStart="8dp"
-        android:paddingTop="1dp"
-        android:text="4 min"
-        android:textStyle="normal"
+        android:layout_marginStart="8dp"
+        android:minWidth="75dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buscard2"
+        app:layout_constraintTop_toTopOf="@+id/buscard2">
+
+        <TextView
+            android:id="@+id/duration3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="1dp"
+            android:paddingEnd="8dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingStart="8dp"
+            android:paddingTop="1dp"
+            android:text="@string/_4_min"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/wheel3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="30dp" />
+
+        <ImageView
+            android:id="@+id/wheel3"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_accessible_black_24dp"
+            android:tint="@color/browser_actions_title_color"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/duration3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/duration3"
+            tools:layout_conversion_absoluteHeight="20dp"
+            tools:layout_conversion_absoluteWidth="10dp" />
+    </android.support.constraint.ConstraintLayout>
+
+    <View
+        android:id="@+id/dividerBot"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>
