@@ -56,6 +56,16 @@
             card_view:layout_constraintStart_toStartOf="parent"
             card_view:layout_constraintTop_toBottomOf="@+id/textViewWalkingTime" />
 
+        <TextView
+            android:id="@+id/textViewRemark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/holo_blue_light"
+            card_view:layout_constraintStart_toStartOf="parent"
+            card_view:layout_constraintTop_toBottomOf="@+id/listViewDetailedSteps" />
+
 
     </android.support.constraint.ConstraintLayout>
 

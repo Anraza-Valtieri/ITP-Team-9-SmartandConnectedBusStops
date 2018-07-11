@@ -62,18 +62,21 @@ public class JSONLTABusRoute {
                 while(iterator.hasNext()){
                     String busNo = iterator.next().getServiceNo();
                     Value data = iterator.next();
-//                    String data = iterator.next().getBusStopCode();
-//                    Log.d(TAG, "createMap: adding "+busNo+ " with "+data.toString());
-                    if(busRouteMap.get(busNo) != null){
+
+                    if(busRouteMap.get(busNo) != null){ // We have data of this bus
                         LinkedList<Value> oldData = busRouteMap.get(busNo);
                         oldData.add(data);
+                        busRouteMap.put(busNo, oldData);
+//                        Log.d(TAG, "doInBackground: createMap != null"+data.toString() );
                     }else{
                         LinkedList<Value> listData = new LinkedList<>();
                         listData.add(data);
                         busRouteMap.put(busNo, listData);
+//                        Log.d(TAG, "doInBackground: createMap == null"+data.toString() );
                     }
 
                 }
+//                Log.d(TAG, "doInBackground: createMap "+busRouteMap.toString());
                 return null;
             }
         };
