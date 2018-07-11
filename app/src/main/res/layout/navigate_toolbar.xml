@@ -103,6 +103,11 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="@+id/textViewDestination"
                         app:srcCompat="@drawable/ic_search" />
+
+                    <Spinner
+                        android:id="@+id/fare_type_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"></Spinner>
                 </android.support.constraint.ConstraintLayout>
 
             </LinearLayout>

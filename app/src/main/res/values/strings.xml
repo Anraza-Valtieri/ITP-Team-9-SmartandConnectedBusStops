@@ -19,6 +19,12 @@
     <string name="transit_error">No routes available</string>
     <string name="stops">stops</string>
 
+    <string-array name="fare_types_array">
+        <item>Student</item>
+        <item>Adult</item>
+        <item>Senior Citizens</item>
+    </string-array>
+
     <string name="large_text">
         "Material is the metaphor.\n\n"
 
