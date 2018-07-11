@@ -1221,7 +1221,7 @@ public class MainActivity extends AppCompatActivity
                 for (Map.Entry<String, LTABusStopData> newData : allBusStops.entrySet()) {
                     String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
-                    allBusByID.put(value.getBusStopCode(),key);
+                    allBusByID.put(value.getBusStopCode(),value.getDescription());
 //                    sortedLTABusStopData.add(value);
 //                    Log.d(TAG, "doInBackground: LinkIDtoName");
                 }
