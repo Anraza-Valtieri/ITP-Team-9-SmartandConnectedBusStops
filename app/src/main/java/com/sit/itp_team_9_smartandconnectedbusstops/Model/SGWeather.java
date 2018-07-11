@@ -82,6 +82,7 @@ public class SGWeather {
     }
 
     public void updateForSpecificLocation(LatLng latLng){
+        Log.d("SGWEATHER -------------", latLng.latitude + ", " + latLng.longitude);
         getForecastForLatLong(latLng);
         getTemperatureForLatLong(latLng);
     }
