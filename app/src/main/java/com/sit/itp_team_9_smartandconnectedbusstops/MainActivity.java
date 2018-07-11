@@ -1,6 +1,9 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
@@ -25,6 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -39,16 +43,19 @@ import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -97,14 +104,12 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.TransitModeDistances;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
-import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import org.apache.http.HttpEntity;
@@ -129,10 +134,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -261,6 +264,7 @@ public class MainActivity extends AppCompatActivity
     List<String> twitterList = new ArrayList<String>();
     // Weather
     private SGWeather sgWeather;
+    TextView location;
     TextView weather;
     TextView temperature;
     TextView psi25;
@@ -274,6 +278,13 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
         toolbarNavigate = findViewById(R.id.navigate_toolbar);
+        CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, 0);
+        toolbarNavigate.setLayoutParams(params);
+        setSupportActionBar(toolbarNavigate);
         setSupportActionBar(toolbar);
         View rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -282,6 +293,7 @@ public class MainActivity extends AppCompatActivity
         navheaderbanner = navHeader.findViewById(R.id.headerbanner);
         weather = navHeader.findViewById(R.id.tvWeather);
         temperature = navHeader.findViewById(R.id.tvTemperature);
+        location = navHeader.findViewById(R.id.tvLocation);
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
@@ -313,10 +325,11 @@ public class MainActivity extends AppCompatActivity
         window.setNavigationBarColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            window.setSustainedPerformanceMode(true);
+//            window.setSustainedPerformanceMode(true);
         }
 
         bottomNav = findViewById(R.id.bottom_navigation);
@@ -372,12 +385,14 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                            handler.postDelayed(() -> location.setText(sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
                             handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
                             handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
                             handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                         }else{
+                            location.setText("Updating..");
                             temperature.setText("-°C");
                             psi25.setText("PM2.5: -");
                             psi10.setText("PM10: -");
@@ -431,7 +446,7 @@ public class MainActivity extends AppCompatActivity
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Window window = this.getWindow();
-            window.setSustainedPerformanceMode(true);
+//            window.setSustainedPerformanceMode(true);
         }
     }
 
@@ -442,6 +457,8 @@ public class MainActivity extends AppCompatActivity
         if (adapter != null)
             adapter.pauseHandlers();
 
+        if (adapter != null)
+            setFavBusStopID(adapter.getFavBusStopID());
 
         if (mLocationPermissionGranted) {
             // pausing location updates
@@ -452,6 +469,8 @@ public class MainActivity extends AppCompatActivity
             Window window = this.getWindow();
             window.setSustainedPerformanceMode(false);
         }
+
+
     }
 
     @Override
@@ -513,12 +532,19 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).hide();
+//                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        if(getSupportActionBar().isShowing())
+                            hideActionBar();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).show();
+//                        Objects.requireNonNull(getSupportActionBar()).show();
+                        if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
+                            showActionBar(toolbarNavigate);
+                        if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
+                            showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        hideActionBar();
+//                        Objects.requireNonNull(getSupportActionBar()).hide();
                     }
                 }
 
@@ -546,13 +572,32 @@ public class MainActivity extends AppCompatActivity
         }
 
         loadFavoritesFromDB();
-        bottomNav.setOnNavigationItemSelectedListener(item -> {
+        bottomNav.setOnNavigationItemSelectedListener((MenuItem item) -> {
             int id = item.getItemId();
             if (id == R.id.action_fav) {
-                toolbarNavigate.setVisibility(View.INVISIBLE);
-                toolbar.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbar);
-                getSupportActionBar().show();
+
+//                getSupportActionBar().hide();
+//                setSupportActionBar(toolbar);
+//                getSupportActionBar().show();
+                if(toolbar.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbar), 350);
+                }
+
+                //STATUS Bar
+                Window window = this.getWindow();
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.setStatusBarColor(Color.TRANSPARENT);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    int flags = window.getDecorView().getSystemUiVisibility();
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    window.getDecorView().setSystemUiVisibility(flags);
+                }
+
+                hideKeyboard();
                 if (adapter != null)
                     setFavBusStopID(adapter.getFavBusStopID());
 
@@ -565,18 +610,38 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
-                toolbar.setVisibility(View.GONE);
-                getSupportActionBar().hide();
-                toolbarNavigate.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbarNavigate);
-                getSupportActionBar().show();
+                if(toolbarNavigate.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
+                }
+
+                if (adapter != null)
+                    setFavBusStopID(adapter.getFavBusStopID());
+
+                //STATUS Bar
+                Window window = this.getWindow();
+//                window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                }
+                window.setStatusBarColor(Color.WHITE);
+
                 AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 ImageButton optionButton = findViewById(R.id.optionButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+                handler.postDelayed(() -> {
+                    startingPointTextView.setSelectAllOnFocus(true);
+                    startingPointTextView.requestFocus();
+                    showKeyboard(startingPointTextView);
+                },600);
+
+
+                handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
                 optionButton.setOnClickListener(view -> {
                     if (!optionMode) {
                         optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
@@ -644,15 +709,34 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
             } else if (id == R.id.action_nearby) {
-                toolbarNavigate.setVisibility(View.INVISIBLE);
-                toolbar.setVisibility(View.VISIBLE);
-                setSupportActionBar(toolbar);
-                Objects.requireNonNull(getSupportActionBar()).show();
+//                getSupportActionBar().hide();
+//                setSupportActionBar(toolbar);
+//                getSupportActionBar().show();
+                if(toolbar.getVisibility() != View.VISIBLE) {
+                    hideActionBar();
+                    handler.postDelayed(() -> showActionBar(toolbar), 350);
+                }
+
+                //STATUS Bar
+                Window window = this.getWindow();
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.setStatusBarColor(Color.TRANSPARENT);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    int flags = window.getDecorView().getSystemUiVisibility();
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    window.getDecorView().setSystemUiVisibility(flags);
+                }
+
                 if(mCurrentLocation==null){
                     getDeviceLocation();
                     getLocationPermission();
                     return false;
                 }
+
+                hideKeyboard();
 
                 @SuppressLint("StaticFieldLeak")
                 AsyncTask asyncTask = new AsyncTask() {
@@ -750,6 +834,8 @@ public class MainActivity extends AppCompatActivity
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
+                        sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        bottomNav.setSelectedItemId(R.id.action_fav);
                     }
                 }
                 try {
@@ -913,8 +999,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_trainstations) {
 
         } else */
-        if (id == R.id.nav_setting) {
-
+        if (id == R.id.nav_about) {
+            Log.d(TAG, "onNavigationItemSelected: Settings");
+//            this.setTheme(R.style.Theme_AppCompat_NoActionBar);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -1088,7 +1175,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     adapter.setFavBusStopID(favBusStopID);
 
-                    bottomNav.setSelectedItemId(R.id.action_fav);
+//                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
                     Log.d(TAG, "No such document");
                 }
@@ -1106,6 +1193,11 @@ public class MainActivity extends AppCompatActivity
      */
     private void PrepareLTAData(){
         Log.d(TAG, "PrepareLTAData: Start");
+
+        if(!haveNetworkConnection(this)) {
+            showNoNetworkDialog(this);
+        }
+
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
@@ -1128,6 +1220,7 @@ public class MainActivity extends AppCompatActivity
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+
     }
 
     public void LinkIDtoName(){
@@ -1140,8 +1233,8 @@ public class MainActivity extends AppCompatActivity
                     String key = newData.getKey();
                     LTABusStopData value = newData.getValue();
                     allBusByID.put(value.getBusStopCode(),key);
-                    sortedLTABusStopData.add(value);
-                    Log.d(TAG, "doInBackground: LinkIDtoName");
+//                    sortedLTABusStopData.add(value);
+//                    Log.d(TAG, "doInBackground: LinkIDtoName");
                 }
                 return null;
             }
@@ -1181,6 +1274,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
+                LinkIDtoName();
                 dialog.dismiss();
             }
 
@@ -1197,6 +1291,7 @@ public class MainActivity extends AppCompatActivity
                     newStop.setBusStopName(value.getDescription());
                     newStop.setBusStopLat(value.getBusStopLat());
                     newStop.setBusStopLong(value.getBusStopLong());
+                    newStop.setBusStopDesc(value.getRoadName());
                     busStopMap.put(newStop.getBusStopID(), newStop);
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
@@ -1208,10 +1303,12 @@ public class MainActivity extends AppCompatActivity
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
                             Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-                            card.setType(Card.BUS_STOP_CARD);
-                            singleCardList.clear();
-                            singleCardList.add(card);
-                            updateAdapterList(singleCardList);
+                            if(card != null) {
+                                card.setType(Card.BUS_STOP_CARD);
+                                singleCardList.clear();
+                                singleCardList.add(card);
+                                updateAdapterList(singleCardList);
+                            }
 //                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                         } else {
                             Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
@@ -1249,6 +1346,14 @@ public class MainActivity extends AppCompatActivity
             return null;
         }
 
+//        prepareBottomSheet();
+        if(!haveNetworkConnection(this)) {
+            Toast.makeText(getApplicationContext(),
+                    "Failed to sync data from network!",
+                    Toast.LENGTH_SHORT).show();
+            return null;
+        }
+
         // Bus stop favorites
         if(favBusStopID != null && favBusStopID.size() > 0 &&favBusStopID.contains(result.getBusStopID()))
             result.setFavorite(true);
@@ -1258,7 +1363,7 @@ public class MainActivity extends AppCompatActivity
         // Pull bus stop data
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
-        Log.d(TAG, "Look up bus timings for : " + result.getBusStopID());
+//        Log.d(TAG, "Look up bus timings for : " + result.getBusStopID());
         JSONLTABusTimingParser ltaReply = new JSONLTABusTimingParser(urlsList, result.getBusStopID());
         Map<String, Map> entry;
         try {
@@ -1269,20 +1374,26 @@ public class MainActivity extends AppCompatActivity
                 BusStopCards card = busStopMap.get(key);
                 card.setType(Card.BUS_STOP_CARD);
                 card.setMajorUpdate(true);
+                card.setBusStopDesc(result.getBusStopDesc());
                 Map<String, List<String>> finalData = new HashMap<>(value);
                 for (List<String> newData : finalData.values()) {
                     String toConvertID = newData.get(0);
-                    Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
-                    if(allBusStops.get(toConvertID).getRoadName() != null)
+//                    Log.d(TAG, "getBusStopData: toConvertID " + toConvertID);
+                    if(allBusStops.get(toConvertID).getRoadName() != null) {
                         newData.set(3, allBusStops.get(toConvertID).getDescription());
+//                        Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getRoadName());
+                    }
+//                    Log.d(TAG, "getBusStopData1: "+allBusStops.get(toConvertID).getDescription());
                 }
                 result.setBusServices(finalData);
+                result.setBusStopDesc(result.getBusStopDesc());
                 result.setLastUpdated(Calendar.getInstance().getTime().toString());
 
-                Log.d(TAG, "getBusStopData: Bus stop ID:" + key
-                        + " Bus Stop Name: " + card.getBusStopName()
-                        + " - " + card.getBusServices() + " - Last Updated: "
-                        + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
+//                Log.d(TAG, "getBusStopData: Bus stop ID:" + key
+//                        + " Bus Stop Name: " + card.getBusStopName()
+//                        + " Bus Stop Desc: " + card.getBusStopDesc()
+//                        + " - " + card.getBusServices()
+//                        + " - Last Updated: " + Utils.dateCheck(Utils.formatCardTime(card.getLastUpdated())));
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -1320,7 +1431,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             protected Object doInBackground(Object[] objects) {
-//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                 return sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             }
 
@@ -1339,12 +1449,12 @@ public class MainActivity extends AppCompatActivity
                 nearbyCardList.clear();
                 for(int i=0; i< 11; i++) {
                     BusStopCards card = getBusStopData(toProcess.get(i).getBusStopCode());
-                    card.setType(Card.BUS_STOP_CARD);
-                    card.setMajorUpdate(true);
-                    nearbyCardList.add(card);
-//            Log.d(TAG, "lookUpNearbyBusStops: adding "+card.getBusStopID()+ " to nearbyCardList");
-                    assert card != null;
-                    Log.d(TAG, "lookUpNearbyBusStops: "+card.toString());
+                    if(card != null) {
+                        card.setType(Card.BUS_STOP_CARD);
+                        card.setMajorUpdate(true);
+                        nearbyCardList.add(card);
+                        Log.d(TAG, "lookUpNearbyBusStops: " + card.toString());
+                    }
                 }
                 handler.postDelayed(new Runnable() {
                     @Override
@@ -1381,7 +1491,7 @@ public class MainActivity extends AppCompatActivity
             return distance1.compareTo(distance2);
         };
         long start = System.currentTimeMillis();
-        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+//        Log.d(TAG, "sortLocations: BEGIN SORTING!");
         Collections.sort(locations, comp);
         long elapsedTime = System.currentTimeMillis() - start;
         Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -1410,7 +1520,7 @@ public class MainActivity extends AppCompatActivity
             return distance1.compareTo(distance2);
         };
         long start = System.currentTimeMillis();
-        Log.d(TAG, "sortLocations: BEGIN SORTING!");
+//        Log.d(TAG, "sortLocations: BEGIN SORTING!");
         Collections.sort(locations, comp);
         long elapsedTime = System.currentTimeMillis() - start;
         Log.d(TAG, "sortLocations: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -1514,7 +1624,7 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(walkingCardList);
 
             }else{
-                //FOR SUGGESTIONS, if no difference from normal routes then will not display 
+                //FOR SUGGESTIONS, if no difference from normal routes then will not display
                 List listMatrix = new ArrayList();
                 for(int i=0; i< result.size(); i++) {
                     if(getDistanceMatrix(result.get(i))){
@@ -1697,6 +1807,110 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void showKeyboard(EditText editText){
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+
+    int mToolbarHeightBackUp = 0;
+    ValueAnimator mVaActionBar2 = null;
+    void hideActionBar() {
+        // holds the original Toolbar height.
+        // this can also be obtained via (an)other method(s)
+        int mToolbarHeight = 0;
+        int mAnimDuration = 200/* milliseconds */;
+//        ValueAnimator mVaActionBar = null;
+        // initialize `mToolbarHeight`
+        mToolbarHeight = getSupportActionBar().getHeight();
+        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
+        if(mToolbarHeight == 0)
+            mToolbarHeight = mToolbarHeightBackUp;
+
+        if (mVaActionBar2 != null && mVaActionBar2.isRunning()) {
+            // we are already animating a transition - block here
+            return;
+        }
+
+        // animate `Toolbar's` height to zero.
+        mVaActionBar2 = ValueAnimator.ofInt(mToolbarHeight , 0);
+        mVaActionBar2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // update LayoutParams
+                ((CoordinatorLayout.LayoutParams)toolbar.getLayoutParams()).height
+                        = (Integer)animation.getAnimatedValue();
+                toolbar.requestLayout();
+            }
+        });
+
+        mVaActionBar2.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+
+                if (getSupportActionBar() != null) { // sanity check
+                    getSupportActionBar().hide();
+                }
+            }
+        });
+
+        mVaActionBar2.setDuration(mAnimDuration);
+        mVaActionBar2.start();
+    }
+
+    ValueAnimator mVaActionBar1 = null;
+    void showActionBar(Toolbar bar) {
+        int mToolbarHeight = 0;
+        int mAnimDuration = 150/* milliseconds */;
+//        ValueAnimator mVaActionBar = null;
+        if (mVaActionBar1 != null && mVaActionBar1.isRunning() && bar != null) {
+            // we are already animating a transition - block here
+            return;
+        }
+
+        if(bar.equals(toolbar)) {
+            TypedValue tv = new TypedValue();
+//            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+                mToolbarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            }
+        }
+        else {
+            if (bar.getHeight() == 0)
+                mToolbarHeight = bar.getMinimumHeight();
+            else
+                mToolbarHeight = bar.getHeight();
+
+            mToolbarHeightBackUp = mToolbarHeight;
+        }
+
+        // restore `Toolbar's` height
+        mVaActionBar1 = ValueAnimator.ofInt(0 , mToolbarHeight);
+        mVaActionBar1.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // update LayoutParams
+                ((CoordinatorLayout.LayoutParams)bar.getLayoutParams()).height
+                        = (Integer)animation.getAnimatedValue();
+                bar.requestLayout();
+            }
+        });
+
+        mVaActionBar1.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                setSupportActionBar(bar);
+                if (getSupportActionBar() != null) { // sanity check
+                    getSupportActionBar().show();
+                }
+            }
+        });
+
+        mVaActionBar1.setDuration(mAnimDuration);
+        mVaActionBar1.start();
+    }
 
 
     // download twitter timeline after first checking to see if there is a network connection
@@ -1734,7 +1948,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(String result) {
-            Log.e("result",result);
+//            Log.e("result",result);
 
             try {
                 JSONArray jsonArray_data = new JSONArray(result);
