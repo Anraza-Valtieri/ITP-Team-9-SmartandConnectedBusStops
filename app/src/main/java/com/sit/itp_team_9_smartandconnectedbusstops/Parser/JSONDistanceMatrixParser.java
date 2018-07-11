@@ -117,6 +117,6 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
         //Do something with the JSON string
 
         Log.i(TAG, "onPostExecute: Total of "+result.size()+ " duration added");
-        Log.i(TAG,"routes: " + result + "\n");
+        Log.i(TAG,"distancedata: " + result + "\n");
     }
 }

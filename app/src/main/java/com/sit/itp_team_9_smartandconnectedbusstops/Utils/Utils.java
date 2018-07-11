@@ -9,8 +9,15 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v7.widget.CardView;
 import android.text.format.DateUtils;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,6 +30,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
+    public static String LRTColor = "#748477";
+    public static String LRT1polylines = "qmmGurexRpB?pCPdGn@`CPb@Dd@AZGZMnBkEjD{J~CqJ~AgFfBcFdBeF`AiCLs@Bi@A_AOw@m@qBa@yCc@aAaCiEaAkB_@u@Yw@eD}LG[A[Pw@n@c@r@Yx@_@x@YbAc@VMVWL}AiBsLUqBDqBF}@\\\\s@dAeBnGiLxDcIEw@]s@iBcAoIiEgBg@mB_@}ECyBF}BO{@Rg@|@CpCNlJa@|@qAV}AIqA_@gC}AeCeDgCaBgAe@c@Qk@Is@Ty@d@o@^u@v@qAzBcAdCyBpGkAbDIx@@v@ZvAl@bAtB`BvBdBtBhB|AhA`AzAfA~ApArAv@`@x@VbC\\\\r@NdA@vBYnDiBvDkAzFwBnBq@v@[XCX?ZJVP\\\\v@^fCj@pD@FHf@Kb@Yl@_Bp@eAXeA^]NYR[j@A`@B^T`At@hCxAhGJj@h@dA~@hB`AdBhA|Ab@`Ad@`Dn@tBJt@Ev@@h@Kn@aApCeBfFgB`FeBdF_AzDwAzDuDtJsBrEc@Tq@BkCMiJy@eDDY?";
+    public static String LRT2polylines = "enlGouhxRQSFc@xAy@~By@nBq@^SNIZ_@Jy@Ku@aAeGQuAaBc@gEjAqBr@mBfAuDdAgEnBw@Ty@DcA@{@OqC_@kB_A_BcBoAwB_C_CeFeEyB_BoAuBAsC|@cDtCcHnA_D~AsCnBeAjB]|FfDlA`Ar@xAnCbBtCh@pAEj@o@@sKAsBReA~@e@jBD`DFvE@tE~@xIrElAl@l@^V`@C~Ai@nAuBtDiHfM_BlDK|DfAtHd@vCPnAKx@[^g@XgE|AcAr@aAlA";
+    public static String LRT3polylines = "mqGuldyR~HnDjEjBxACv@m@vF_NnFeMpN{QjRqVrC{Dp@qAXsAk@aBsB{AmEyCcM}H}BmAaAG}@HgAl@uA`BiCzD_PnVoQxXuIzNeAnD_@xAKzA`A`CtCtAtF|C";
+    private static ViewGroup.LayoutParams params;
+
     public static boolean isBeforeDay(Date date1, Date date2) {
         if (date1 == null || date2 == null) {
             throw new IllegalArgumentException("The dates must not be null");
@@ -93,14 +106,14 @@ public class Utils {
                     return text;
                 }
 
-                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) > 0){
+                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) > 20){
                     String text = String.format(Locale.getDefault(), "%02d secs",
                             TimeUnit.MILLISECONDS.toSeconds(relativetime));
                     return text;
                 }
 
-                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) < 0){
-                    String text = String.format(Locale.getDefault(), "Arr");
+                if(TimeUnit.MILLISECONDS.toSeconds(relativetime) < 20){
+                    String text = String.format(Locale.getDefault(), "Arriving");
                     return text;
                 }
 //                CharSequence relativetime = DateUtils.getRelativeTimeSpanString(apptTime,
@@ -188,4 +201,68 @@ public class Utils {
                 .show();
     }
 
+    public static String loadBUSRouteJSONFromAsset(Context context) {
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                String json = null;
+                try {
+                    InputStream is = context.getAssets().open("bus_routes.json");
+                    int size = is.available();
+                    byte[] buffer = new byte[size];
+                    is.read(buffer);
+                    is.close();
+                    json = new String(buffer, "UTF-8");
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    return null;
+                }
+                return json;
+            }
+        };
+        try {
+            return asyncTask.execute().get().toString();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        // for navigate cards: allow card to expand to accommodate expandable list
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        int totalHeight = 0;
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        params = listView.getLayoutParams();
+        ViewGroup.LayoutParams paramsToSet = listView.getLayoutParams();
+        paramsToSet.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(paramsToSet);
+        listView.requestLayout();
+    }
+
+    public static void setListViewToOriginal(ListView listView) {
+        // for navigate cards: allow card to go back to original height
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        ViewGroup.LayoutParams paramsToSet = listView.getLayoutParams();
+        paramsToSet.height = 50; //TODO change hardcoded height
+        listView.setLayoutParams(paramsToSet);
+        listView.requestLayout();
+
+    }
 }

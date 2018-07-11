@@ -48,7 +48,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="$ X.XX"
             card_view:layout_constraintEnd_toEndOf="parent"
             card_view:layout_constraintTop_toTopOf="@+id/textViewTotalDistance"
             tools:text="$ X.XX" />
@@ -59,61 +58,17 @@
             android:layout_height="17dp"
             android:layout_marginTop="8dp"
             android:orientation="horizontal"
-            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalDistance">
-
-        </LinearLayout>
-
-        <ImageView
-            android:id="@+id/imageViewStartingStation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/linearLayoutBreakdownBar"
-            card_view:srcCompat="@drawable/ic_directions_bus_black_24dp" />
-
-        <TextView
-            android:id="@+id/textViewStartingStation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            card_view:layout_constraintStart_toEndOf="@+id/imageViewStartingStation"
-            card_view:layout_constraintTop_toTopOf="@+id/imageViewStartingStation"
-            tools:text="Farrer Park" />
-
-
-        <TextView
-            android:id="@+id/textViewTimeTaken"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="64dp"
-            android:layout_marginTop="8dp"
-            card_view:layout_constraintStart_toStartOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/imageViewStartingStation"
-            tools:text="X mins" />
-
-        <TextView
-            android:id="@+id/textViewNumStops"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            card_view:layout_constraintStart_toEndOf="@+id/textViewTimeTaken"
-            card_view:layout_constraintTop_toTopOf="@+id/textViewTimeTaken"
-            tools:text="( X stops)" />
+            card_view:layout_constraintTop_toBottomOf="@+id/textViewTotalDistance"/>
 
         <LinearLayout
             android:id="@+id/linearLayoutTransitStops"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
             android:orientation="vertical"
             card_view:layout_constraintBottom_toBottomOf="parent"
-            card_view:layout_constraintTop_toBottomOf="@+id/textViewTimeTaken"></LinearLayout>
-
-
+            card_view:layout_constraintTop_toBottomOf="@+id/linearLayoutBreakdownBar" />
     </android.support.constraint.ConstraintLayout>
 
 </android.support.v7.widget.CardView>
