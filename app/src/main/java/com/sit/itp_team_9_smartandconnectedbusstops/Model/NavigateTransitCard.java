@@ -42,6 +42,7 @@ public class NavigateTransitCard extends Card {
     private String totalTime;
     private String cost;
     private String totalDistance;
+    private String condition;
     private List<List<Object>> timeTaken; //time(int),weight(float), colour(int) (breakdown bar based on this)
     private String startingStation;
     private String startingStationTimeTaken;
@@ -192,6 +193,14 @@ public class NavigateTransitCard extends Card {
         this.error = error;
     }
 
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -200,7 +209,7 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes) {
+    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
         AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected void onPreExecute() {
@@ -220,6 +229,7 @@ public class NavigateTransitCard extends Card {
                     card.setID(googleRoutesData.getID());
                     card.setTotalDistance(googleRoutesData.getTotalDistance());
                     card.setTotalTime(googleRoutesData.getTotalDuration());
+                    card.setCondition(trafCon);
 
                     //in Steps
                     List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();

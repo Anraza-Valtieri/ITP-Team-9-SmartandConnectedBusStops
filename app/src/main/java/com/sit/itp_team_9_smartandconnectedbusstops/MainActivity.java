@@ -1733,7 +1733,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         updateAdapterList(walkingCardList);
 
-                    }else{
+                    }else{/*
                         //FOR SUGGESTIONS, if no difference from normal routes then will not display
                         List listMatrix = new ArrayList();
                         for(int i=0; i< result.size(); i++) {
@@ -1755,12 +1755,20 @@ public class MainActivity extends AppCompatActivity
                                 transitCardList.add(card);
                             }
                         }
-                        //NORMAL ROUTES
+                        //NORMAL ROUTES*/
                         for(int i=0; i< result.size(); i++) {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes);
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
-                            Log.d(TAG, "lookUpRoute: "+card1.toString());
+                            if(getDistanceMatrix(result.get(i))) {
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
+                            else{
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
                         }
                         updateAdapterList(transitCardList);
                     }
