@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity
         );
         params.setMargins(0, 0, 0, 0);
         toolbarNavigate.setLayoutParams(params);
-        setSupportActionBar(toolbarNavigate);
+//        setSupportActionBar(toolbarNavigate);
         setSupportActionBar(toolbar);
         View rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -334,12 +334,18 @@ public class MainActivity extends AppCompatActivity
         // Status bar :: Transparent
         Window window = this.getWindow();
 
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.WHITE);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            window.setNavigationBarColor(Color.WHITE);
+            window.setStatusBarColor(Color.WHITE);
+//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+            int flags = window.getDecorView().getSystemUiVisibility();
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            window.getDecorView().setSystemUiVisibility(flags);
         }
-        window.setStatusBarColor(Color.WHITE);
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            window.setSustainedPerformanceMode(true);
