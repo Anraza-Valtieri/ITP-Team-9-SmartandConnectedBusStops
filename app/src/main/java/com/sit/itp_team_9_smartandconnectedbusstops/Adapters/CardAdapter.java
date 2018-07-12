@@ -63,6 +63,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
+    public ArrayList<String> favRouteID = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
 
@@ -77,6 +78,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
         favBusStopID.clear();
         favBusStopID = newFavBusStopID;
+    }
+
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
+    }
+
+    public void setFavRouteID(ArrayList<String> newFavBusStopID) {
+        favRouteID.clear();
+        favRouteID = newFavBusStopID;
     }
 
     public ArrayList<Card> getmCard() {
@@ -180,6 +190,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
                 transitCard.setType(NavigateTransitCard.NAVIGATE_TRANSIT_CARD);
                 holder.setItem(transitCard);
+
+                final View cardTransit = holder.itemView.findViewById(R.id.transitcard);
+                ImageButton favTransit = cardTransit.findViewById(R.id.favoritebtnTransit);
+
+                favTransit.setOnClickListener(v -> {
+                    if (transitCard.isFavorite()) {
+                        transitCard.setFavorite(false);
+                        favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                        favRouteID.remove(transitCard.getID());
+                    } else {
+                        transitCard.setFavorite(true);
+                        favTransit.setImageResource(R.drawable.ic_favorite_red);
+                        favRouteID.add(String.valueOf(transitCard.getID()));
+                    }
+
+                    if (mOnFavoriteClickListener != null) {
+                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                    }
+                });
                 break;
 
             case NAVIGATE_WALKING_CARD:
@@ -366,7 +395,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
         //For navigate transit card
         TextView totalTime;
-        TextView totalDistance, remark;
+        TextView totalDistance, condition;
         TextView cost;
         View breakdownBar;
         TextView startingStation;
@@ -378,7 +407,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
         //For navigate walking card
         TextView walkingTime;
-        TextView walkingDistance;
+        TextView walkingDistance, remark;
         TextView startingRoad;
         ExpandableListView listViewDetailedSteps;
 
@@ -415,6 +444,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             cost = itemView.findViewById(R.id.textViewCost);
             breakdownBar = itemView.findViewById(R.id.breakdownBar);
             listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
+            condition = itemView.findViewById(R.id.textViewCondition);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -578,6 +608,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
+                        this.condition.setText(cardsTransit.getCondition());
                         //this.startingStation.setText(cardsTransit.getStartingStation());
                         //this.numStops.setText(cardsTransit.getNumStops());
                         //this.imageViewStartingStation.setImageResource(cardsTransit.getImageViewStartingStation());
