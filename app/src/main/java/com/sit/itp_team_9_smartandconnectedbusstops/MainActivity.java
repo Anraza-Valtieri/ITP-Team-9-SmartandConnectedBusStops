@@ -10,6 +10,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +20,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,12 +32,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
+import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -91,6 +96,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -200,6 +207,10 @@ public class MainActivity extends AppCompatActivity
     RecyclerView recyclerView;
     View layer;
 
+    // Navigation Toolbar
+    private AutoCompleteTextView startingPointTextView;
+    private AutoCompleteTextView destinationTextView;
+
     //Database
     FirebaseFirestore db;
 
@@ -269,7 +280,11 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreference;
     private SharedPreferences.Editor sharedPrefEditor;
 
+    // Context Variable for classes
     public static Context context = null;
+
+    // Address for starting point
+    String convertedAddress;
 
     //direction query
     String query;
@@ -315,6 +330,9 @@ public class MainActivity extends AppCompatActivity
         uv = navHeader.findViewById(R.id.tvUV);
         // Toolbar :: Transparent
         toolbar.setBackgroundColor(Color.TRANSPARENT);
+
+        startingPointTextView = findViewById(R.id.textViewStartingPoint);
+        destinationTextView = findViewById(R.id.textViewDestination);
 
         SharedPreferences prefs = getSharedPreferences(UUID_ID, MODE_PRIVATE);
         String restoredText = prefs.getString("UUID", null);
@@ -641,12 +659,14 @@ public class MainActivity extends AppCompatActivity
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 // Apply the adapter to the spinner
                 fareTypesSpinner.setAdapter(adapter);
-                AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
-                AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
-                ImageButton optionButton = findViewById(R.id.optionButton);
+                //ImageButton switchButton = findViewById(R.id.switchButton);
+                ImageButton startVoiceSearchButton = findViewById(R.id.imgBtnStartVoiceSearch);
+                ImageButton destVoiceSearchButton = findViewById(R.id.imgBtnDestVoiceSearch);
+                ImageButton switchButton = findViewById(R.id.switchButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
+                TabLayout navigationTabs = findViewById(R.id.tabLayout);
 
                 handler.postDelayed(() -> {
                     startingPointTextView.setSelectAllOnFocus(true);
@@ -654,17 +674,9 @@ public class MainActivity extends AppCompatActivity
                     showKeyboard(startingPointTextView);
                 },600);
 
+                //startingPointTextView.setText("H" + getCurrentAddress());
 
                 handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
-                optionButton.setOnClickListener(view -> {
-                    if (!optionMode) {
-                        optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
-                        optionMode = true;
-                    } else{
-                        optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
-                        optionMode = false;
-                    }
-                });
 
                 destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                     @Override
@@ -672,11 +684,14 @@ public class MainActivity extends AppCompatActivity
                         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                             if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                                 Log.i(TAG,"lookUpRoutes!");
-                                String mode;
-                                if (optionMode){
+                                String mode ="";
+                                if (navigationTabs.getSelectedTabPosition() == 0){
                                     mode = "transit";
-                                }else{
+                                    optionMode = true;
+                                }
+                                else if(navigationTabs.getSelectedTabPosition() == 1){
                                     mode = "walking";
+                                    optionMode = false;
                                 }
                                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                         + startingPointTextView.getText().toString() + "&destination="
@@ -697,15 +712,33 @@ public class MainActivity extends AppCompatActivity
                         return false;
                     }
                 });
+
+                startVoiceSearchButton.setOnClickListener(v -> {
+                    promptSpeechInput(100);
+                });
+
+                destVoiceSearchButton.setOnClickListener(v -> {
+                    promptSpeechInput(200);
+                });
+
+                switchButton.setOnClickListener(v -> {
+                    String startPoint = startingPointTextView.getText().toString();
+                    startingPointTextView.setText(destinationTextView.getText());
+                    destinationTextView.setText(startPoint);
+                });
+
                 searchButton.setOnClickListener(v -> {
                 Log.i(TAG,"onClickListener!");
                     if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                         Log.i(TAG,"lookUpRoutes!");
-                        String mode;
-                        if (optionMode){
+                        String mode = "";
+                        if (navigationTabs.getSelectedTabPosition() == 0){
                             mode = "transit";
-                        }else{
+                            optionMode = true;
+                        }
+                        else if(navigationTabs.getSelectedTabPosition() == 1){
                             mode = "walking";
+                            optionMode = false;
                         }
                          query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
@@ -909,6 +942,43 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     *
+     * method to return the address of the currentLocation
+     */
+    private String getCurrentAddress() {
+
+        try {
+
+            Task location = mFusedLocationClient.getLastLocation();
+
+            location.addOnCompleteListener(new OnCompleteListener() {
+                @Override
+                public void onComplete(@NonNull Task task) {
+                    if (task.isSuccessful()) {
+
+                        Location currentLocation = (Location) task.getResult();
+                        Geocoder gc = new Geocoder(getApplicationContext());
+
+                        try {
+                            Address address = gc.getFromLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), 1).get(0);
+                            convertedAddress = address.getAddressLine(0);
+                        }
+                        catch(IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+
+            return convertedAddress;
+        }
+        catch (SecurityException e) {
+            Log.d(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
+        }
+        return null;
+    }
+
     public void stopLocationUpdates() {
         // Removing location updates
         mFusedLocationClient
@@ -934,6 +1004,44 @@ public class MainActivity extends AppCompatActivity
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
+        }
+    }
+
+    /**
+     * voice search
+     */
+    public void promptSpeechInput(int requestCode) {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
+
+        try {
+            startActivityForResult(intent, requestCode);
+        }
+        catch(ActivityNotFoundException a) {
+            Toast.makeText(MainActivity.this, "Sorry! Your device doesn't support speech language!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void onActivityResult(int request_code, int result_code, Intent i) {
+
+        switch(request_code) {
+
+            case 100:
+                if(result_code == RESULT_OK && i != null) {
+                    ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    startingPointTextView.setText(result.get(0));
+                }
+                break;
+
+            case 200:
+
+                if(result_code == RESULT_OK && i != null) {
+                    ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    destinationTextView.setText(result.get(0));
+                }
+                break;
         }
     }
 
