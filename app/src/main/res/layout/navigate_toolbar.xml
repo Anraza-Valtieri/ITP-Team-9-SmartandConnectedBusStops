@@ -1,27 +1,26 @@
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/new_toolbar_navigate"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/text_shadow_white"
-    android:elevation="4dp"
-    android:minHeight="250dp"
-    android:padding="0dp"
     android:contentInsetStart="0dp"
+    android:elevation="4dp"
+    android:minHeight="230dp"
+    android:padding="0dp"
+    android:theme="@style/AppTheme.NoActionBar"
     app:contentInsetLeft="0dp"
-    app:contentInsetStart="0dp"
-    android:theme="?attr/actionBarTheme">
+    app:contentInsetStart="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:contentInsetStart="0dp"
         android:gravity="top|bottom|center_vertical|center_horizontal"
         android:orientation="horizontal"
-        android:contentInsetStart="0dp"
+        android:padding="0dp"
         app:contentInsetLeft="0dp"
-        app:contentInsetStart="0dp"
-        android:padding="0dp">
+        app:contentInsetStart="0dp">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
@@ -272,29 +271,34 @@
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:theme="@style/AppTheme.NoActionBar"
                 android:visibility="visible"
-                app:tabBackground="@drawable/tab_background"
-                app:tabIndicatorColor="@android:color/transparent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/relLayout4">
+                app:layout_constraintTop_toBottomOf="@+id/relLayout4"
+                app:tabBackground="@drawable/tab_background"
+                app:tabIndicatorColor="@android:color/transparent"
+                app:tabSelectedTextColor="@android:color/white">
 
                 <android.support.design.widget.TabItem
                     android:id="@+id/tabItem"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:text="Public Transport"
                     android:textColor="@android:color/darker_gray"
-                    android:text="BUS/MRT"
+                    android:theme="@style/AppTheme.NoActionBar"
                     android:visibility="visible" />
 
                 <android.support.design.widget.TabItem
                     android:id="@+id/tabItem2"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:text="Walking"
                     android:textColor="@android:color/darker_gray"
-                    android:text="WALKING"
                     android:visibility="visible" />
 
             </android.support.design.widget.TabLayout>
