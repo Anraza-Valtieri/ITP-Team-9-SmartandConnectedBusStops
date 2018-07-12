@@ -35,6 +35,7 @@ import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
@@ -210,6 +211,9 @@ public class MainActivity extends AppCompatActivity
     private AutoCompleteTextView startingPointTextView;
     private AutoCompleteTextView destinationTextView;
 
+    // Loading screen
+    private ConstraintLayout loadingScreen;
+
     //Database
     FirebaseFirestore db;
 
@@ -302,7 +306,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.AppTheme_NoActionBar);
+//        setTheme(R.style.AppTheme_NoActionBar);
+//        setContentView(R.layout.loadingscreen);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = this;
@@ -327,6 +332,7 @@ public class MainActivity extends AppCompatActivity
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
+        loadingScreen = findViewById(R.id.splashscreen);
         // Toolbar :: Transparent
 //        toolbar.setBackgroundColor(Color.TRANSPARENT);
 
@@ -351,7 +357,6 @@ public class MainActivity extends AppCompatActivity
 
         // Status bar :: Transparent
         Window window = this.getWindow();
-
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             window.setNavigationBarColor(Color.WHITE);
@@ -850,6 +855,7 @@ public class MainActivity extends AppCompatActivity
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        loadingScreen.setVisibility(View.GONE);
                         bottomNav.setSelectedItemId(R.id.action_fav);
                     }
                 }
