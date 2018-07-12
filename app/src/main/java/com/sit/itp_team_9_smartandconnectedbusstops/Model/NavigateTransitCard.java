@@ -6,6 +6,7 @@ import android.util.Log;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.Value;
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONTrainStationParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 
@@ -15,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class NavigateTransitCard extends Card {
     private static final String TAG = NavigateTransitCard.class.getSimpleName();
@@ -44,15 +46,17 @@ public class NavigateTransitCard extends Card {
     private String startingStationTimeTaken;
     private int imageViewStartingStation;
     private int imageViewStartingStationColor;
+    private static String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
+    private List<String> polyLines;
     private boolean isFavorite;
     //private List<String> transitStations;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
                                                         // lineName(string), arrivalStop (string)>
     private String error;
-    //private String transferStation;
-    //private String endingStation;
+
+    private List<String> inBetweenTrainStations;
 
     //private int imageViewTransitStation;
     //private int imageViewTransitStationColor;
@@ -89,14 +93,6 @@ public class NavigateTransitCard extends Card {
         this.totalDistance = totalDistance;
     }
 
-    public String getStartingStation() {
-        return startingStation;
-    }
-
-    public void setStartingStation(String startingStation) {
-        this.startingStation = startingStation;
-    }
-
     public List<List<Object>> getTimeTaken() {
         return timeTaken;
     }
@@ -121,6 +117,14 @@ public class NavigateTransitCard extends Card {
         this.inBetweenStops = inBetweenStops;
     }
 
+    public List<String> getPolyLines() {
+        return polyLines;
+    }
+
+    public void setPolyLines(List<String> polyLines) {
+        this.polyLines = polyLines;
+    }
+
     /*public String getTransferStation() {
         return transferStation;
     }
@@ -137,7 +141,7 @@ public class NavigateTransitCard extends Card {
         this.endingStation = endingStation;
     }*/
 
-    public int getImageViewStartingStation() {
+    /*public int getImageViewStartingStation() {
         return imageViewStartingStation;
     }
 
@@ -168,6 +172,14 @@ public class NavigateTransitCard extends Card {
     public void setTransitStations(List<String> transitStations) {
         this.transitStations = transitStations;
     }*/
+
+    public static String getDepartureStationCode() {
+        return departureStationCode;
+    }
+
+    public void setDepartureStationCode(String departureStationCode) {
+        this.departureStationCode = departureStationCode;
+    }
 
     public Map<String, List<Object>> getTransitStations() {
         return transitStations;
@@ -211,7 +223,7 @@ public class NavigateTransitCard extends Card {
                 Map<String,List<Object>> transitStations = new LinkedHashMap<>();
                 List<List<Object>> timeTakenList = new ArrayList<>();
                 List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
-
+                List<String> listOfPolyLines = new ArrayList<>();
                 //find largest duration of each step for weights in breakdownBar
                 int largestDuration = 0;
                 for (int i = 0; i < routeSteps.size(); i++) {
@@ -225,6 +237,7 @@ public class NavigateTransitCard extends Card {
 
                 for (int i = 0; i < routeSteps.size(); i++) {
                     List<Object> timeTakenEachStep = new ArrayList<>();
+                    listOfPolyLines.add(routeSteps.get(i).getPolyline());
                     String travelMode = routeSteps.get(i).getTravelMode();
                     String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                     float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
@@ -299,65 +312,133 @@ public class NavigateTransitCard extends Card {
                                 stationDetails.add(imageViewTransit);
                                 stationDetails.add(imageViewColor);
                                 stationDetails.add(lineName); //line name is bus num
+
                                 //get in between bus stops
                                 List<String> busStopNames = new ArrayList<>();
-                                if (imageViewColor == NavigateTransitCard.BUS_COLOR) {
+                                List<String> trainStationNames = new ArrayList<>();
+                                if (imageViewTransit == R.drawable.ic_directions_bus_black_24dp) {
                                     Log.i(TAG,"is this a bus?");
+
                                     //get departure stop's code
-                                    //go into linkedlist to get the next X stops
-                                    // then get bus stop name
-                                    //MainActivity mainActivity = new MainActivity();
                                     Map<String, String> allBusByIdMap = MainActivity.allBusByID;
-                                    Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
-                                    String departureBusStopCode = null;
+                                    String departureBusStopCode = null, arrivalBusStopCode = null;
                                     for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
-                                        Log.i(TAG,"allBusByIdMap.entrySet()");
                                         String busStopIDCode = entry.getKey();
                                         Log.i(TAG,"busStopIDCode "+busStopIDCode);
                                         String busStopName = entry.getValue();
+                                        //Log.i(TAG,"busStopName "+busStopName);
                                         if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
                                             departureBusStopCode = busStopIDCode;
-                                            Log.i(TAG,"DEPARTURE CODE "+ departureBusStopCode);
+                                            Log.i(TAG,"departure code "+ departureBusStopCode);
+                                        } else if (busStopName.equals(routeSteps.get(i).getArrivalStop())){
+                                            arrivalBusStopCode = busStopIDCode;
+                                            Log.i(TAG,"departure code "+ arrivalBusStopCode);
                                         }
                                     }
 
+                                    //go into linkedlist to get the next X stops
                                     List<String> busStopCodes = new ArrayList<>();
                                     JSONLTABusRoute busRoute = new JSONLTABusRoute();
                                     Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
-                                    for (int j = 0; j < busMap.size(); j++) {
-                                        Log.i(TAG,"this is busMap loop" );
-                                        if (busMap.get(lineName) != null) {
-                                            //if bus route exists
-                                            LinkedList<Value> busValue = busMap.get(lineName);
-                                            for (int k = 0; k < busValue.size(); k++) {
-                                                Log.i(TAG,"this is busMap loop + busValueSize" );
-                                                if (busValue.get(k).getBusStopCode().equals(departureBusStopCode)){
+                                    //Log.i(TAG,"busMap? " + busMap);
+                                    for (Map.Entry<String, LinkedList<Value>> busMapEntry : busMap.entrySet()) {
+                                        String busServiceNumber = busMapEntry.getKey();
+                                        LinkedList<Value> busMapValue = busMapEntry.getValue();
+                                        if (busServiceNumber.equals(lineName)) {
+                                            //get direction from departureStop Value
+                                            for (int busMapIndex = 0; busMapIndex < busMapValue.size(); busMapIndex++) {
+                                                //int stopSequence = busMapValue.get(busMapIndex).getStopSequence();
+                                                //Log.i(TAG,"stopSequence: "+ stopSequence);
+                                                //LinkedList<Value> busValue = busMap.get(lineName);
+                                                if (busMapValue.get(busMapIndex).getBusStopCode().equals(departureBusStopCode)) {
                                                     //if departure stop is found, save the next X num of stops
-                                                    for (int l = 0; l < Integer.parseInt(card.getNumStops()); l++){
-                                                        busStopCodes.add(busValue.get(k+l).getBusStopCode());
-                                                        Log.i(TAG,"busStopCodes:"+busStopCodes);
+                                                    int departureStopDirection = busMapValue.get(busMapIndex).getDirection();
+                                                    int numStopInt = Integer.parseInt(card.getNumStops());
+                                                    for (int k = 1; k < Integer.parseInt(card.getNumStops()); k++){
+                                                        int direction = busMapValue.get(busMapIndex+k).getDirection();
+                                                        if (direction == departureStopDirection){
+                                                            busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
+                                                            //add until arrivalStop
+                                                        }else{
+                                                            //error?
+                                                        }
                                                     }
+                                                    /*if ((busMapIndex+numStopInt) < busMapValue.size()
+                                                            && busMapValue.get(busMapIndex+numStopInt)
+                                                            .getBusStopCode().equals(arrivalBusStopCode)) {
+                                                        //if arrivalStop is found before end of busMapValue
+                                                        for (int k = 1; k < Integer.parseInt(card.getNumStops()); k++) {
+                                                            busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
+                                                            Log.i(TAG,"+k = "+(busMapIndex+k));
+
+                                                        }
+                                                    }/*else{
+                                                        for (int k = 1; k < numStopInt; k++) {
+                                                            busStopCodes.add(busMapValue.get(busMapIndex-k).getBusStopCode());
+                                                            Log.i(TAG,"-k = "+(busMapIndex-k));
+                                                        }
+                                                        //busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
+                                                        Log.i(TAG,"numStops="+card.getNumStops());
+                                                        Log.i(TAG,"busMapValue = "+busMapValue.size());
+                                                        //TODO sometimes Index out of bounds exception: direction?
+                                                        //TODO busRoute cannot be static
+                                                        //check for arrivalStop, if null, use direction 2?
+                                                        //Log.d(TAG, "busStopCodes:" + busStopCodes);
+                                                    }*/
                                                 }
                                             }
                                         }
                                     }
+
+                                    //get bus stop names
                                     for (int k = 0; k < busStopCodes.size(); k++){
-                                        Log.i(TAG,"busStopCodes k loop");
                                         //Find names of all in busStopCodes
                                         // Key: Bus stop ID Value: Bus stop name
-                                        //key: busStopCodes.get(l);
                                         String busStopName = allBusByIdMap.get(busStopCodes.get(k));
                                         busStopNames.add(busStopName);
                                         Log.i(TAG,"Bus stop name (add 1): "+busStopName);
                                     }
+                                }else{
+                                    //train stations
+                                    /*String queryDeparture = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                            + routeSteps.get(i).getDepartureStop();
+                                    lookUpTrainStationCode(queryDeparture);
+                                    String departureStationCodeRef = NavigateTransitCard.getDepartureStationCode();
+                                    Log.d(TAG,"departureTrainStationCode " + departureStationCodeRef);
+
+                                    String queryArrival = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                            + routeSteps.get(i).getArrivalStop();
+
+                                    int intValueDeparture = Integer.parseInt(departureStationCodeRef.replaceAll("[^0-9]", ""));
+                                    int intValueArrival = Integer.parseInt(queryArrival.replaceAll("[^0-9]", ""));
+                                    String trainLineName = departureStationCodeRef.replaceAll("[0-9]", "");
+
+                                    String trainLineQuery = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                            + trainLineName; //get all stops in that line
+
+                                    List<TrainStation> allTrainStationsInLine = lookUpAllStationsInLine(trainLineQuery);
+                                    //List<String> inBetweenStationsNames = new ArrayList<>();
+                                    if (intValueDeparture < intValueArrival){
+                                        for (int j = intValueDeparture; j < allTrainStationsInLine.size(); j++){
+                                            trainStationNames.add(allTrainStationsInLine.get(j).getStationName());
+                                        }
+                                    }else {
+                                        for (int j = intValueArrival; j <allTrainStationsInLine.size(); j--) {
+                                            trainStationNames.add(allTrainStationsInLine.get(j).getStationName());
+                                        }
+                                    }
+                                    //using trainStationCode, either ++ or -- to arrivalStop*/
+                                    trainStationNames.add("Hello");
                                 }
-                                 //key is bus num, value: linkedlist, get bus stop number
-                                //bus stop number get bus stop name from hashmap allBusById
+
                                 stationDetails.add(routeSteps.get(i).getArrivalStop());
                                 stationDetails.add(routeSteps.get(i).getDuration());
                                 if (!busStopNames.isEmpty()){
                                     stationDetails.add(busStopNames);
                                     Log.i(TAG,"BUS STOP NAMES: "+busStopNames);
+                                }else{
+                                    stationDetails.add(trainStationNames);
+                                    Log.i(TAG,"TRAIN STATION NAMES: "+trainStationNames);
                                 }
                                 transitStations.put(routeSteps.get(i).getDepartureStop(),stationDetails);
                             }
@@ -394,6 +475,8 @@ public class NavigateTransitCard extends Card {
 
                     }
                 }
+                card.setPolyLines(listOfPolyLines);
+                Log.i(TAG,listOfPolyLines.toString());
                 card.setCost(price);
                 card.setTimeTaken(timeTakenList);
                 card.setTransitStations(transitStations);
@@ -402,5 +485,76 @@ public class NavigateTransitCard extends Card {
             card.setError(googleRoutesData.getError());
         }
         return card;
+    }
+
+    private void lookUpTrainStationNames(String query){
+        List<String> trainStationsQuery = new ArrayList<>();
+        trainStationsQuery.add(query);
+        Log.i(TAG,trainStationsQuery.toString());
+        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
+        List<TrainStation> result; //result from parser
+        try {
+            result = trainStationParser.execute().get();
+            Log.d(TAG, query);
+            if (result.size() <= 0) {
+                Log.d(TAG, "trainStation: Data.gov returned no data");
+                return;
+            }else{
+                //got result
+                for (int i = 0; i < result.size(); i++) {
+                    inBetweenTrainStations.add(result.get(i).getStationName());
+                }
+            }
+        }catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void lookUpTrainStationCode(String query){
+        List<String> trainStationsQuery = new ArrayList<>();
+        trainStationsQuery.add(query);
+        Log.i(TAG,trainStationsQuery.toString());
+        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
+        List<TrainStation> result; //result from parser
+        try {
+            result = trainStationParser.execute().get();
+            Log.d(TAG, query);
+            if (result.size() <= 0) {
+                Log.d(TAG, "trainStation: Data.gov returned no data");
+                return;
+            }else{
+                //got result
+                Log.d(TAG, result.get(0).getStationCode());
+                NavigateTransitCard navigateTransitCard = new NavigateTransitCard();
+                navigateTransitCard.setDepartureStationCode(result.get(0).getStationCode()); //departure train station code
+            }
+        }catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<TrainStation> lookUpAllStationsInLine(String query){
+        List<String> trainStationsQuery = new ArrayList<>();
+        List<TrainStation> trainStationsResult = new ArrayList<>();
+        trainStationsQuery.add(query);
+        Log.i(TAG,trainStationsQuery.toString());
+        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
+        List<TrainStation> result; //result from parser
+        try {
+            result = trainStationParser.execute().get();
+            Log.d(TAG, query);
+            if (result.size() <= 0) {
+                Log.d(TAG, "trainStation: Data.gov returned no data");
+                return null;
+            }else{
+                //got result
+                for (int i = 0; i < result.size(); i++) {
+                    trainStationsResult.add(result.get(i));
+                }
+            }
+        }catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return trainStationsResult;
     }
 }

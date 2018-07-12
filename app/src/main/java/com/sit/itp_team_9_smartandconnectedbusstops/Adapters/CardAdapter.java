@@ -595,15 +595,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             Integer stationImage = (Integer) entry.getValue().get(0);
                             Integer stationColor = (Integer) entry.getValue().get(1);
                             String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null;
-                            List<String> busStopNames = null;
+                            List<String> inBetweenStopNames = null;
                             if (entry.getValue().size() > 4) {
                                 lineName = (String) entry.getValue().get(2);
                                 arrivalStop = (String) entry.getValue().get(3);
                                 timeTakenForEachWaypoint = (String)entry.getValue().get(4);
                                 if (entry.getValue().size() > 5){
-                                    if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
-                                        busStopNames = (List<String>) entry.getValue().get(5);
-                                    }
+                                    //if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
+                                    inBetweenStopNames = (List<String>) entry.getValue().get(5);
+                                    //}
                                 }
                             }
 
@@ -650,7 +650,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 Log.i(TAG, inBetweenStopsHeaderString);
                                 inBetweenStopsHeader.add(inBetweenStopsHeaderString);
                                 HashMap<String, List<String>> inBetweenStops = new HashMap<>();
-                                inBetweenStops.put(inBetweenStopsHeaderString,busStopNames);
+                                inBetweenStops.put(inBetweenStopsHeaderString,inBetweenStopNames);
 
                                 ExpandableListAdapter transitListAdapter = new ExpandableListAdapter(mContext,
                                         inBetweenStopsHeader,inBetweenStops);

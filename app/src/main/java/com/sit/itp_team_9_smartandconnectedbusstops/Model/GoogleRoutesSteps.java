@@ -14,6 +14,7 @@ public class GoogleRoutesSteps {
     private String duration;
     private String htmlInstructions;
     private String travelMode;
+    private String polyline;
 
     //in expandable list
     private List<GoogleRoutesSteps> detailedSteps; //WALKING, step-by-step turns to take etc.
@@ -93,6 +94,14 @@ public class GoogleRoutesSteps {
 
     public void setTravelMode(String travelMode) {
         this.travelMode = travelMode;
+    }
+
+    public String getPolyline() {
+        return polyline;
+    }
+
+    public void setPolyline(String polyline) {
+        this.polyline = polyline;
     }
 
     //WALKING
