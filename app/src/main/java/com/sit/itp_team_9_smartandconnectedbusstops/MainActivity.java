@@ -56,7 +56,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
@@ -314,7 +313,7 @@ public class MainActivity extends AppCompatActivity
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
         // Toolbar :: Transparent
-        toolbar.setBackgroundColor(Color.TRANSPARENT);
+//        toolbar.setBackgroundColor(Color.TRANSPARENT);
 
         SharedPreferences prefs = getSharedPreferences(UUID_ID, MODE_PRIVATE);
         String restoredText = prefs.getString("UUID", null);
@@ -335,14 +334,12 @@ public class MainActivity extends AppCompatActivity
         // Status bar :: Transparent
         Window window = this.getWindow();
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
             window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
+        window.setStatusBarColor(Color.WHITE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            window.setSustainedPerformanceMode(true);
@@ -590,19 +587,6 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
 
-                //STATUS Bar
-                Window window = this.getWindow();
-                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                window.setStatusBarColor(Color.TRANSPARENT);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    int flags = window.getDecorView().getSystemUiVisibility();
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                    window.getDecorView().setSystemUiVisibility(flags);
-                }
-
                 hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
@@ -623,15 +607,6 @@ public class MainActivity extends AppCompatActivity
 
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
-
-                //STATUS Bar
-                Window window = this.getWindow();
-//                window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                }
-                window.setStatusBarColor(Color.WHITE);
 
                 Spinner fareTypesSpinner = (Spinner) findViewById(R.id.fare_type_spinner);
                 // Create an ArrayAdapter using the string array and a default spinner layout
@@ -729,19 +704,6 @@ public class MainActivity extends AppCompatActivity
                 if(toolbar.getVisibility() != View.VISIBLE) {
                     hideActionBar();
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
-                }
-
-                //STATUS Bar
-                Window window = this.getWindow();
-                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                window.setStatusBarColor(Color.TRANSPARENT);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    int flags = window.getDecorView().getSystemUiVisibility();
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                    window.getDecorView().setSystemUiVisibility(flags);
                 }
 
                 if(mCurrentLocation==null){
