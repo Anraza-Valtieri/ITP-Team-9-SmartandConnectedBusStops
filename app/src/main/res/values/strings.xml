@@ -31,9 +31,19 @@
     </string-array>
 
     <string name="hour">hour</string>
-    <string name="minute">mins</string>
+    <string name="hours">hours</string>
+    <string name="minute">min</string>
+    <string name="minutes">mins</string>
+
     <string name="day">Day</string>
     <string name="night">Night</string>
+
+    <string name="fair">Fair</string>
+    <string name="partcloudy">Partly Cloudy</string>
+
+    <string name="walk">Walk</string>
+    <string name="km">km</string>
+    <string name="m">m</string>
 
     <string name="dummy">Lorem imposummmmm</string>
     <string name="collapsed">Collapsed</string>

@@ -3,6 +3,8 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,8 +89,44 @@ public class NavigateWalkingCard extends Card {
         LinkedHashMap<String, List<String>> walkingDetailedSteps = new LinkedHashMap<>();
         List<String> walkingDetailedStepsChildren = new ArrayList<>();
 
-        card.setTotalDistance(googleRoutesData.getTotalDistance());
-        card.setTotalTime(googleRoutesData.getTotalDuration());
+        String translatedDistance = "";
+
+        if(googleRoutesData.getTotalDistance().contains("km")) {
+            translatedDistance = googleRoutesData.getTotalDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
+        }
+        else if(googleRoutesData.getTotalDistance().contains("m")) {
+            translatedDistance = googleRoutesData.getTotalDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
+        }
+
+        card.setTotalDistance(translatedDistance);
+
+        String translatedDuration = "";
+        String hourTranslate = "";
+        if(!(googleRoutesData.getTotalDuration().contains("hour")) && googleRoutesData.getTotalDuration().contains("mins")) {
+            translatedDuration = googleRoutesData.getTotalDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+        }
+        else if(googleRoutesData.getTotalDuration().contains("hour") && (googleRoutesData.getTotalDuration().contains("mins")|| googleRoutesData.getTotalDuration().contains("min"))) {
+            hourTranslate = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
+
+            if(hourTranslate.contains("mins")) {
+                translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+            }
+            else if(hourTranslate.contains("min")) {
+                translatedDuration = hourTranslate.replace("min", MainActivity.context.getResources().getString(R.string.minute));
+            }
+        }
+        else if(googleRoutesData.getTotalDuration().contains("hours") && (googleRoutesData.getTotalDuration().contains("mins") || googleRoutesData.getTotalDuration().contains("min"))) {
+            hourTranslate = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
+
+            if(hourTranslate.contains("mins")) {
+                translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+            }
+            else if(hourTranslate.contains("min")) {
+                translatedDuration = hourTranslate.replace("min", MainActivity.context.getResources().getString(R.string.minute));
+            }
+        }
+
+        card.setTotalTime(translatedDuration);
         card.setRemark(umbrella);
         String description = "Via " + googleRoutesData.getSummary();
         walkingDescription.add(description);

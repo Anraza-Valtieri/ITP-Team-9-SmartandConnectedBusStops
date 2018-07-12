@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@color/text_shadow_white"
     android:elevation="4dp"
-    android:minHeight="200dp"
+    android:minHeight="250dp"
     android:padding="0dp"
     android:contentInsetStart="0dp"
     app:contentInsetLeft="0dp"
@@ -38,7 +38,7 @@
                 android:backgroundTint="@android:color/white"
                 android:elevation="4dp"
                 android:padding="0dp"
-                app:layout_constraintEnd_toStartOf="@+id/optionButton"
+                app:layout_constraintEnd_toStartOf="@+id/switchButton"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -150,7 +150,7 @@
             </android.support.constraint.ConstraintLayout>
 
             <ImageButton
-                android:id="@+id/optionButton"
+                android:id="@+id/switchButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginBottom="8dp"
@@ -274,6 +274,8 @@
                 android:layout_height="40dp"
                 android:layout_marginBottom="8dp"
                 android:visibility="visible"
+                app:tabBackground="@drawable/tab_background"
+                app:tabIndicatorColor="@android:color/transparent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -281,10 +283,20 @@
 
                 <android.support.design.widget.TabItem
                     android:id="@+id/tabItem"
-                    android:layout_width="200dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:text="Tab2"
+                    android:textColor="@android:color/darker_gray"
+                    android:text="BUS/MRT"
                     android:visibility="visible" />
+
+                <android.support.design.widget.TabItem
+                    android:id="@+id/tabItem2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textColor="@android:color/darker_gray"
+                    android:text="WALKING"
+                    android:visibility="visible" />
+
             </android.support.design.widget.TabLayout>
 
         </android.support.constraint.ConstraintLayout>

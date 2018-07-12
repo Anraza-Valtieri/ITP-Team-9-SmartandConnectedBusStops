@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class SGWeather {
@@ -53,6 +54,8 @@ public class SGWeather {
     private JSONPSIParser psiParser;
     private JSONUVParser uvParser;
     private JSONPM25Parser pm25Parser;
+
+    private HashMap<String, String> locationHashMap = new HashMap<>();
 
     public SGWeather() {
         @SuppressLint("StaticFieldLeak")
@@ -184,6 +187,9 @@ public class SGWeather {
     }
 
     private void updateForecast(){
+
+        populateLocationHashMap();
+
         @SuppressLint("StaticFieldLeak")
         AsyncTask task = new AsyncTask() {
             @Override
@@ -218,16 +224,24 @@ public class SGWeather {
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
 
-                        String translatedForecast = "";
+                        String dayNightForecast = "";
                         if(entry.getForecast().contains("Day")) {
-                            translatedForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.day));
+                            dayNightForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.day));
                         }
                         else if(entry.getForecast().contains("Night")) {
-                            translatedForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.night));
+                            dayNightForecast = entry.getForecast().replace("Night", MainActivity.context.getResources().getString(R.string.night));
+                        }
+
+                        String translatedForecast = "";
+                        if(dayNightForecast.contains("Fair")) {
+                            translatedForecast = dayNightForecast.replace("Fair", MainActivity.context.getResources().getString(R.string.fair));
+                        }
+                        else if(entry.getForecast().contains("Partly Cloudy")) {
+                            translatedForecast = dayNightForecast.replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.partcloudy));
                         }
 
                         setmWeatherForecast(translatedForecast);
-                        setmLocation(entry.getArea());
+                        setmLocation(locationHashMap.get(entry.getArea()));
 //                        Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
@@ -673,6 +687,55 @@ public class SGWeather {
             }
         };
         asyncTask.execute();
+    }
+
+    public void populateLocationHashMap() {
+        locationHashMap.put("Ang Mo Kio", MainActivity.context.getResources().getString(R.string.AngMoKio));
+        locationHashMap.put("Bedok", MainActivity.context.getResources().getString(R.string.Bedok));
+        locationHashMap.put("Bishan", MainActivity.context.getResources().getString(R.string.Bishan));
+        locationHashMap.put("Boon Lay", MainActivity.context.getResources().getString(R.string.BoonLay));
+        locationHashMap.put("Bukit Batok", MainActivity.context.getResources().getString(R.string.BukitBatok));
+        locationHashMap.put("Bukit Merah", MainActivity.context.getResources().getString(R.string.BukitMerah));
+        locationHashMap.put("Bukit Panjang", MainActivity.context.getResources().getString(R.string.BukitPanjang));
+        locationHashMap.put("Bukit Timah", MainActivity.context.getResources().getString(R.string.BukitTimah));
+        locationHashMap.put("Central Water Catchment", MainActivity.context.getResources().getString(R.string.CentralWaterCatchment));
+        locationHashMap.put("Changi", MainActivity.context.getResources().getString(R.string.Changi));
+        locationHashMap.put("Choa Chu Kang", MainActivity.context.getResources().getString(R.string.ChoaChuKang));
+        locationHashMap.put("Clementi", MainActivity.context.getResources().getString(R.string.Clementi));
+        locationHashMap.put("City", MainActivity.context.getResources().getString(R.string.City));
+        locationHashMap.put("Geylang", MainActivity.context.getResources().getString(R.string.Geylang));
+        locationHashMap.put("Hougang", MainActivity.context.getResources().getString(R.string.Hougang));
+        locationHashMap.put("Jalan Bahar", MainActivity.context.getResources().getString(R.string.JalanBahar));
+        locationHashMap.put("Jurong East", MainActivity.context.getResources().getString(R.string.JurongEast));
+        locationHashMap.put("Jurong Island", MainActivity.context.getResources().getString(R.string.JurongIsland));
+        locationHashMap.put("Jurong West", MainActivity.context.getResources().getString(R.string.JurongWest));
+        locationHashMap.put("Kallang", MainActivity.context.getResources().getString(R.string.Kallang));
+        locationHashMap.put("Lim Chu Kang", MainActivity.context.getResources().getString(R.string.LimChuKang));
+        locationHashMap.put("Mandai", MainActivity.context.getResources().getString(R.string.Mandai));
+        locationHashMap.put("Marine Parade", MainActivity.context.getResources().getString(R.string.MarineParade));
+        locationHashMap.put("Pasir Ris", MainActivity.context.getResources().getString(R.string.PasirRis));
+        locationHashMap.put("Paya Lebar", MainActivity.context.getResources().getString(R.string.PayaLebar));
+        locationHashMap.put("Pioneer", MainActivity.context.getResources().getString(R.string.Pioneer));
+        locationHashMap.put("Pulau Tekong", MainActivity.context.getResources().getString(R.string.PulauTekong));
+        locationHashMap.put("Pulau Ubin", MainActivity.context.getResources().getString(R.string.PulauUbin));
+        locationHashMap.put("Punggol", MainActivity.context.getResources().getString(R.string.Punggol));
+        locationHashMap.put("Queenstown", MainActivity.context.getResources().getString(R.string.Queenstown));
+        locationHashMap.put("Seletar", MainActivity.context.getResources().getString(R.string.Seletar));
+        locationHashMap.put("Sembawang", MainActivity.context.getResources().getString(R.string.Sembawang));
+        locationHashMap.put("Sengkang", MainActivity.context.getResources().getString(R.string.Sengkang));
+        locationHashMap.put("Sentosa", MainActivity.context.getResources().getString(R.string.Sentosa));
+        locationHashMap.put("Serangoon", MainActivity.context.getResources().getString(R.string.Serangoon));
+        locationHashMap.put("Southern Islands", MainActivity.context.getResources().getString(R.string.SouthernIslands));
+        locationHashMap.put("Sungei Kadut", MainActivity.context.getResources().getString(R.string.SungeiKadut));
+        locationHashMap.put("Tampines", MainActivity.context.getResources().getString(R.string.Tampines));
+        locationHashMap.put("Tanglin", MainActivity.context.getResources().getString(R.string.Tanglin));
+        locationHashMap.put("Tengah", MainActivity.context.getResources().getString(R.string.Tengah));
+        locationHashMap.put("Toa Payoh", MainActivity.context.getResources().getString(R.string.ToaPayoh));
+        locationHashMap.put("Tuas", MainActivity.context.getResources().getString(R.string.Tuas));
+        locationHashMap.put("Western Islands", MainActivity.context.getResources().getString(R.string.WesternIslands));
+        locationHashMap.put("Western Water Catchment", MainActivity.context.getResources().getString(R.string.WesternWaterCatchment));
+        locationHashMap.put("Woodlands", MainActivity.context.getResources().getString(R.string.Woodlands));
+        locationHashMap.put("Yishun", MainActivity.context.getResources().getString(R.string.Yishun));
     }
 
     public String getmTemperature() {
