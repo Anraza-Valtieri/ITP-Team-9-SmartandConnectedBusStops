@@ -866,7 +866,7 @@ public class MainActivity extends AppCompatActivity
 
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
@@ -1010,14 +1010,14 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.nav_language_preferences:
 
-                final String[] listItems = { "English", "中文", "Bahasa Melayu", "தமிழ்" };
+                final String[] listItems = {"English", "中文", "Bahasa Melayu", "தமிழ்"};
                 AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
                 mBuilder.setTitle("Choose your preferred language");
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
                         saveSelectedItem(option);
-                        switch(option) {
+                        switch (option) {
                             case 0:
                                 //English
                                 setLocale("en");
@@ -1057,7 +1057,6 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onNavigationItemSelected: Settings");
                 break;
         }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -1396,7 +1395,7 @@ public class MainActivity extends AppCompatActivity
                     markerMap.put(value.getDescription(), infoWindowItem);
                     mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+//                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
                             if(card != null) {
                                 card.setType(Card.BUS_STOP_CARD);
@@ -1652,6 +1651,8 @@ public class MainActivity extends AppCompatActivity
             Log.e(TAG, "prepareFavoriteCards: list is empty!");
             return;
         }
+
+        favCardList.clear();
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
@@ -1958,7 +1959,7 @@ public class MainActivity extends AppCompatActivity
 //        ValueAnimator mVaActionBar = null;
         // initialize `mToolbarHeight`
         mToolbarHeight = getSupportActionBar().getHeight();
-        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
+//        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
         if(mToolbarHeight == 0)
             mToolbarHeight = mToolbarHeightBackUp;
 

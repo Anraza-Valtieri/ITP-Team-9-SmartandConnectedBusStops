@@ -6,12 +6,12 @@
     android:layout_height="wrap_content"
     android:background="@color/text_shadow_white"
     android:elevation="4dp"
-    android:minHeight="120dp"
+    android:minHeight="138dp"
     android:theme="?attr/actionBarTheme">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="120dp"
+        android:layout_height="138dp"
         android:gravity="top|bottom|center_vertical|center_horizontal"
         android:orientation="horizontal">
 
@@ -35,9 +35,9 @@
 
                     <AutoCompleteTextView
                         android:id="@+id/textViewStartingPoint"
+                        style="@android:style/Widget.Material.AutoCompleteTextView"
                         android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_marginBottom="8dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:layout_marginTop="8dp"
                         android:ellipsize="end"
@@ -50,15 +50,15 @@
                         android:singleLine="true"
                         android:textColor="@android:color/black"
                         android:textColorHint="@android:color/darker_gray"
-                        app:layout_constraintBottom_toTopOf="@+id/textViewDestination"
                         app:layout_constraintEnd_toStartOf="@+id/optionButton"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <AutoCompleteTextView
                         android:id="@+id/textViewDestination"
+                        style="@android:style/Widget.Material.AutoCompleteTextView"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:ellipsize="end"
                         android:hint="@string/destination"
@@ -70,9 +70,9 @@
                         android:singleLine="true"
                         android:textColor="@android:color/black"
                         android:textColorHint="@android:color/darker_gray"
-                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/searchButton"
-                        app:layout_constraintStart_toStartOf="parent" />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textViewStartingPoint" />
 
                     <ImageButton
                         android:id="@+id/optionButton"
@@ -106,8 +106,17 @@
 
                     <Spinner
                         android:id="@+id/fare_type_spinner"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"></Spinner>
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="32dp"
+                        android:popupTheme="@style/AppTheme"
+                        android:theme="@style/AppTheme"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textViewDestination" />
                 </android.support.constraint.ConstraintLayout>
 
             </LinearLayout>
