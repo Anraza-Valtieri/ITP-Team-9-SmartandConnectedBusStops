@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sit.itp_team_9_smartandconnectedbusstops">
-
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/product_logo_144dp"

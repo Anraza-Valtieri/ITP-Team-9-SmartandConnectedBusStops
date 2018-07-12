@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
                 android:id="@+id/relLayout1"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
@@ -28,8 +28,8 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/chip_shape"
                 android:backgroundTint="@android:color/white"
-                android:elevation="10dp"
-                android:orientation="horizontal"
+                android:elevation="4dp"
+                android:padding="0dp"
                 app:layout_constraintEnd_toStartOf="@+id/optionButton"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -37,16 +37,26 @@
                 <AutoCompleteTextView
                     android:id="@+id/textViewStartingPoint"
                     style="@android:style/Widget.Material.AutoCompleteTextView"
-                    android:layout_width="200dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
                     android:background="@null"
+                    android:hint="@string/destination"
                     android:imeOptions="actionNext"
                     android:inputType="text"
                     android:maxLines="1"
+                    android:minHeight="32dp"
                     android:popupBackground="@android:color/white"
                     android:textColor="#000"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imgBtnStartVoiceSearch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <!--<ImageButton
                             android:id="@+id/imgBtnCancel"
@@ -57,15 +67,18 @@
 
                 <ImageButton
                     android:id="@+id/imgBtnStartVoiceSearch"
-                    android:layout_width="30dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginRight="8dp"
-                    android:background="@null"
-                    android:src="@drawable/ic_voice_search_black_24dp" />
-            </LinearLayout>
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="14dp"
+                    android:background="@color/fui_transparent"
+                    android:elevation="8dp"
+                    android:src="@drawable/ic_voice_search_black_24dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
                 android:id="@+id/relLayout2"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
@@ -75,7 +88,7 @@
                 android:background="@drawable/chip_shape"
                 android:backgroundTint="@android:color/white"
                 android:elevation="10dp"
-                android:orientation="horizontal"
+                android:padding="0dp"
                 app:layout_constraintEnd_toStartOf="@+id/searchButton"
                 app:layout_constraintHorizontal_bias="0.625"
                 app:layout_constraintStart_toStartOf="parent"
@@ -84,17 +97,25 @@
                 <AutoCompleteTextView
                     android:id="@+id/textViewDestination"
                     style="@android:style/Widget.Material.AutoCompleteTextView"
-                    android:layout_width="200dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
                     android:background="@null"
                     android:hint="@string/destination"
                     android:imeOptions="actionNext"
                     android:inputType="text"
                     android:maxLines="1"
+                    android:minHeight="32dp"
                     android:popupBackground="@android:color/white"
                     android:textColor="#000"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imgBtnDestVoiceSearch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <!--<ImageButton
                             android:id="@+id/imgBtnCancel"
@@ -105,13 +126,15 @@
 
                 <ImageButton
                     android:id="@+id/imgBtnDestVoiceSearch"
-                    android:layout_width="30dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginRight="8dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="14dp"
                     android:background="@null"
-                    android:src="@drawable/ic_voice_search_black_24dp" />
-            </LinearLayout>
+                    android:src="@drawable/ic_voice_search_black_24dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/textViewDestination"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textViewDestination" />
+            </android.support.constraint.ConstraintLayout>
 
             <ImageButton
                 android:id="@+id/optionButton"
@@ -120,8 +143,11 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/ic_switch"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="10dp"
                 android:gravity="center_vertical|center_horizontal"
+                android:src="@drawable/ic_swap_vert_black_24dp"
                 app:layout_constraintBottom_toTopOf="@+id/relLayout2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/relLayout1" />
@@ -132,18 +158,22 @@
                 android:layout_height="40dp"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/ic_route_search"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="10dp"
                 android:gravity="center_vertical|center_horizontal"
+                android:src="@drawable/ic_search"
                 app:layout_constraintBottom_toBottomOf="@+id/relLayout2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/relLayout2" />
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
                 android:id="@+id/relLayout3"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/relLayout2">
 
 
@@ -151,28 +181,36 @@
                     android:id="@+id/tvDisplayFares"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
-                    android:text="@string/displayfares" />
+                    android:text="@string/displayfares"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/fare_type_spinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <Spinner
                     android:id="@+id/fare_type_spinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_width="0dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="8dp"
                     android:minHeight="32dp"
                     android:popupTheme="@style/AppTheme"
-                    android:theme="@style/AppTheme" />
+                    android:theme="@style/AppTheme"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvDisplayFares"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/tvDisplayFares"
+                    app:layout_constraintTop_toTopOf="@+id/tvDisplayFares" />
 
-            </LinearLayout>
+            </android.support.constraint.ConstraintLayout>
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
                 android:id="@+id/relLayout4"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.625"
                 app:layout_constraintStart_toStartOf="parent"
@@ -183,22 +221,30 @@
                     android:id="@+id/tvSortBy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
-                    android:text="@string/sortby" />
+                    android:text="@string/sortby"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/sort_by_spinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <Spinner
                     android:id="@+id/sort_by_spinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_width="0dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="8dp"
                     android:minHeight="32dp"
                     android:popupTheme="@style/AppTheme"
-                    android:theme="@style/AppTheme" />
+                    android:theme="@style/AppTheme"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSortBy"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/tvSortBy"
+                    app:layout_constraintTop_toTopOf="@+id/tvSortBy" />
 
-            </LinearLayout>
+            </android.support.constraint.ConstraintLayout>
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/tabLayout"
