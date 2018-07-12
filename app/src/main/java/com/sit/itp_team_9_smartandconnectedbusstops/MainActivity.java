@@ -5,15 +5,19 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -24,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
@@ -137,6 +142,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -258,6 +264,13 @@ public class MainActivity extends AppCompatActivity
     private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
             new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
 
+    //Shared Preference for Language Alert Dialog
+    private static final String SELECTED_ITEM = "SelectedItem";
+    private SharedPreferences sharedPreference;
+    private SharedPreferences.Editor sharedPrefEditor;
+
+    public static Context context = null;
+
     //direction query
     String query;
     String mrtLine;
@@ -278,6 +291,7 @@ public class MainActivity extends AppCompatActivity
         setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
         toolbar = findViewById(R.id.toolbar);
         toolbarNavigate = findViewById(R.id.navigate_toolbar);
         CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(
@@ -387,19 +401,21 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-                            handler.postDelayed(() -> location.setText(sgWeather.getmLocation()),500);
-                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
+
+                            handler.postDelayed(() -> location.setText( sgWeather.getmLocation()),500);
+                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+getString(R.string.degree)),500);
                             handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
                             handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
-                            handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
-                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                            handler.postDelayed(() -> uv.setText(getString(R.string.uvIndex)+": "+sgWeather.getmUV()),500);
                         }else{
                             location.setText("Updating..");
+                            weather.setText("-");
                             temperature.setText("-°C");
                             psi25.setText("PM2.5: -");
                             psi10.setText("PM10: -");
                             uv.setText("UV Index: -");
-                            weather.setText("-");
+
                         }
                     }
 
@@ -990,21 +1006,100 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        /*if (id == R.id.nav_bus) {
-            // Handle the camera action
-        } else if (id == R.id.nav_bus_stops) {
+        switch(id) {
 
-        } else if (id == R.id.nav_trainstations) {
+            case R.id.nav_language_preferences:
 
-        } else */
-        if (id == R.id.nav_about) {
-            Log.d(TAG, "onNavigationItemSelected: About");
-//            this.setTheme(R.style.Theme_AppCompat_NoActionBar);
+                final String[] listItems = {"English", "中文", "Bahasa Melayu", "தமிழ்"};
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+                mBuilder.setTitle("Choose your preferred language");
+                mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int option) {
+                        saveSelectedItem(option);
+                        switch (option) {
+                            case 0:
+                                //English
+                                setLocale("en");
+                                recreate();
+                                break;
+                            case 1:
+                                //chinese
+                                setLocale("zh");
+                                recreate();
+                                break;
+                            case 2:
+                                //malay
+                                setLocale("ms");
+                                recreate();
+                                break;
+                            case 3:
+                                //tamil
+                                setLocale("ta-rSG");
+                                recreate();
+                                break;
+                            default:
+                                break;
+                        }
+
+                        // dismiss alert dialog when language selected
+                        dialog.dismiss();
+                    }
+                });
+
+                AlertDialog mDialog = mBuilder.create();
+                // show alert dialog
+                mDialog.show();
+                break;
+
+            case R.id.nav_about:
+
+                Log.d(TAG, "onNavigationItemSelected: Settings");
+                break;
         }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    // method to localize the language
+    private void setLocale(String lang) {
+        Locale locale = new Locale(lang);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        // save data to Shared Preferences
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", lang);
+        editor.apply();
+    }
+
+    // load language saved in shared preferences
+    public void loadLocale() {
+        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        setLocale(language);
+    }
+
+    //shared preferences method for language alert dialog options
+    private int getSelectedItem() {
+        if (sharedPreference == null) {
+            sharedPreference = PreferenceManager
+                    .getDefaultSharedPreferences(MainActivity.this);
+        }
+        return sharedPreference.getInt(SELECTED_ITEM, -1);
+    }
+
+    //shared preferences method for language alert dialog options
+    private void saveSelectedItem(int item) {
+        if (sharedPreference == null) {
+            sharedPreference = PreferenceManager
+                    .getDefaultSharedPreferences(MainActivity.this);
+        }
+        sharedPrefEditor = sharedPreference.edit();
+        sharedPrefEditor.putInt(SELECTED_ITEM, item);
+        sharedPrefEditor.commit();
     }
 
     @Override

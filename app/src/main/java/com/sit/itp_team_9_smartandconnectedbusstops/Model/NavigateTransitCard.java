@@ -1,5 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class NavigateTransitCard extends Card {
+
     private static final String TAG = NavigateTransitCard.class.getSimpleName();
 
     private final static int CCL_COLOR = Color.argb(249,244, 168, 37);
@@ -403,7 +405,8 @@ public class NavigateTransitCard extends Card {
                         String price = "";
 
                         if(transitDistance > 0.0) {
-                            if(fareTypes.equals("Student")) {
+
+                            if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.student))) {
 
                                 for(int i = 0; i < fareDetails.getStudentFareDistance().size(); i++) {
 
@@ -423,7 +426,7 @@ public class NavigateTransitCard extends Card {
 
                                 }
                             }
-                            else if(fareTypes.equals("Adult")) {
+                            else if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.adult))) {
 
                                 for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
 
@@ -442,7 +445,7 @@ public class NavigateTransitCard extends Card {
                                     }
                                 }
                             }
-                            else if(fareTypes.equals("Senior Citizens")) {
+                            else if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.seniorcitizens))) {
 
                                 for(int i = 0; i < fareDetails.getSeniorFareDistance().size(); i++) {
 
