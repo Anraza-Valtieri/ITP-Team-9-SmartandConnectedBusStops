@@ -341,6 +341,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(uvParser == null) {
                     Log.e(TAG, "updateUV: No data?");
+                    getDataForUV();
                     return null;
                 }
                 List<com.sit.itp_team_9_smartandconnectedbusstops.SGUV.Item> item = uvParser.getItems();
@@ -360,6 +361,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(pm25Parser == null) {
                     Log.e(TAG, "updatePM25: No data?");
+                    getDataForPM25();
                     return null;
                 }
 

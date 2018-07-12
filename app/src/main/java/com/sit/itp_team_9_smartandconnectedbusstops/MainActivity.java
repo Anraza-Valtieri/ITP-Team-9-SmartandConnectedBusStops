@@ -850,7 +850,7 @@ public class MainActivity extends AppCompatActivity
 
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
@@ -998,7 +998,7 @@ public class MainActivity extends AppCompatActivity
 
         } else */
         if (id == R.id.nav_about) {
-            Log.d(TAG, "onNavigationItemSelected: Settings");
+            Log.d(TAG, "onNavigationItemSelected: About");
 //            this.setTheme(R.style.Theme_AppCompat_NoActionBar);
         }
 
