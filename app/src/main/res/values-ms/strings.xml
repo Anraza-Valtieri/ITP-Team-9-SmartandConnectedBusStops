@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
-    <string name="degree">ijazah</string>
+    <string name="degree">Ijazah</string>
     <string name="uvIndex">Indeks uv</string>
     <string name="action_settings">Tetapan</string>
     <string name="default_info_snippet">Tiada tempat dijumpai, kerana kebenaran lokasi dilumpuhkan</string>
@@ -12,7 +12,7 @@
     <string name="transit_error">Tiada laluan yang tersedia</string>
     <string name="language">Bahasa</string>
     <string name="about">" Sekitar"</string>
-    <string name="current_weather">Cuaca semasa</string>
+    <string name="current_weather">Cuaca Semasa</string>
     <string name="directions">Navigasi</string>
     <string name="nearby">Berdekatan</string>
     <string name="favorites">Kegemaran</string>
@@ -68,5 +68,16 @@
     <string name="Punggol">Punggol</string>
     <string name="CentralWaterCatchment"> Central Catchment Area</string>
     <string name="SouthernIslands">Pulau Selatan</string>
+    <string name="displayfares">Tuduhan pameran untuk:</string>
+    <string name="sortby">Isih mengikut:</string>
+    <string name="partcloudy">Sebahagiannya Mendung</string>
+    <string name="fair">Cuaca Yang Adil</string>
+    <string name="hour">jam</string>
+    <string name="minute">minit</string>
+    <string name="hours">jam</string>
+    <string name="minutes">minit</string>
+    <string name="km">km</string>
+    <string name="m">m</string>
+    <string name="walk">Berjalan</string>
 
 </resources>

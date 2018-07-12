@@ -68,4 +68,15 @@
     <string name="PulauTekong">"德光岛 "</string>
     <string name="PulauUbin">"乌敏岛 "</string>
     <string name="Punggol">榜鹅</string>
+    <string name="sortby">排序为：</string>
+    <string name="displayfares">显示票价：</string>
+    <string name="fair">晴朗</string>
+    <string name="partcloudy">部分多云</string>
+    <string name="hour">小时</string>
+    <string name="hours">小时</string>
+    <string name="minute">分钟</string>
+    <string name="minutes">分钟</string>
+    <string name="km">公里</string>
+    <string name="m">米</string>
+    <string name="walk">步行</string>
 </resources>
