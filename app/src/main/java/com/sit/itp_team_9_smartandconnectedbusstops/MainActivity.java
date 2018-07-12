@@ -1035,7 +1035,7 @@ public class MainActivity extends AppCompatActivity
                                 break;
                             case 3:
                                 //tamil
-                                setLocale("ta-rSG");
+                                setLocale("ta");
                                 recreate();
                                 break;
                             default:
