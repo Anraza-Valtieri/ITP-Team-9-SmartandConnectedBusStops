@@ -37,7 +37,7 @@
                 <AutoCompleteTextView
                     android:id="@+id/textViewStartingPoint"
                     style="@android:style/Widget.Material.AutoCompleteTextView"
-                    android:layout_width="240dp"
+                    android:layout_width="200dp"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="10dp"
                     android:background="@null"
@@ -84,11 +84,11 @@
                 <AutoCompleteTextView
                     android:id="@+id/textViewDestination"
                     style="@android:style/Widget.Material.AutoCompleteTextView"
-                    android:layout_width="240dp"
+                    android:layout_width="200dp"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="10dp"
                     android:background="@null"
-                    android:hint="Enter your destionation..."
+                    android:hint="@string/destination"
                     android:imeOptions="actionNext"
                     android:inputType="text"
                     android:maxLines="1"
@@ -151,10 +151,9 @@
                     android:id="@+id/tvDisplayFares"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="16dp"
+                    android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
-                    android:text="@string/displayfares"
-                    android:visibility="visible" />
+                    android:text="@string/displayfares" />
 
                 <Spinner
                     android:id="@+id/fare_type_spinner"
@@ -184,10 +183,9 @@
                     android:id="@+id/tvSortBy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="16dp"
+                    android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
-                    android:text="@string/sortby"
-                    android:visibility="visible" />
+                    android:text="@string/sortby" />
 
                 <Spinner
                     android:id="@+id/sort_by_spinner"
