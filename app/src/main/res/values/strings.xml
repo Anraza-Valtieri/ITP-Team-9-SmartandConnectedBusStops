@@ -57,6 +57,9 @@
     <string name="language">Language Preferences</string>
     <string name="about">About</string>
 
+    <string name="displayfares">Displaying Fares for:</string>
+    <string name="sortby">Sort By:</string>
+
     <string name="AngMoKio">Ang Mo Kio</string>
     <string name="Bedok">Bedok</string>
     <string name="Bishan">Bishan</string>
