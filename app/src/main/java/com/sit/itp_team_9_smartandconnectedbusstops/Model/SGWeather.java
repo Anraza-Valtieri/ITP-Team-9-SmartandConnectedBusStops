@@ -7,6 +7,8 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.JSONPM25Parser;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPSI.Item;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPSI.JSONPSIParser;
@@ -212,7 +214,16 @@ public class SGWeather {
                 Forecasts[] forecasts = readings[0].getForecasts();
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
-                        setmWeatherForecast(entry.getForecast());
+
+                        String translatedForecast = "";
+                        if(entry.getForecast().contains("Day")) {
+                            translatedForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.day));
+                        }
+                        else if(entry.getForecast().contains("Night")) {
+                            translatedForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.night));
+                        }
+
+                        setmWeatherForecast(translatedForecast);
                         setmLocation(entry.getArea());
                         Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
