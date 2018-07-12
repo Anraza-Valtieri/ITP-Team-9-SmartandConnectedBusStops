@@ -147,4 +147,24 @@ public class GoogleRoutesSteps {
         this.numStops = numStops;
     }
 
+    @Override
+    public String toString() {
+        return "GoogleRoutesSteps{" +
+                "steps=" + steps +
+                ", startLocationLat=" + startLocationLat +
+                ", startLocationLng=" + startLocationLng +
+                ", endLocationLat=" + endLocationLat +
+                ", endLocationLng=" + endLocationLng +
+                ", distance='" + distance + '\'' +
+                ", duration='" + duration + '\'' +
+                ", htmlInstructions='" + htmlInstructions + '\'' +
+                ", travelMode='" + travelMode + '\'' +
+                ", detailedSteps=" + detailedSteps +
+                ", trainLine='" + trainLine + '\'' +
+                ", departureStop='" + departureStop + '\'' +
+                ", arrivalStop='" + arrivalStop + '\'' +
+                ", busNum='" + busNum + '\'' +
+                ", numStops=" + numStops +
+                '}';
+    }
 }

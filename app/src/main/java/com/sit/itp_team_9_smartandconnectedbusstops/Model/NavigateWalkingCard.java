@@ -1,5 +1,9 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,6 +13,7 @@ public class NavigateWalkingCard extends Card {
     private int ID;
     private String totalTime;
     private String totalDistance;
+    private String remark;
     private List<String> description;
     private boolean isFavorite;
     private List<String> summary;
@@ -42,6 +47,15 @@ public class NavigateWalkingCard extends Card {
 
     public void setFavorite(boolean favorite) { isFavorite = favorite; }
 
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
     public HashMap<String, List<String>> getDetailedSteps() {
         return detailedSteps;
     }
@@ -58,7 +72,15 @@ public class NavigateWalkingCard extends Card {
         this.description = description;
     }
 
-    public static NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData) {
+    /**
+     * Sets and returns a NavigateWalkingCard card
+     * <p>
+     * This method always returns immediately
+     *
+     * @param googleRoutesData GoogleRoutesData
+     * @return card NavigateWalkingCard
+     */
+    public static NavigateWalkingCard getRouteDataWalking(GoogleRoutesData googleRoutesData, String umbrella) {
         NavigateWalkingCard card = new NavigateWalkingCard();
         card.setType(Card.NAVIGATE_WALKING_CARD);
         List<String> walkingDescription = new ArrayList<>();
@@ -67,6 +89,7 @@ public class NavigateWalkingCard extends Card {
 
         card.setTotalDistance(googleRoutesData.getTotalDistance());
         card.setTotalTime(googleRoutesData.getTotalDuration());
+        card.setRemark(umbrella);
         String description = "Via " + googleRoutesData.getSummary();
         walkingDescription.add(description);
         for (int i = 0; i < googleRoutesData.getSteps().size(); i++){
@@ -74,10 +97,8 @@ public class NavigateWalkingCard extends Card {
         }
         walkingDetailedSteps.put(description,walkingDetailedStepsChildren);
 //        card.setID(googleRoutesData.getID());
-        //Log.i(TAG,"total distance= "+googleRoutesData.getTotalDistance());
         card.setDescription(walkingDescription);
         card.setDetailedSteps(walkingDetailedSteps);
-        //card.setDescription(googleRoutesData.getSteps().get(0).getHtmlInstructions()); //first instruction
         return card;
     }
 }

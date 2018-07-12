@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -63,13 +64,19 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
+    private OnFavoriteClick mOnFavoriteClickListener;
+
+    public void setOnFavoriteClickListener(OnFavoriteClick l) {
+        mOnFavoriteClickListener = l;
+    }
+
     public ArrayList<String> getFavBusStopID() {
         return favBusStopID;
     }
 
-    public void setFavBusStopID(ArrayList<String> favBusStopID) {
-        this.favBusStopID.clear();
-        this.favBusStopID = favBusStopID;
+    public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
+        favBusStopID.clear();
+        favBusStopID = newFavBusStopID;
     }
 
     public ArrayList<Card> getmCard() {
@@ -90,8 +97,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
         this.recyclerView = rv;
-//        updateUI();
-//        mPackageManager = mContext.getPackageManager();
     }
 
     @NonNull
@@ -153,6 +158,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         card.setFavorite(true);
                         favorite.setImageResource(R.drawable.ic_favorite_red);
                         favBusStopID.add(card.getBusStopID());
+                    }
+
+                    if (mOnFavoriteClickListener != null) {
+                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
@@ -357,7 +366,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
         //For navigate transit card
         TextView totalTime;
-        TextView totalDistance;
+        TextView totalDistance, remark;
         TextView cost;
         View breakdownBar;
         TextView startingStation;
@@ -405,6 +414,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             totalDistance = itemView.findViewById(R.id.textViewTotalDistance);
             cost = itemView.findViewById(R.id.textViewCost);
             breakdownBar = itemView.findViewById(R.id.breakdownBar);
+            listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -415,6 +425,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             walkingTime = itemView.findViewById(R.id.textViewWalkingTime);
             walkingDistance = itemView.findViewById(R.id.textViewWalkingDistance);
             listViewDetailedSteps = itemView.findViewById(R.id.listViewDetailedSteps);
+            remark = itemView.findViewById(R.id.textViewRemark);
 
             cardType = type;
         }
@@ -593,10 +604,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             //List<Integer> stationImageStationColor = entry.getValue();
                             Integer stationImage = (Integer) entry.getValue().get(0);
                             Integer stationColor = (Integer) entry.getValue().get(1);
-                            String lineName = null, arrivalStop = null;
-                            if (entry.getValue().size() > 3) {
+                            String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null;
+                            List<String> busStopNames = null;
+                            if (entry.getValue().size() > 4) {
                                 lineName = (String) entry.getValue().get(2);
                                 arrivalStop = (String) entry.getValue().get(3);
+                                timeTakenForEachWaypoint = (String)entry.getValue().get(4);
+                                if (entry.getValue().size() > 5){
+                                    if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
+                                        busStopNames = (List<String>) entry.getValue().get(5);
+                                    }
+                                }
                             }
 
                             LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -633,7 +651,39 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 transitLineBackground.setBackgroundColor(stationColor);
                                 imageViewTransitStation.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
                                 imageViewTransitStation.setImageResource(stationImage);
-                                //TODO set expandable list view
+
+                                //For in between stops (expandable list adapter and listeners)
+                                List<String> inBetweenStopsHeader = new ArrayList<>();
+                                String inBetweenStopsHeaderString = timeTakenForEachWaypoint
+                                        + " (" + cardsTransit.getNumStops() + " "
+                                        + mContext.getString(R.string.stops) +  ")";
+                                Log.i(TAG, inBetweenStopsHeaderString);
+                                inBetweenStopsHeader.add(inBetweenStopsHeaderString);
+                                HashMap<String, List<String>> inBetweenStops = new HashMap<>();
+                                inBetweenStops.put(inBetweenStopsHeaderString,busStopNames);
+
+                                ExpandableListAdapter transitListAdapter = new ExpandableListAdapter(mContext,
+                                        inBetweenStopsHeader,inBetweenStops);
+                                listViewNumStops.setAdapter(transitListAdapter);
+
+                                listViewNumStops.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+                                    @Override
+                                    public void onGroupExpand(int groupPosition) {
+                                        Log.i(TAG,"on group expand");
+                                        Utils.setListViewHeightBasedOnChildren(listViewNumStops);
+                                        listViewNumStops.smoothScrollToPosition(groupPosition);
+
+                                    }
+                                });
+
+                                listViewNumStops.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+                                    @Override
+                                    public void onGroupCollapse(int groupPosition) {
+                                        Log.i(TAG,"on group collapse");
+                                        Utils.setListViewToOriginal(listViewNumStops);
+                                    }
+                                });
                                 Log.i(TAG, "transitStationString=" + key);
                                 transit_layout.addView(to_add_navigate);
                             }
@@ -674,6 +724,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     this.walkingTime.setText(cardsWalking.getTotalTime());
                     String walkingDistance = "( " + cardsWalking.getTotalDistance() +")";
                     this.walkingDistance.setText(walkingDistance);
+                    this.remark.setText(cardsWalking.getRemark());
 
                     //For detailed steps (expandable list adapter and listeners)
                     ExpandableListAdapter walkingListAdapter = new ExpandableListAdapter(mContext,
