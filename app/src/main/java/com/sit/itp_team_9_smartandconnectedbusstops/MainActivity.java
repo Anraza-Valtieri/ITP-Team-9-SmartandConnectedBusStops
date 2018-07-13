@@ -96,8 +96,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -270,6 +268,7 @@ public class MainActivity extends AppCompatActivity
 
     //Navigate
     boolean optionMode = true;
+
 
     //PlaceAutoCompleteAdapter
     private PlaceAutoCompleteAdapter mPlaceAutoCompleteAdapter;
@@ -561,9 +560,10 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-//                        Objects.requireNonNull(getSupportActionBar()).hide();
-                        if(getSupportActionBar().isShowing())
-                            hideActionBar();
+                        if(toolbarNavigate.isShown())
+                            hideActionBar(toolbarNavigate);
+                        if(toolbar.isShown())
+                            hideActionBar(toolbar);
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -572,7 +572,10 @@ public class MainActivity extends AppCompatActivity
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                        hideActionBar();
+                        if(toolbarNavigate.isShown())
+                            hideActionBar(toolbarNavigate);
+                        if(toolbar.isShown())
+                            hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
                     }
                 }
@@ -581,7 +584,6 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-//                    getSupportActionBar().hide();
                 }
             });
         }
@@ -612,7 +614,7 @@ public class MainActivity extends AppCompatActivity
 //                setSupportActionBar(toolbar);
 //                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
 
@@ -630,7 +632,7 @@ public class MainActivity extends AppCompatActivity
                 }
             } else if (id == R.id.action_nav) {
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
 
@@ -660,7 +662,7 @@ public class MainActivity extends AppCompatActivity
                     showKeyboard(startingPointTextView);
                 },600);
 
-                //startingPointTextView.setText("H" + getCurrentAddress());
+                startingPointTextView.setText(convertedAddress);
 
                 handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
 
@@ -746,7 +748,7 @@ public class MainActivity extends AppCompatActivity
 //                setSupportActionBar(toolbar);
 //                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbarNavigate);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
 
@@ -857,6 +859,24 @@ public class MainActivity extends AppCompatActivity
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
                         loadingScreen.setVisibility(View.GONE);
                         bottomNav.setSelectedItemId(R.id.action_fav);
+
+                        Geocoder gc = new Geocoder(getApplicationContext());
+                        try {
+                            Address address = gc.getFromLocation(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(), 1).get(0);
+                            convertedAddress = address.getAddressLine(0);
+                        }
+                        catch(IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }else{
+                    Geocoder gc = new Geocoder(getApplicationContext());
+                    try {
+                        Address address = gc.getFromLocation(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(), 1).get(0);
+                        convertedAddress = address.getAddressLine(0);
+                    }
+                    catch(IOException e) {
+                        e.printStackTrace();
                     }
                 }
                 try {
@@ -914,43 +934,6 @@ public class MainActivity extends AppCompatActivity
 
                 });
         }
-    }
-
-    /**
-     *
-     * method to return the address of the currentLocation
-     */
-    private String getCurrentAddress() {
-
-        try {
-
-            Task location = mFusedLocationClient.getLastLocation();
-
-            location.addOnCompleteListener(new OnCompleteListener() {
-                @Override
-                public void onComplete(@NonNull Task task) {
-                    if (task.isSuccessful()) {
-
-                        Location currentLocation = (Location) task.getResult();
-                        Geocoder gc = new Geocoder(getApplicationContext());
-
-                        try {
-                            Address address = gc.getFromLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), 1).get(0);
-                            convertedAddress = address.getAddressLine(0);
-                        }
-                        catch(IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-
-            return convertedAddress;
-        }
-        catch (SecurityException e) {
-            Log.d(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
-        }
-        return null;
     }
 
     public void stopLocationUpdates() {
@@ -2041,32 +2024,47 @@ public class MainActivity extends AppCompatActivity
 
     int mToolbarHeightBackUp = 0;
     ValueAnimator mVaActionBar2 = null;
-    void hideActionBar() {
+    void hideActionBar(Toolbar bar) {
         // holds the original Toolbar height.
         // this can also be obtained via (an)other method(s)
         int mToolbarHeight = 0;
-        int mAnimDuration = 200/* milliseconds */;
+        int mAnimDuration = 150/* milliseconds */;
 //        ValueAnimator mVaActionBar = null;
         // initialize `mToolbarHeight`
-        mToolbarHeight = getSupportActionBar().getHeight();
+//        mToolbarHeight = getSupportActionBar().getHeight();
 //        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
-        if(mToolbarHeight == 0)
-            mToolbarHeight = mToolbarHeightBackUp;
+
+        if(bar.equals(toolbar)) {
+            Log.d(TAG, "hideActionBar: SHOWN");
+            TypedValue tv = new TypedValue();
+//            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+                mToolbarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            }
+        }
+        else {
+            Log.d(TAG, "hideActionBar: SHOWN2");
+            mToolbarHeight = toolbarNavigate.getMinimumHeight();
+        }
 
         if (mVaActionBar2 != null && mVaActionBar2.isRunning()) {
             // we are already animating a transition - block here
+            Log.d(TAG, "hideActionBar: we are already animating a transition");
             return;
         }
 
         // animate `Toolbar's` height to zero.
+        Log.d(TAG, "hideActionBar1: "+mToolbarHeight);
         mVaActionBar2 = ValueAnimator.ofInt(mToolbarHeight , 0);
         mVaActionBar2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 // update LayoutParams
-                ((CoordinatorLayout.LayoutParams)toolbar.getLayoutParams()).height
+
+                ((CoordinatorLayout.LayoutParams)bar.getLayoutParams()).height
                         = (Integer)animation.getAnimatedValue();
-                toolbar.requestLayout();
+                Log.d(TAG, "hideActionBar2: "+bar.getLayoutParams().height);
+                bar.requestLayout();
             }
         });
 
@@ -2074,7 +2072,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-
                 if (getSupportActionBar() != null) { // sanity check
                     getSupportActionBar().hide();
                 }
@@ -2103,11 +2100,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         else {
-            if (bar.getHeight() == 0)
-                mToolbarHeight = bar.getMinimumHeight();
-            else
-                mToolbarHeight = bar.getHeight();
-
+            mToolbarHeight = toolbarNavigate.getMinimumHeight();
             mToolbarHeightBackUp = mToolbarHeight;
         }
 

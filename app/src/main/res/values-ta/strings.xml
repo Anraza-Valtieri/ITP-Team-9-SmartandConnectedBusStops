@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="degree">பட்டம்</string>
     <string name="uvIndex">uv குறியீட்டு</string>
     <string name="action_settings">அமைப்புகளை</string>
