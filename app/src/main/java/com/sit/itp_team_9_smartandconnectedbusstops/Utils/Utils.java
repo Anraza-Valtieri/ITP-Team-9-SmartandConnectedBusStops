@@ -9,12 +9,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v7.widget.CardView;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,25 +97,25 @@ public class Utils {
 
                 long relativetime = apptTime - currentTime;
                 if(TimeUnit.MILLISECONDS.toHours(relativetime) > 0){
-                    String text = String.format(Locale.getDefault(), "%02d H %02d mins",
+                    String text = String.format(Locale.getDefault(), "%02d "+ MainActivity.context.getResources().getString(R.string.hour)+" %02d "+MainActivity.context.getResources().getString(R.string.minute),
                             TimeUnit.MILLISECONDS.toHours(relativetime),
                             TimeUnit.MILLISECONDS.toMinutes(relativetime));
                     return text;
                 }
                 if(TimeUnit.MILLISECONDS.toMinutes(relativetime) > 0){
-                    String text = String.format(Locale.getDefault(), "%02d mins",
+                    String text = String.format(Locale.getDefault(), "%02d "+MainActivity.context.getResources().getString(R.string.minute),
                             TimeUnit.MILLISECONDS.toMinutes(relativetime));
                     return text;
                 }
 
                 if(TimeUnit.MILLISECONDS.toSeconds(relativetime) > 20){
-                    String text = String.format(Locale.getDefault(), "%02d secs",
+                    String text = String.format(Locale.getDefault(), "%02d "+MainActivity.context.getResources().getString(R.string.secs),
                             TimeUnit.MILLISECONDS.toSeconds(relativetime));
                     return text;
                 }
 
                 if(TimeUnit.MILLISECONDS.toSeconds(relativetime) < 20){
-                    String text = String.format(Locale.getDefault(), "Arriving");
+                    String text = String.format(Locale.getDefault(), ""+MainActivity.context.getResources().getString(R.string.arriving));
                     return text;
                 }
 //                CharSequence relativetime = DateUtils.getRelativeTimeSpanString(apptTime,
