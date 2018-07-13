@@ -260,7 +260,7 @@ public class Utils {
         }
 
         ViewGroup.LayoutParams paramsToSet = listView.getLayoutParams();
-        paramsToSet.height = 50; //TODO change hardcoded height
+        paramsToSet.height = 55; //TODO change hardcoded height
         listView.setLayoutParams(paramsToSet);
         listView.requestLayout();
 
