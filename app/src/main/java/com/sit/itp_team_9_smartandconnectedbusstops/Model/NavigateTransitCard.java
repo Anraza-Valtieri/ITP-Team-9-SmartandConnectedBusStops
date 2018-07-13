@@ -46,7 +46,7 @@ public class NavigateTransitCard extends Card {
     private String startingStationTimeTaken;
     private int imageViewStartingStation;
     private int imageViewStartingStationColor;
-    private static String departureStationCode;
+    private String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
     private List<String> polyLines;
@@ -173,7 +173,7 @@ public class NavigateTransitCard extends Card {
         this.transitStations = transitStations;
     }*/
 
-    public static String getDepartureStationCode() {
+    public String getDepartureStationCode() {
         return departureStationCode;
     }
 
@@ -259,7 +259,6 @@ public class NavigateTransitCard extends Card {
                             //train, lrt and bus
                             String trainLine = routeSteps.get(i).getTrainLine();
                             String lineName = null;
-                            card.setNumStops(String.valueOf(routeSteps.get(i).getNumStops()));
                             int imageViewTransit;
                             int imageViewColor;
                             if (trainLine != null) {
@@ -312,6 +311,7 @@ public class NavigateTransitCard extends Card {
                                 stationDetails.add(imageViewTransit);
                                 stationDetails.add(imageViewColor);
                                 stationDetails.add(lineName); //line name is bus num
+                                stationDetails.add(routeSteps.get(i).getNumStops());
 
                                 //get in between bus stops
                                 List<String> busStopNames = new ArrayList<>();
@@ -319,84 +319,102 @@ public class NavigateTransitCard extends Card {
                                 if (imageViewTransit == R.drawable.ic_directions_bus_black_24dp) {
                                     Log.i(TAG,"is this a bus?");
 
-                                    //get departure stop's code
-                                    Map<String, String> allBusByIdMap = MainActivity.allBusByID;
+                                    //bus stop code: get departure stop's code
+                                    Map<String, String> allBusStopsByIdMap = MainActivity.allBusByID; //bus stop IDs
+                                    List<String> departureBusStopCodeList = new ArrayList<>(); //names are not unique
+                                    List<String> arrivalBusStopCodeList = new ArrayList<>();
                                     String departureBusStopCode = null, arrivalBusStopCode = null;
-                                    for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
+                                    for (Map.Entry<String, String> entry : allBusStopsByIdMap.entrySet()) {
                                         String busStopIDCode = entry.getKey();
-                                        Log.i(TAG,"busStopIDCode "+busStopIDCode);
+                                        //Log.i(TAG,"busStopIDCode "+busStopIDCode);
                                         String busStopName = entry.getValue();
                                         //Log.i(TAG,"busStopName "+busStopName);
-                                        if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
-                                            departureBusStopCode = busStopIDCode;
-                                            Log.i(TAG,"departure code "+ departureBusStopCode);
-                                        } else if (busStopName.equals(routeSteps.get(i).getArrivalStop())){
-                                            arrivalBusStopCode = busStopIDCode;
-                                            Log.i(TAG,"departure code "+ arrivalBusStopCode);
+                                        if (routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
+                                            //departureBusStopCode = busStopIDCode;
+                                            departureBusStopCodeList.add(busStopIDCode);
+                                            Log.i(TAG,"departure code list "+ departureBusStopCodeList);
+                                        }
+                                        if (routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
+                                            //arrivalBusStopCode = busStopIDCode;
+                                            arrivalBusStopCodeList.add(busStopIDCode);
+                                            Log.i(TAG,"arrival code list"+ arrivalBusStopCodeList);
                                         }
                                     }
 
-                                    //go into linkedlist to get the next X stops
-                                    List<String> busStopCodes = new ArrayList<>();
+                                    //bus route
                                     JSONLTABusRoute busRoute = new JSONLTABusRoute();
                                     Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
+                                    List<String> inBetweenBusStopCodes = new ArrayList<>();
                                     //Log.i(TAG,"busMap? " + busMap);
                                     for (Map.Entry<String, LinkedList<Value>> busMapEntry : busMap.entrySet()) {
                                         String busServiceNumber = busMapEntry.getKey();
                                         LinkedList<Value> busMapValue = busMapEntry.getValue();
-                                        if (busServiceNumber.equals(lineName)) {
-                                            //get direction from departureStop Value
-                                            for (int busMapIndex = 0; busMapIndex < busMapValue.size(); busMapIndex++) {
-                                                //int stopSequence = busMapValue.get(busMapIndex).getStopSequence();
-                                                //Log.i(TAG,"stopSequence: "+ stopSequence);
-                                                //LinkedList<Value> busValue = busMap.get(lineName);
-                                                if (busMapValue.get(busMapIndex).getBusStopCode().equals(departureBusStopCode)) {
-                                                    //if departure stop is found, save the next X num of stops
-                                                    int departureStopDirection = busMapValue.get(busMapIndex).getDirection();
-                                                    int numStopInt = Integer.parseInt(card.getNumStops());
-                                                    for (int k = 1; k < Integer.parseInt(card.getNumStops()); k++){
-                                                        int direction = busMapValue.get(busMapIndex+k).getDirection();
-                                                        if (direction == departureStopDirection){
-                                                            busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
-                                                            //add until arrivalStop
-                                                        }else{
-                                                            //error?
-                                                        }
-                                                    }
-                                                    /*if ((busMapIndex+numStopInt) < busMapValue.size()
-                                                            && busMapValue.get(busMapIndex+numStopInt)
-                                                            .getBusStopCode().equals(arrivalBusStopCode)) {
-                                                        //if arrivalStop is found before end of busMapValue
-                                                        for (int k = 1; k < Integer.parseInt(card.getNumStops()); k++) {
-                                                            busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
-                                                            Log.i(TAG,"+k = "+(busMapIndex+k));
+                                        //int departureBusStopDirection = 0, arrivalBusStopDirection = 0;
+                                        if (busServiceNumber.equalsIgnoreCase(lineName)) {
+                                            //if found the correct bus service no.
+                                            Log.i(TAG,"found the correct bus num!");
+                                            Log.i(TAG,busMapValue.toString());
+
+                                            OUTER_LOOP:
+                                            for (int j = 0; j < busMapValue.size(); j++) {
+                                                //loop through the bus service's bus stops (going through the bus route)
+                                                for (String potentialDepartureBusStopCode : departureBusStopCodeList) {
+                                                    for (String potentialArrivalBusStopCode : arrivalBusStopCodeList) {
+                                                        Log.i(TAG,"departure, arrival codes: "
+                                                                + potentialDepartureBusStopCode
+                                                                + " " + potentialArrivalBusStopCode);
+                                                        if (busMapValue.get(j).getBusStopCode()
+                                                                .equals(potentialArrivalBusStopCode)){
+                                                            Log.i(TAG, "ONLY NEED ARRIVAL");
+                                                            int arrivalBusDirection =
+                                                                    busMapValue.get(j).getDirection();
+                                                            if (busMapValue.get(j - routeSteps.get(i)
+                                                                    .getNumStops()) != null
+                                                                    && busMapValue.get(j - routeSteps.get(i).getNumStops())
+                                                                    .getDirection() == arrivalBusDirection) {
+                                                                for (int k = (routeSteps.get(i).getNumStops()-1); k > 0; k--) {
+                                                                    inBetweenBusStopCodes.add
+                                                                            (busMapValue.get(j - k).getBusStopCode());
+                                                                    Log.i(TAG, "inBetweenBusStopCodes"
+                                                                            + inBetweenBusStopCodes);
+                                                                }
+                                                                break OUTER_LOOP;
+                                                            }
 
                                                         }
-                                                    }/*else{
-                                                        for (int k = 1; k < numStopInt; k++) {
-                                                            busStopCodes.add(busMapValue.get(busMapIndex-k).getBusStopCode());
-                                                            Log.i(TAG,"-k = "+(busMapIndex-k));
+                                                    }
+                                                    Log.i(TAG,"no arrival");
+                                                    //only departureBusStopCode found
+                                                    if (busMapValue.get(j).getBusStopCode()
+                                                            .equals(potentialDepartureBusStopCode)){
+                                                        Log.i(TAG, "ONLY NEED DEPARTURE");
+                                                        int departureBusDirection = busMapValue.get(j).getDirection();
+                                                        if (busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
+                                                                && busMapValue.get(j + routeSteps.get(i).getNumStops())
+                                                                .getDirection() == departureBusDirection )
+                                                        {
+                                                            //if arrival stop is not null
+                                                            // and direction of stops match
+                                                            for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
+                                                                inBetweenBusStopCodes.add(busMapValue
+                                                                        .get(j + k).getBusStopCode());
+                                                                Log.i(TAG, "inBetweenBusStopCodes"
+                                                                        + inBetweenBusStopCodes);
+                                                            }
+                                                            break OUTER_LOOP;
                                                         }
-                                                        //busStopCodes.add(busMapValue.get(busMapIndex+k).getBusStopCode());
-                                                        Log.i(TAG,"numStops="+card.getNumStops());
-                                                        Log.i(TAG,"busMapValue = "+busMapValue.size());
-                                                        //TODO sometimes Index out of bounds exception: direction?
-                                                        //TODO busRoute cannot be static
-                                                        //check for arrivalStop, if null, use direction 2?
-                                                        //Log.d(TAG, "busStopCodes:" + busStopCodes);
-                                                    }*/
+
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-
-                                    //get bus stop names
-                                    for (int k = 0; k < busStopCodes.size(); k++){
+                                    for (int j = 0; j < inBetweenBusStopCodes.size(); j++) {
                                         //Find names of all in busStopCodes
                                         // Key: Bus stop ID Value: Bus stop name
-                                        String busStopName = allBusByIdMap.get(busStopCodes.get(k));
+                                        String busStopName = allBusStopsByIdMap.get(inBetweenBusStopCodes.get(j));
                                         busStopNames.add(busStopName);
-                                        Log.i(TAG,"Bus stop name (add 1): "+busStopName);
+                                        Log.i(TAG, "Bus stop name (add 1): " + busStopName);
                                     }
                                 }else{
                                     //train stations
