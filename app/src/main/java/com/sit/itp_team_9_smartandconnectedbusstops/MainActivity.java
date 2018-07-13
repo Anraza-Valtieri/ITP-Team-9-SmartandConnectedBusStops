@@ -219,6 +219,8 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
+    public ArrayList<String> favRoute = new ArrayList<>();
+
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
@@ -568,6 +570,7 @@ public class MainActivity extends AppCompatActivity
         adapter.doAutoRefresh();
 
         adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
+        adapter.setOnFavoriteClickListener(favRoute -> setFavRoute(favRoute));
 
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
@@ -609,12 +612,13 @@ public class MainActivity extends AppCompatActivity
 
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-                if (favBusStopID.size() > 0) {
+                if (favBusStopID.size() > 0 || favRoute.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
                     handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
+
             } else if (id == R.id.action_nav) {
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
                     hideActionBar();
@@ -1235,6 +1239,9 @@ public class MainActivity extends AppCompatActivity
         return favBusStopID;
     }
 
+    public ArrayList<String> getFavRoute() {
+        return favRoute;
+    }
     /**
      * Sets up favoritecards from list
      * <p>
@@ -1246,6 +1253,13 @@ public class MainActivity extends AppCompatActivity
         this.favCardList.clear();
         this.favBusStopID = favBusStopID;
         userData.setFavBusStopID(favBusStopID);
+        db.collection("user").document(UUIDStr).set(userData);
+    }
+
+    public void setFavRoute(ArrayList<String> favRoute) {
+        this.favCardList.clear();
+        this.favRoute = favRoute;
+        userData.setFavRoute(favRoute);
         db.collection("user").document(UUIDStr).set(userData);
     }
 
@@ -1266,8 +1280,10 @@ public class MainActivity extends AppCompatActivity
                     userData = document.toObject(UserData.class);
                     if (userData != null) {
                         favBusStopID = userData.getFavBusStopID();
+                        favRoute = userData.getFavRoute();
                     }
                     adapter.setFavBusStopID(favBusStopID);
+                    adapter.setFavRoute(favRoute);
 
 //                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
@@ -1453,6 +1469,7 @@ public class MainActivity extends AppCompatActivity
             result.setFavorite(true);
         else
             result.setFavorite(false);
+
 
         // Pull bus stop data
         List<String> urlsList = new ArrayList<>();
@@ -1929,7 +1946,6 @@ public class MainActivity extends AppCompatActivity
                     Double endLng = routeSteps.get(i).getEndLocationLng();
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
-                    Log.d("DISTANCEMATRIX", "query");
                     pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
                 }
             }

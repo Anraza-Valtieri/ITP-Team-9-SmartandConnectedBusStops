@@ -77,6 +77,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                         buffer.append(line + "\n");
                     }
                     JSONObject response1 = new JSONObject(buffer.toString());
+                    JSONArray jsonGeo = response1.getJSONArray("geocoded_waypoints");
                     JSONArray jsonArray = response1.getJSONArray("routes");
                     Log.i(TAG, "jsonArray");
                     if(response1.getString("status").equals("OK")) {
@@ -84,6 +85,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
                             GoogleRoutesData entry = new GoogleRoutesData();
+                            entry.setStartPlaceId(jsonGeo.getJSONObject(0).getString("place_id"));
+                            entry.setEndPlaceId(jsonGeo.getJSONObject(1).getString("place_id"));
+                            Log.d("PLACE ID ----", jsonGeo.getJSONObject(0).getString("place_id") + " " + jsonGeo.getJSONObject(1).getString("place_id"));
+
                             entry.setID(i);
                             entry.setCopyrights(obj.getString("copyrights"));
                             entry.setWarnings(obj.getJSONArray("warnings"));

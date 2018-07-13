@@ -51,6 +51,8 @@ public class NavigateTransitCard extends Card {
     private String numStops;
     private List<String> inBetweenStops;
     private boolean isFavorite;
+    private String placeidStart, placeidEnd, routeID;
+    public ArrayList<String> favRoute = new ArrayList<>();
     //private List<String> transitStations;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
                                                         // lineName(string), arrivalStop (string)>
@@ -201,6 +203,30 @@ public class NavigateTransitCard extends Card {
         return condition;
     }
 
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
+    }
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -226,7 +252,13 @@ public class NavigateTransitCard extends Card {
                 NavigateTransitCard card = new NavigateTransitCard();
                 card.setType(Card.NAVIGATE_TRANSIT_CARD);
                 if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
+                    Log.d("ROUTE ID" , "-------- " + googleRoutesData.getID());
                     card.setID(googleRoutesData.getID());
+                    card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+                    card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+                    String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID();
+                    Log.d("STRING ROUTE ID" , "-------- " + routeID);
+                    card.setRouteID(routeID);
                     card.setTotalDistance(googleRoutesData.getTotalDistance());
                     card.setTotalTime(googleRoutesData.getTotalDuration());
                     card.setCondition(trafCon);
