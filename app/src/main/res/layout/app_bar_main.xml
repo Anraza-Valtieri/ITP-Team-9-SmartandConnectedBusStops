@@ -62,6 +62,19 @@
         android:background="#77424242"
         android:visibility="invisible" />
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        android:clickable="true"
+        android:focusable="auto"
+        app:backgroundTint="@android:color/white"
+        app:elevation="12dp"
+        app:layout_anchor="@+id/cardView"
+        app:layout_anchorGravity="top|center"
+        card_view:srcCompat="@drawable/ic_my_location_black_36dp" />
+
     <FrameLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
@@ -106,7 +119,7 @@
         android:layout_gravity="bottom"
         android:backgroundTint="@android:color/transparent"
         android:foreground="?android:attr/selectableItemBackground"
-        card_view:cardElevation="40dp">
+        app:cardElevation="8dp">
 
         <FrameLayout
             android:id="@+id/bottombar"

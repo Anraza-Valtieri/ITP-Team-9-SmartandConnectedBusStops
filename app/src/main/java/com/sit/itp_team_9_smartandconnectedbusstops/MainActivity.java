@@ -39,6 +39,7 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -60,6 +61,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
@@ -269,6 +271,8 @@ public class MainActivity extends AppCompatActivity
     //Navigate
     boolean optionMode = true;
 
+    FloatingActionButton fab;
+
 
     //PlaceAutoCompleteAdapter
     private PlaceAutoCompleteAdapter mPlaceAutoCompleteAdapter;
@@ -457,6 +461,43 @@ public class MainActivity extends AppCompatActivity
                 }
         );
 
+        fab = findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                @SuppressLint("StaticFieldLeak")
+                AsyncTask asyncTask = new AsyncTask() {
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        if(mCurrentLocation == null)
+                            return;
+                    }
+
+                    @Override
+                    protected Object doInBackground(Object[] objects) {
+                        if(mCurrentLocation == null)
+                            return null;
+
+                        return new CameraPosition.Builder()
+                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();
+                    }
+
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        super.onPostExecute(o);
+                        if(o != null)
+                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
+                    }
+                };
+
+                asyncTask.execute();
+            }
+        });
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -564,6 +605,7 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
+                        fab.hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -571,12 +613,14 @@ public class MainActivity extends AppCompatActivity
                         if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
+                        fab.show();
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         if(toolbarNavigate.isShown())
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        fab.hide();
                     }
                 }
 
@@ -584,6 +628,8 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
+                    fab.hide();
+//                    fab.setSize(1-(int)slideOffset);
                 }
             });
         }
