@@ -13,10 +13,31 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:layout_marginTop="28dp"
-        android:background="#64020202"
+        android:background="@android:color/white"
         android:elevation="4dp"
-        app:popupTheme="@style/AppTheme.PopupOverlay" />
+        android:textAlignment="center"
+        android:theme="@android:style/Widget.Material.Toolbar"
+        app:layout_anchor="@+id/include2"
+        app:layout_anchorGravity="right|top"
+        app:popupTheme="@style/AppTheme.PopupOverlay"
+        app:titleTextColor="@android:color/black">
+
+        <TextView
+            style="@style/TextAppearance.AppCompat.Widget.ActionBar.Subtitle"
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textStyle="bold"
+            android:contentInsetStart="0dp"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center"
+            app:contentInsetStart="0dp"
+            />
+
+    </android.support.v7.widget.Toolbar>
+
 
     <include
         android:id="@+id/navigate_toolbar"
@@ -25,7 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
         android:elevation="4dp"
-        android:visibility="gone"></include>
+        android:visibility="gone" />
 
     <include
         android:id="@+id/include2"
@@ -67,12 +88,14 @@
     </FrameLayout>
 
     <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
         android:id="@+id/progressBar"
-        style="@android:style/Widget.DeviceDefault.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:layout_gravity="top|center_vertical|center"
         android:indeterminate="true"
+        android:padding="0dp"
+        android:progressBackgroundTint="@color/fui_bgEmail"
         android:visibility="invisible"
         app:layout_anchor="@id/bottom_navigation" />
 
@@ -82,6 +105,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:backgroundTint="@android:color/transparent"
+        android:foreground="?android:attr/selectableItemBackground"
         card_view:cardElevation="40dp">
 
         <FrameLayout

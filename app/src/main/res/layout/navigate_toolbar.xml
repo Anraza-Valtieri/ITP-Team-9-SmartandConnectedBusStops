@@ -1,128 +1,310 @@
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/toolbar_navigate"
+    android:id="@+id/new_toolbar_navigate"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/text_shadow_white"
+    android:contentInsetStart="0dp"
     android:elevation="4dp"
-    android:minHeight="138dp"
-    android:theme="?attr/actionBarTheme">
+    android:minHeight="230dp"
+    android:padding="0dp"
+    android:theme="@style/AppTheme.NoActionBar"
+    app:contentInsetLeft="0dp"
+    app:contentInsetStart="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="138dp"
+        android:layout_height="wrap_content"
+        android:contentInsetStart="0dp"
         android:gravity="top|bottom|center_vertical|center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="0dp"
+        app:contentInsetLeft="0dp"
+        app:contentInsetStart="0dp">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/relLayout1"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:gravity="top|left"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="4dp"
+                android:padding="0dp"
+                app:layout_constraintEnd_toStartOf="@+id/switchButton"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <android.support.constraint.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                <AutoCompleteTextView
+                    android:id="@+id/textViewStartingPoint"
+                    style="@android:style/Widget.Material.AutoCompleteTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/transparent"
+                    android:dropDownWidth="match_parent"
+                    android:hint="@string/starting_point"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textPostalAddress"
+                    android:maxLines="1"
+                    android:minHeight="32dp"
+                    android:popupBackground="@android:color/white"
+                    android:textColor="#000"
+                    android:textColorHint="@android:color/darker_gray"
+                    android:textSize="15sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imgBtnStartVoiceSearch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <AutoCompleteTextView
-                        android:id="@+id/textViewStartingPoint"
-                        style="@android:style/Widget.Material.AutoCompleteTextView"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="8dp"
-                        android:ellipsize="end"
-                        android:hint="@string/starting_point"
-                        android:imeOptions="actionNext"
-                        android:inputType="text|textPostalAddress"
-                        android:maxEms="15"
-                        android:maxLines="1"
-                        android:popupBackground="@android:color/white"
-                        android:singleLine="true"
-                        android:textColor="@android:color/black"
-                        android:textColorHint="@android:color/darker_gray"
-                        app:layout_constraintEnd_toStartOf="@+id/optionButton"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                <!--<ImageButton
+                            android:id="@+id/imgBtnCancel"
+                            android:layout_width="30dp"
+                            android:layout_height="match_parent"
+                            android:background="@null"
+                            android:src="@drawable/ic_cancel" />-->
 
-                    <AutoCompleteTextView
-                        android:id="@+id/textViewDestination"
-                        style="@android:style/Widget.Material.AutoCompleteTextView"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:ellipsize="end"
-                        android:hint="@string/destination"
-                        android:imeOptions="actionSearch"
-                        android:inputType="text|textPostalAddress"
-                        android:maxEms="15"
-                        android:maxLines="1"
-                        android:popupBackground="@android:color/white"
-                        android:singleLine="true"
-                        android:textColor="@android:color/black"
-                        android:textColorHint="@android:color/darker_gray"
-                        app:layout_constraintEnd_toStartOf="@+id/searchButton"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textViewStartingPoint" />
+                <ImageButton
+                    android:id="@+id/imgBtnStartVoiceSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="14dp"
+                    android:background="@color/fui_transparent"
+                    android:elevation="8dp"
+                    android:src="@drawable/ic_voice_search_black_24dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
 
-                    <ImageButton
-                        android:id="@+id/optionButton"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ic_directions_bus_black_24dp"
-                        android:gravity="center_vertical|center_horizontal"
-                        app:layout_constraintBottom_toBottomOf="@+id/textViewStartingPoint"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@+id/textViewStartingPoint" />
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/relLayout2"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="4dp"
+                android:padding="0dp"
+                app:layout_constraintEnd_toStartOf="@+id/searchButton"
+                app:layout_constraintHorizontal_bias="0.625"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/relLayout1">
 
-                    <ImageButton
-                        android:id="@+id/searchButton"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_weight="1"
-                        android:backgroundTint="@color/fui_transparent"
-                        android:gravity="top"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="@+id/textViewDestination"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@+id/textViewDestination"
-                        app:srcCompat="@drawable/ic_search" />
+                <AutoCompleteTextView
+                    android:id="@+id/textViewDestination"
+                    style="@android:style/Widget.Material.AutoCompleteTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@android:color/transparent"
+                    android:dropDownWidth="match_parent"
+                    android:hint="@string/destination"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text|textPostalAddress"
+                    android:maxLines="1"
+                    android:minHeight="32dp"
+                    android:popupBackground="@android:color/white"
+                    android:textColor="#000"
+                    android:textColorHint="@android:color/darker_gray"
+                    android:textSize="15sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imgBtnDestVoiceSearch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <Spinner
-                        android:id="@+id/fare_type_spinner"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:layout_marginTop="8dp"
-                        android:minHeight="32dp"
-                        android:popupTheme="@style/AppTheme"
-                        android:theme="@style/AppTheme"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textViewDestination" />
-                </android.support.constraint.ConstraintLayout>
+                <!--<ImageButton
+                            android:id="@+id/imgBtnCancel"
+                            android:layout_width="30dp"
+                            android:layout_height="match_parent"
+                            android:background="@null"
+                            android:src="@drawable/ic_cancel" />-->
 
-            </LinearLayout>
+                <ImageButton
+                    android:id="@+id/imgBtnDestVoiceSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="14dp"
+                    android:background="@null"
+                    android:src="@drawable/ic_voice_search_black_24dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/textViewDestination"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textViewDestination" />
+            </android.support.constraint.ConstraintLayout>
+
+            <ImageButton
+                android:id="@+id/switchButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="6dp"
+                android:gravity="center_vertical|center_horizontal"
+                android:src="@drawable/ic_swap_vert_black_24dp"
+                app:layout_constraintBottom_toTopOf="@+id/relLayout2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/relLayout1" />
+
+            <ImageButton
+                android:id="@+id/searchButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/chip_shape"
+                android:backgroundTint="@android:color/white"
+                android:elevation="6dp"
+                android:gravity="center_vertical|center_horizontal"
+                android:src="@drawable/ic_search_black_24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/relLayout2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/relLayout2" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/relLayout3"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/relLayout2">
+
+
+                <TextView
+                    android:id="@+id/tvDisplayFares"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/displayfares"
+                    android:textColor="@android:color/darker_gray"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/fare_type_spinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Spinner
+                    android:id="@+id/fare_type_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="8dp"
+                    android:minHeight="32dp"
+                    android:outlineProvider="bounds"
+                    android:popupTheme="@style/AppTheme"
+                    android:theme="@style/AppTheme"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvDisplayFares"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/tvDisplayFares"
+                    app:layout_constraintTop_toTopOf="@+id/tvDisplayFares" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/relLayout4"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.625"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/relLayout3">
+
+
+                <TextView
+                    android:id="@+id/tvSortBy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sortby"
+                    android:textColor="@android:color/darker_gray"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/sort_by_spinner"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Spinner
+                    android:id="@+id/sort_by_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="8dp"
+                    android:minHeight="32dp"
+                    android:popupTheme="@style/AppTheme"
+                    android:theme="@style/AppTheme"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSortBy"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/tvSortBy"
+                    app:layout_constraintTop_toTopOf="@+id/tvSortBy" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:theme="@style/AppTheme.NoActionBar"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/relLayout4"
+                app:tabBackground="@drawable/tab_background"
+                app:tabIndicatorColor="@android:color/transparent"
+                app:tabSelectedTextColor="@android:color/white">
+
+                <android.support.design.widget.TabItem
+                    android:id="@+id/tabItem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Public Transport"
+                    android:textColor="@android:color/darker_gray"
+                    android:theme="@style/AppTheme.NoActionBar"
+                    android:visibility="visible" />
+
+                <android.support.design.widget.TabItem
+                    android:id="@+id/tabItem2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Walking"
+                    android:textColor="@android:color/darker_gray"
+                    android:visibility="visible" />
+
+            </android.support.design.widget.TabLayout>
 
         </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>
-</android.support.v7.widget.Toolbar>
 
+</android.support.v7.widget.Toolbar>
