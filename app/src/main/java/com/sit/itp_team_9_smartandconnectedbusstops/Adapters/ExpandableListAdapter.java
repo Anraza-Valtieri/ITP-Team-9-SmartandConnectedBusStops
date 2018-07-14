@@ -1,7 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
 import android.content.Context;
-import android.support.v7.widget.CardView;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +11,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
-import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.HashMap;
 import java.util.List;

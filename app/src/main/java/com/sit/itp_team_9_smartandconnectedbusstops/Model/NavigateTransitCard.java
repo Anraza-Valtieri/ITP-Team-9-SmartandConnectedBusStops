@@ -264,6 +264,18 @@ public class NavigateTransitCard extends Card {
                             int imageViewWalking = R.drawable.ic_baseline_directions_walk_24px;
                             walkingDetails.add(imageViewWalking);
                             walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
+                            walkingDetails.add(null);
+
+                            //get detailed walking steps
+                            List<String> walkingDetailedStepsChildren = new ArrayList<>();
+                            for (int j = 0; j < routeSteps.get(i).getDetailedSteps().size(); j++){
+                                walkingDetailedStepsChildren.add(routeSteps.get(i).getDetailedSteps().get(j).getHtmlInstructions());
+                            }
+                            for (int j = 3; j < 5; j++) {
+                                walkingDetails.add(j,null);
+                            }
+                            walkingDetails.add(5,routeSteps.get(i).getDuration());
+                            walkingDetails.add(6,walkingDetailedStepsChildren);
                             transitStations.put(routeSteps.get(i).getDistance(),walkingDetails);
                             break;
 
@@ -376,7 +388,8 @@ public class NavigateTransitCard extends Card {
                                                         Log.i(TAG, "ONLY NEED ARRIVAL");
                                                         int arrivalBusDirection =
                                                                 busMapValue.get(j).getDirection();
-                                                        if (busMapValue.get(j - routeSteps.get(i)
+                                                        if ((j - routeSteps.get(i).getNumStops()) > 0
+                                                                && busMapValue.get(j - routeSteps.get(i)
                                                                 .getNumStops()) != null
                                                                 && busMapValue.get(j - routeSteps.get(i).getNumStops())
                                                                 .getDirection() == arrivalBusDirection) {
@@ -398,7 +411,8 @@ public class NavigateTransitCard extends Card {
                                                             .equals(potentialDepartureBusStopCode)){
                                                         Log.i(TAG, "ONLY NEED DEPARTURE");
                                                         int departureBusDirection = busMapValue.get(j).getDirection();
-                                                        if (busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
+                                                        if ((j + routeSteps.get(i).getNumStops()) < busMapValue.size()
+                                                                && busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
                                                                 && busMapValue.get(j + routeSteps.get(i).getNumStops())
                                                                 .getDirection() == departureBusDirection )
                                                         {
