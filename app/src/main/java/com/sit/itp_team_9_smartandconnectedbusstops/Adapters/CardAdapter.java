@@ -635,16 +635,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             //List<Integer> stationImageStationColor = entry.getValue();
                             Integer stationImage = (Integer) entry.getValue().get(0);
                             Integer stationColor = (Integer) entry.getValue().get(1);
-                            String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null;
-                            List<String> busStopNames = null;
-                            if (entry.getValue().size() > 4) {
+                            String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null, numInBetweenStops = null;
+                            List<String> inBetweenStopNames = null;
+                            if (entry.getValue().size() > 5) {
                                 lineName = (String) entry.getValue().get(2);
-                                arrivalStop = (String) entry.getValue().get(3);
-                                timeTakenForEachWaypoint = (String)entry.getValue().get(4);
-                                if (entry.getValue().size() > 5){
-                                    if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
-                                        busStopNames = (List<String>) entry.getValue().get(5);
-                                    }
+                                numInBetweenStops = (String) String.valueOf(entry.getValue().get(3));
+                                arrivalStop = (String) entry.getValue().get(4);
+                                timeTakenForEachWaypoint = (String)entry.getValue().get(5);
+                                if (entry.getValue().size() > 6){
+                                    //if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
+                                    inBetweenStopNames = (List<String>) entry.getValue().get(6);
+                                    //}
                                 }
                             }
 
@@ -686,12 +687,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
                                 String inBetweenStopsHeaderString = timeTakenForEachWaypoint
-                                        + " (" + cardsTransit.getNumStops() + " "
+                                        + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
                                 Log.i(TAG, inBetweenStopsHeaderString);
                                 inBetweenStopsHeader.add(inBetweenStopsHeaderString);
                                 HashMap<String, List<String>> inBetweenStops = new HashMap<>();
-                                inBetweenStops.put(inBetweenStopsHeaderString,busStopNames);
+                                inBetweenStops.put(inBetweenStopsHeaderString,inBetweenStopNames);
 
                                 ExpandableListAdapter transitListAdapter = new ExpandableListAdapter(mContext,
                                         inBetweenStopsHeader,inBetweenStops);

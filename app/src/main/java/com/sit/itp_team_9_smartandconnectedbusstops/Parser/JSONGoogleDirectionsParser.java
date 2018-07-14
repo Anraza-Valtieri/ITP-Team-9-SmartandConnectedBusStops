@@ -106,6 +106,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                     steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                    steps.setPolyline(stepsObject.getJSONObject("polyline").getString("points"));
+                                    Log.d(TAG,"polyline"+ steps.getPolyline());
                                     steps.setTravelMode(stepsObject.getString("travel_mode"));
 
                                     //detailed, step-by-step instructions

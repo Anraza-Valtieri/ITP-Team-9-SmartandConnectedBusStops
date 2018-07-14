@@ -22,7 +22,7 @@ public class JSONLTABusRoute {
     @Expose
     private List<Value> value = null;
 
-    private Map<String, LinkedList<Value>> busRouteMap = new HashMap<>();
+    private static Map<String, LinkedList<Value>> busRouteMap = new HashMap<>();
 
     private String getOdataMetadata() {
         return odataMetadata;
