@@ -31,7 +31,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
     public JSONGoogleDirectionsParser(Activity activity, List<String> url){
         urls = url;
-        //this.activity = activity;
+//        this.activity = activity;
     }
 
     public List<String> getUrls() {
@@ -192,10 +192,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-
-            return routesList;
         }
+            return routesList;
     }
 
     @Override
@@ -204,6 +202,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
         Log.i(TAG, "onPostExecute: Total of "+result.size()+ " routes added");
         Log.i(TAG,"routes: " + result + "\n");
-        //delegate.processFinishFromGoogle(result);
+        if(delegate != null)
+            delegate.processFinishFromGoogle(result);
     }
 }

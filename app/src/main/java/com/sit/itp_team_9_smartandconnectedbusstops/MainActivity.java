@@ -107,6 +107,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -593,7 +594,7 @@ public class MainActivity extends AppCompatActivity
     private void prepareBottomSheet() {
         // Bottom sheet
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         if (bottomSheetBehavior != null) {
             bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
                 @Override
@@ -621,8 +622,15 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
                         fab.hide();
+                    } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
+                        if(bottomNav.getSelectedItemId() == R.id.action_nearby)
+                            lookUpNearbyBusStops();
+                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
+                            prepareFavoriteCards(getFavBusStopID());
                     }
                 }
+
+
 
                 @Override
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
@@ -672,9 +680,11 @@ public class MainActivity extends AppCompatActivity
 
                 if (favBusStopID.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        prepareFavoriteCards(favBusStopID);
+                    }else
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
             } else if (id == R.id.action_nav) {
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
@@ -709,8 +719,7 @@ public class MainActivity extends AppCompatActivity
                 },600);
 
                 startingPointTextView.setText(convertedAddress);
-
-                handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
                 destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                     @Override
@@ -790,9 +799,6 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
             } else if (id == R.id.action_nearby) {
-//                getSupportActionBar().hide();
-//                setSupportActionBar(toolbar);
-//                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
                     hideActionBar(toolbarNavigate);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
@@ -806,30 +812,19 @@ public class MainActivity extends AppCompatActivity
 
                 hideKeyboard();
 
-                @SuppressLint("StaticFieldLeak")
-                AsyncTask asyncTask = new AsyncTask() {
-                    @Override
-                    protected Object doInBackground(Object[] objects) {
-                        return new CameraPosition.Builder()
-                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();
-                    }
+                CameraPosition pos = new CameraPosition.Builder()
+                        .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
 
-                    @Override
-                    protected void onPostExecute(Object o) {
-                        super.onPostExecute(o);
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
-                    }
-                };
-
-                asyncTask.execute();
                 if (!isPooling()) {
                     setPooling(true);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-//                    lookUpNearbyBusStops();
+                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        lookUpNearbyBusStops();
+                    }else
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(this::lookUpNearbyBusStops, 600);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -904,7 +899,9 @@ public class MainActivity extends AppCompatActivity
                         mMap.setMinZoomPreference(MIN_ZOOM);
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
                         loadingScreen.setVisibility(View.GONE);
-                        bottomNav.setSelectedItemId(R.id.action_fav);
+//                        bottomNav.setSelectedItemId(R.id.action_fav);
+                        bottomNav.setVisibility(View.VISIBLE);
+                        bottomNav.setSelectedItemId(R.id.action_nearby);
 
                         Geocoder gc = new Geocoder(getApplicationContext());
                         try {
@@ -1660,13 +1657,9 @@ public class MainActivity extends AppCompatActivity
                         nearbyCardList.add(card);
                         Log.d(TAG, "lookUpNearbyBusStops: " + card.toString());
                     }
-                }
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
+                    if(i==10)
                         updateAdapterList(nearbyCardList);
-                    }
-                },400);
+                }
 //                updateAdapterList(nearbyCardList);
             }
         };
@@ -1803,71 +1796,69 @@ public class MainActivity extends AppCompatActivity
 
 //        updateAdapterList(favCardList);
     }
-
     private void lookUpRoutes(String query, String fareTypes){
+
+        transitCardList.clear();
+        walkingCardList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
         JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<>(); //result from parser
-        try {
-            result = directionsParser.execute().get();
-            Log.d(TAG,query);
-            if(result.size() <= 0){
-                Log.d(TAG, "lookUpRoute: Google returned no data");
-                return;
+        directionsParser.delegate = new JSONGoogleResponseRoute() {
+            @Override
+            public boolean processBoolean(List<GoogleRoutesData> result) {
+                return false;
             }
-            transitCardList.clear();
-            walkingCardList.clear();
-            progressBar.setVisibility(View.VISIBLE);
 
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!optionMode){
-                        //walking
-                        for(int i=0; i< result.size(); i++) {
-                            if (getWeatherData(result.get(i))) {
-                                String msg = "Remember to bring an umbrella with you!";
-                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
-                                card.setType(Card.NAVIGATE_WALKING_CARD);
-                                walkingCardList.add(card);
-                                Log.d(TAG, "lookUpRoute: " + card.toString());
-                            }
-                            else{
-                                String msg = "Weather looks good!";
-                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
-                                card.setType(Card.NAVIGATE_WALKING_CARD);
-                                walkingCardList.add(card);
-                                Log.d(TAG, "lookUpRoute: " + card.toString());
-                            }
-                        }
-                        updateAdapterList(walkingCardList);
-
-                    }else{/*
-                        //NORMAL ROUTES*/
-                        for(int i=0; i< result.size(); i++) {
-                            if(getDistanceMatrix(result.get(i))) {
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
-                            else{
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
-                        }
-                        updateAdapterList(transitCardList);
-                    }
+            @Override
+            public void processFinishFromGoogle(List<GoogleRoutesData> result) {
+                if (result.size() <= 0) {
+                    Log.d(TAG, "lookUpRoute: Google returned no data");
+                    progressBar.setVisibility(View.GONE);
+                    return;
                 }
-            }, 1500);
 
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+                if (!optionMode) {
+                    //walking
+                    for (int i = 0; i < result.size(); i++) {
+                        if (getWeatherData(result.get(i))) {
+                            String msg = "Remember to bring an umbrella with you!";
+                            NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                            card.setType(Card.NAVIGATE_WALKING_CARD);
+                            walkingCardList.add(card);
+                            Log.d(TAG, "lookUpRoute: " + card.toString());
+                        } else {
+                            String msg = "Weather looks good!";
+                            NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                            card.setType(Card.NAVIGATE_WALKING_CARD);
+                            walkingCardList.add(card);
+                            Log.d(TAG, "lookUpRoute: " + card.toString());
+                        }
+                    }
+                    updateAdapterList(walkingCardList);
+
+                } else {
+                    //NORMAL ROUTES
+                    for (int i = 0; i < result.size(); i++) {
+                        if (getDistanceMatrix(result.get(i))) {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                        } else {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                        }
+                    }
+                    updateAdapterList(transitCardList);
+                }
+            }
+        };
+        directionsParser.execute();
     }
 
     public boolean getWeatherData(GoogleRoutesData googleRoutesData){
@@ -1914,6 +1905,7 @@ public class MainActivity extends AppCompatActivity
         List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
         try {
             result = directionsParser.execute().get();
+            Log.d(TAG, "lookUpTrafficDuration: "+result);
             result1 = durationParser.execute().get();
             Log.d(TAG,queryMatrix);
             if(result.size() <= 0){
