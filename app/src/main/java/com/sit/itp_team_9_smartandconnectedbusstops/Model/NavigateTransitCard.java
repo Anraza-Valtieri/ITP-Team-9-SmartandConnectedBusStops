@@ -11,6 +11,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -260,8 +261,7 @@ public class NavigateTransitCard extends Card {
                         case "TRANSIT":
                             //train, lrt and bus
                             String trainLine = routeSteps.get(i).getTrainLine();
-                            String lineName = null;
-                            String lineShortForm = null;
+                            String lineName;
                             int imageViewTransit;
                             int imageViewColor;
                             if (trainLine != null) {
@@ -273,51 +273,32 @@ public class NavigateTransitCard extends Card {
                                         imageViewColor = NavigateTransitCard.DTL_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.DTL_COLOR);
                                         lineName = NavigateTransitCard.DOWNTOWN_LINE;
-                                        lineShortForm = "DT";
                                         break;
                                     case "North East Line":
                                         imageViewColor = NavigateTransitCard.NEL_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.NEL_COLOR);
                                         lineName = NavigateTransitCard.NORTH_EAST_LINE;
-                                        lineShortForm = "NE";
                                         break;
                                     case "East West Line":
                                         imageViewColor = NavigateTransitCard.EWL_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.EWL_COLOR);
                                         lineName = NavigateTransitCard.EAST_WEST_LINE;
-                                        lineShortForm = "EW";
                                         break;
                                     case "North South Line":
                                         imageViewColor = NavigateTransitCard.NSL_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.NSL_COLOR);
                                         lineName = NavigateTransitCard.NORTH_SOUTH_LINE;
-                                        lineShortForm = "NS";
                                         break;
                                     case "Circle Line":
                                         imageViewColor = NavigateTransitCard.CCL_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.CCL_COLOR);
                                         lineName = NavigateTransitCard.CIRCLE_LINE;
-                                        lineShortForm = "CC";
-                                        break;
-                                    case "Changi Airport Branch Line":
-                                        imageViewColor = NavigateTransitCard.EWL_COLOR;
-                                        timeTakenEachStep.add(NavigateTransitCard.EWL_COLOR);
-                                        lineName = NavigateTransitCard.CHANGI_AIRPORT_BRANCH_LINE;
-                                        lineShortForm = "CG";
-                                        break;
-                                    case "Circle Line Extension":
-                                        imageViewColor = NavigateTransitCard.CCL_COLOR;
-                                        timeTakenEachStep.add(NavigateTransitCard.CCL_COLOR);
-                                        lineName = NavigateTransitCard.CIRCLE_LINE_EXTENSION;
-                                        lineShortForm = "CE";
                                         break;
                                     default:
                                         //if lrt
                                         imageViewColor = NavigateTransitCard.LRT_COLOR;
                                         timeTakenEachStep.add(NavigateTransitCard.LRT_COLOR);
                                         lineName = NavigateTransitCard.LRT_LINE;
-                                        trainLine = "LRT"; //for finding in between stations
-                                        lineShortForm = "LRT";
                                         break;
                                 }
                             }else{
@@ -367,17 +348,15 @@ public class NavigateTransitCard extends Card {
                                     JSONLTABusRoute busRoute = new JSONLTABusRoute();
                                     Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
                                     List<String> inBetweenBusStopCodes = new ArrayList<>();
-                                    //Log.i(TAG,"busMap? " + busMap);
+                                    OUTER_LOOP:
                                     for (Map.Entry<String, LinkedList<Value>> busMapEntry : busMap.entrySet()) {
                                         String busServiceNumber = busMapEntry.getKey();
                                         LinkedList<Value> busMapValue = busMapEntry.getValue();
-                                        //int departureBusStopDirection = 0, arrivalBusStopDirection = 0;
                                         if (busServiceNumber.equalsIgnoreCase(lineName)) {
                                             //if found the correct bus service no.
                                             Log.i(TAG,"found the correct bus num!");
                                             Log.i(TAG,busMapValue.toString());
 
-                                            OUTER_LOOP:
                                             for (int j = 0; j < busMapValue.size(); j++) {
                                                 //loop through the bus service's bus stops (going through the bus route)
                                                 for (String potentialArrivalBusStopCode : arrivalBusStopCodeList) {
@@ -454,294 +433,107 @@ public class NavigateTransitCard extends Card {
                                             queryAllStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + trainLine;
                                             break;
-
                                     }
                                     List<TrainStation> allTrainStationsInLine = lookUpTrainStations(queryAllStationsInLine);
-                                    Log.i(TAG, "allTrainStationsInLine "+allTrainStationsInLine);
+                                    if (allTrainStationsInLine != null) {
+                                        for (TrainStation trainStation : allTrainStationsInLine) {
+                                            System.out.println("original"+trainStation.toString()+"\n");
+                                        }
 
-                                    //get departure station code
-                                    String queryDeparture = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                            + routeSteps.get(i).getDepartureStop().replace("MRT Station","");
-                                    List<TrainStation> departureTrainStation = lookUpTrainStations(queryDeparture);
-                                    Log.i(TAG, "departureTrainStationCode "+departureTrainStation);
+                                        Collections.sort(allTrainStationsInLine); //sort by ascending station num
 
-                                    //get arrival station code
-                                    String queryArrival = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                            + routeSteps.get(i).getArrivalStop().replace("MRT Station","");
-                                    List<TrainStation> arrivalTrainStation = lookUpTrainStations(queryArrival);
-                                    Log.i(TAG,"arrivalStopStationCode "+arrivalTrainStation);
+                                        //add in stations in extension lines
+                                        if (trainLine.equals("Circle Line")){
+                                            String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "环线延长线";
+                                            List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
+                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                        }else if (trainLine.equals("East West Line")){
+                                            String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "Changi Airport Branch Line";
+                                            List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
+                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                        }
 
-                                    if(allTrainStationsInLine != null){
-                                        OUTER_TRAIN_LOOP:
-                                        for (int j = 0; j < allTrainStationsInLine.size(); j++) {
-                                            String confirmedDepartureStationCode = null, confirmedArrivalStationCode = null;
-                                            int departureStationNum = 0 ,arrivalStationNum = 0;
-                                            if (allTrainStationsInLine.get(j).getStationName().equals(routeSteps.get(i).getDepartureStop())){
-                                                //if departureStationName found in list of all stations in that MRT line
-                                                confirmedDepartureStationCode = allTrainStationsInLine.get(j).getStationCode();
-                                                String departureStationNumString = confirmedDepartureStationCode.replaceAll("[^0-9]", "");
-                                                if (!departureStationNumString.isEmpty()) {
-                                                    departureStationNum = Integer.parseInt(departureStationNumString);
-                                                }
+                                        for(TrainStation trainStation: allTrainStationsInLine){
+                                            System.out.println("sortedStation: "+trainStation.toString()+"\n");
+                                        }
+                                    }
+
+                                    if(allTrainStationsInLine != null) {
+                                        TrainStation departureTrainStation = null, arrivalTrainStation = null;
+                                        String departureStation = cleanUpStationName(routeSteps.get(i).getDepartureStop());
+                                        String arrivalStation = cleanUpStationName(routeSteps.get(i).getArrivalStop());
+
+                                        //get departure and arrival stations
+                                        for (TrainStation trainStationInList : allTrainStationsInLine) {
+                                            if (trainStationInList.getStationName().equalsIgnoreCase(
+                                                    departureStation)){
+                                                departureTrainStation = trainStationInList;
+                                                Log.i(TAG, "found departure train station");
                                             }
-                                            if (allTrainStationsInLine.get(j).getStationName().equals(routeSteps.get(i).getArrivalStop())){
-                                                //if arrivalStationName found in list of all stations in that MRT line
-                                                confirmedArrivalStationCode = allTrainStationsInLine.get(j).getStationCode();
-                                                String arrivalStationNumString = confirmedArrivalStationCode.replaceAll("[^0-9]", "");
-                                                if (!arrivalStationNumString.isEmpty()) {
-                                                    arrivalStationNum = Integer.parseInt(arrivalStationNumString);
-                                                }
+                                            if (trainStationInList.getStationName().equalsIgnoreCase(
+                                                    arrivalStation)){
+                                                arrivalTrainStation = trainStationInList;
+                                                Log.i(TAG, "found arrival train station");
                                             }
-
-                                            if (confirmedDepartureStationCode != null && confirmedArrivalStationCode != null){
-                                                if (departureStationNum < arrivalStationNum){
-                                                    //++ to add to trainStations
-                                                    Log.i(TAG, "departureStationNum < arrivalStationNum");
-                                                }
-                                                else{
-                                                    //-- to add to trainStations
-                                                    Log.i(TAG, "departureStationNum > arrivalStationNum");
-                                                }
-                                            }else if(confirmedDepartureStationCode != null){
-                                                Log.i(TAG, "departureStationNum != null");
-                                                departureStationNum = Integer.parseInt(confirmedDepartureStationCode.replaceAll("[^0-9]", ""));
-                                                int largerArrivalStationNum = departureStationNum + routeSteps.get(i).getNumStops();
-                                                int smallerArrivalStationNum = departureStationNum - routeSteps.get(i).getNumStops();
-
-                                                //get arrival station code
-                                                String queryFindArrival = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                        + lineShortForm +largerArrivalStationNum;
-                                                List<TrainStation> largerArrivalTrainStation = lookUpTrainStations(queryFindArrival);
-                                                Log.i(TAG,"arrivalStopStationCode "+largerArrivalTrainStation);
-                                                if (largerArrivalTrainStation != null){
-                                                    //if larger arrival train station exists, get in between stops
-                                                    for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
-                                                        String queryFindInBetween = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                                + lineShortForm + (departureStationNum + k);
-                                                        List<TrainStation> inBetweenTrainStations = lookUpTrainStations(queryFindInBetween);
-                                                        if (inBetweenTrainStations != null) {
-                                                            trainStationNames.add(inBetweenTrainStations.get(0).getStationName());
-                                                            Log.i(TAG, "confirmedDepartureStationCode != null + largerArrivalStop"+trainStationNames.toString());
-                                                        }
-                                                    }
-                                                }else{
-                                                    //if smaller arrival train station exists, get in between stops
-                                                    for (int k = 0; k < routeSteps.get(i).getNumStops(); k++) {
-                                                        String queryFindInBetween = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                                + lineShortForm + (departureStationNum - k);
-                                                        List<TrainStation> inBetweenTrainStations = lookUpTrainStations(queryFindInBetween);
-                                                        if (inBetweenTrainStations != null) {
-                                                            trainStationNames.add(inBetweenTrainStations.get(0).getStationName());
-                                                            Log.i(TAG, "confirmedDepartureStationCode != null + smallerArrivalStop"+trainStationNames.toString());
-                                                        }
-                                                    }
-                                                }
-                                                if (!trainStationNames.isEmpty()) {
-                                                    break OUTER_TRAIN_LOOP;
-                                                }
-                                            }else{
-                                                //confirmedArrivalStationCode != null
-                                                if (confirmedArrivalStationCode != null) {
-                                                    Log.i(TAG, "arrivalStationNum != null");
-                                                    arrivalStationNum = Integer.parseInt(confirmedArrivalStationCode.replaceAll("[^0-9]", ""));
-                                                    int largerDepartureStationNum = arrivalStationNum + routeSteps.get(i).getNumStops();
-                                                    int smallerDepartureStationNum = arrivalStationNum - routeSteps.get(i).getNumStops();
-
-                                                    //get arrival station code
-                                                    String queryFindDeparture = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                            + lineShortForm + largerDepartureStationNum;
-                                                    List<TrainStation> largerDepartureStation = lookUpTrainStations(queryFindDeparture);
-                                                    Log.i(TAG, "arrivalStopStationCode " + largerDepartureStation);
-                                                    if (largerDepartureStation != null) {
-                                                        //if larger departure train station exists, get in between stops
+                                            //TODO LRT loops
+                                            //TODO Ten Mile Junction(BP14) is in between BP5 and BP6
+                                        }
+                                        if (departureTrainStation != null && arrivalTrainStation != null ){
+                                            //if both stations found
+                                            for (int j = 0; j < allTrainStationsInLine.size(); j++) {
+                                                if (allTrainStationsInLine.get(j).getStationCode()
+                                                        .equals(departureTrainStation.getStationCode())){
+                                                    //j is position of departure train station
+                                                    if (departureTrainStation.getStationNum()
+                                                            < arrivalTrainStation.getStationNum()) {
+                                                        //if departure comes before arrival in list
                                                         for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
-                                                            String queryFindInBetween = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                                    + lineShortForm + (arrivalStationNum + k);
-                                                            List<TrainStation> inBetweenTrainStations = lookUpTrainStations(queryFindInBetween);
-                                                            if (inBetweenTrainStations != null) {
-                                                                trainStationNames.add(0,inBetweenTrainStations.get(0).getStationName());
-                                                                Log.i(TAG, "arrivalStationNum != null + largerDepartureStation" + trainStationNames.toString());
-
+                                                            //add until it reaches end of num of stops
+                                                            if (departureTrainStation.getStationCode().equals("CE1") ||
+                                                                    departureTrainStation.getStationCode().equals("CE2") ||
+                                                                    departureTrainStation.getStationCode().equals("CG1") ||
+                                                                    departureTrainStation.getStationCode().equals("CG2") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE2") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CG1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CG2")){
+                                                                //extension line stops placed after stations in original line
+                                                                Log.i(TAG,"EXTENSION LINE");
+                                                                k+=2;
                                                             }
+                                                            trainStationNames.add(allTrainStationsInLine
+                                                                    .get(j + k).getStationName());
                                                         }
-                                                    } else {
-                                                        //if smaller departure train station exists, get in between stops
+                                                    }else{
+                                                        //if departure comes after arrival in list
                                                         for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
-                                                            String queryFindInBetween = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                                    + lineShortForm + (arrivalStationNum - k);
-                                                            List<TrainStation> inBetweenTrainStations = lookUpTrainStations(queryFindInBetween);
-                                                            if (inBetweenTrainStations != null) {
-                                                                trainStationNames.add(0,inBetweenTrainStations.get(0).getStationName());
-                                                                Log.i(TAG, "arrivalStationNum != null" + "smallDepartureStation" + trainStationNames.toString());
+                                                            //add until it reaches end of num of stops
+                                                            if ((allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
+                                                                    && (departureTrainStation.getStationCode().equals("CE1") ||
+                                                                    departureTrainStation.getStationCode().equals("CE2"))) ||
+                                                            (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
+                                                                    && (departureTrainStation.getStationCode().equals("CG1") ||
+                                                                    departureTrainStation.getStationCode().equals("CG2")))
+                                                                    || (allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
+                                                                    && (arrivalTrainStation.getStationCode().equals("CE1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE2"))) ||
+                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
+                                                                            && (arrivalTrainStation.getStationCode().equals("CG1") ||
+                                                                            arrivalTrainStation.getStationCode().equals("CG2")))){
+                                                                //extension line stops placed before stations in original line
+                                                                Log.i(TAG,"EXTENSION LINE");
+                                                                k+=2;
                                                             }
+                                                            trainStationNames.add(allTrainStationsInLine
+                                                                    .get(j - k).getStationName());
                                                         }
-
                                                     }
                                                 }
                                             }
                                         }
                                     }
-
-                                    /*if (departureTrainStation != null) {
-                                        for (TrainStation potentialDepartureTrainStation : departureTrainStation) {
-                                            String mrtLineName = potentialDepartureTrainStation.getLineName();
-                                            if (mrtLineName.equalsIgnoreCase(trainLine)) {
-                                                //if found the correct MRT line
-                                                Log.i(TAG, "found the correct mrt line:" + mrtLineName);
-                                                //query trainLine
-                                                String queryLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                        + mrtLineName;
-                                                List<TrainStation> allStationsInLine = lookUpTrainStations(queryArrival);
-                                                if (allStationsInLine != null) {
-                                                    for (int j = 0; j < allStationsInLine.size(); j++) {
-                                                        //loop through all stations in line
-                                                        if (allStationsInLine.get(j).getStationCode()
-                                                                .equals(potentialDepartureTrainStation.getStationCode())) {
-                                                            //found departureStop
-                                                            for (int k = 0; k < routeSteps.get(j).getNumStops(); k++) {
-                                                                if (allStationsInLine.get(j + k).getStationCode().equals()) {
-                                                                    trainStationNames.add(allStationsInLine.get(j + k).getStationName());
-                                                                    Log.i(TAG, "inBetweenTrainStationNames"
-                                                                            + trainStationNames);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }else {
-                                        //only arrival train found
-                                        if (allStationsInLine.get(j).getBusStopCode()
-                                                .equals(potentialDepartureTrainStation)) {
-                                            Log.i(TAG, "ONLY NEED ARRIVAL");
-                                            int departureBusDirection = busMapValue.get(j).getDirection();
-                                            if (busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
-                                                    && busMapValue.get(j + routeSteps.get(i).getNumStops())
-                                                    .getDirection() == departureBusDirection) {
-                                                //if arrival stop is not null
-                                                // and direction of stops match
-                                                for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
-                                                    inBetweenBusStopCodes.add(busMapValue
-                                                            .get(j + k).getBusStopCode());
-                                                    Log.i(TAG, "inBetweenBusStopCodes"
-                                                            + inBetweenBusStopCodes);
-                                                }
-                                                break OUTER_LOOP;
-                                            }
-                                        }
-                                    }*/
-                                    /*if (departureTrainStationCode != null && arrivalTrainStationCode != null) {
-                                        OUTER_TRAIN_LOOP:
-                                        for (TrainStation potentialDepartureTrainStation : departureTrainStationCode) {
-                                            String departureLine = potentialDepartureTrainStation.getLineName();
-                                            for (TrainStation potentialArrivalTrainStation : arrivalTrainStationCode) {
-                                                String arrivalLine = potentialArrivalTrainStation.getLineName();
-                                                if (departureLine.equals(arrivalLine)) {
-                                                    //find MRT line
-                                                    String trainLineName = departureLine;
-                                                    String queryAllTrainStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                            + trainLineName;
-
-                                                    int departureTrainStationNum = Integer.parseInt(potentialDepartureTrainStation.getStationCode().replaceAll("[^0-9]", ""));
-                                                    int arrivalTrainStationNum = Integer.parseInt(potentialDepartureTrainStation.getStationCode().replaceAll("[^0-9]", ""));
-
-                                                    //save all train stations in that MRT line
-                                                    List<TrainStation> allTrainStationsCode = lookUpTrainStations(queryAllTrainStationsInLine);
-                                                    if (allTrainStationsCode != null) {
-                                                        if (departureTrainStationNum < arrivalTrainStationNum) {
-                                                            for (int j = 0; j < allTrainStationsCode.size(); j++) {
-                                                                trainStationNames.add(allTrainStationsCode.get(j).getStationName());
-                                                                Log.i(TAG, "trainStationNames: " + trainStationNames);
-                                                            }
-                                                        } else {
-                                                            for (int j = allTrainStationsCode.size() - 1; j > 0; j--) {
-                                                                trainStationNames.add(allTrainStationsCode.get(j).getStationName());
-                                                                Log.i(TAG, "trainStationNames: " + trainStationNames);
-                                                            }
-                                                        }
-
-                                                    }
-                                                }
-                                                break OUTER_TRAIN_LOOP;
-                                            }
-                                        }
-                                    }*/
-                                            //no arrival
-                                            /*String queryAllTrainStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                    + departureLine;
-                                            List<TrainStation> allTrainStationsCode = lookUpTrainStations(queryAllTrainStationsInLine);
-                                            if (allTrainStationsCode.get(j).getBusStopCode()
-                                                    .equals(potentialDepartureTrainStation)){
-                                                Log.i(TAG, "ONLY NEED DEPARTURE");
-                                                if (busMapValue.get(j + routeSteps.get(i).getNumStops()) != null)
-                                                {
-                                                    //if arrival stop is not null
-                                                    for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
-                                                        inBetweenBusStopCodes.add(busMapValue
-                                                                .get(j + k).getBusStopCode());
-                                                        Log.i(TAG, "inBetweenBusStopCodes"
-                                                                + inBetweenBusStopCodes);
-                                                    }
-                                                    //break;
-                                                }
-
-                                            }*/
-
-                                        //get train line
-                                        //String trainLineName = departureTrainStationCode.replaceAll("[0-9]", "");
-                                        /*String queryAllTrainStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                                + trainLineName;
-
-                                        //save all train stations in that MRT line
-                                        List<TrainStation> allTrainStationsCode = lookUpTrainStations(queryAllTrainStationsInLine);
-
-                                        int departureTrainStationNum = Integer.parseInt(departureTrainStationCode.replaceAll("[^0-9]", ""));
-                                        int arrivalTrainStationNum = Integer.parseInt(departureTrainStationCode.replaceAll("[^0-9]", ""));
-
-                                        //if departure < arrival
-                                        if (allTrainStationsCode != null) {
-                                            if (departureTrainStationNum < arrivalTrainStationNum) {
-                                                for (int j = 0; j < allTrainStationsCode.size(); j++) {
-                                                    trainStationNames.add(allTrainStationsCode.get(j).getStationName());
-                                                }
-                                            } else {
-                                                //if departure > arrival
-                                                for (int j = allTrainStationsCode.size()-1; j > 0; j--) {
-                                                    trainStationNames.add(allTrainStationsCode.get(j).getStationName());
-                                                }
-                                            }
-                                        }*/
-
-                                    /*String queryDeparture = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                            + routeSteps.get(i).getDepartureStop();
-                                    lookUpTrainStationCode(queryDeparture);
-                                    String departureStationCodeRef = NavigateTransitCard.getDepartureStationCode();
-                                    Log.d(TAG,"departureTrainStationCode " + departureStationCodeRef);
-
-                                    String queryArrival = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                            + routeSteps.get(i).getArrivalStop();
-
-                                    int intValueDeparture = Integer.parseInt(departureStationCodeRef.replaceAll("[^0-9]", ""));
-                                    int intValueArrival = Integer.parseInt(queryArrival.replaceAll("[^0-9]", ""));
-                                    String trainLineName = departureStationCodeRef.replaceAll("[0-9]", "");
-
-                                    String trainLineQuery = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
-                                            + trainLineName; //get all stops in that line
-
-                                    List<TrainStation> allTrainStationsInLine = lookUpAllStationsInLine(trainLineQuery);
-                                    //List<String> inBetweenStationsNames = new ArrayList<>();
-                                    if (intValueDeparture < intValueArrival){
-                                        for (int j = intValueDeparture; j < allTrainStationsInLine.size(); j++){
-                                            trainStationNames.add(allTrainStationsInLine.get(j).getStationName());
-                                        }
-                                    }else {
-                                        for (int j = intValueArrival; j <allTrainStationsInLine.size(); j--) {
-                                            trainStationNames.add(allTrainStationsInLine.get(j).getStationName());
-                                        }
-                                    }
-                                    //using trainStationCode, either ++ or -- to arrivalStop*/
-                                    //trainStationNames.add("Hello");
                                 }
 
                                 stationDetails.add(routeSteps.get(i).getArrivalStop());
@@ -800,6 +592,22 @@ public class NavigateTransitCard extends Card {
         return card;
     }
 
+    private static String cleanUpStationName(String stationName){
+        switch(stationName){
+            case "One North Station":
+                stationName = stationName.replace(" Station","");
+                stationName = stationName.replace(" ","-");
+                break;
+            case "Redhill (EW18)":
+                stationName = stationName.replace(" (EW18)","");
+                break;
+        }
+        stationName = stationName.replaceAll(" MRT Station.*$","");
+        Log.i(TAG, "stationNameRegex "+stationName);
+
+        return stationName;
+    }
+
     private static List<TrainStation> lookUpTrainStations(String query){
         List<String> trainStationsQuery = new ArrayList<>();
         trainStationsQuery.add(query);
@@ -823,58 +631,4 @@ public class NavigateTransitCard extends Card {
         return null;
     }
 
-    private static List<String> lookUpTrainStationCode(String query){
-        List<String> trainStationsQuery = new ArrayList<>();
-        trainStationsQuery.add(query);
-        Log.i(TAG,"lookUpTrainStationCode: "+trainStationsQuery.toString());
-        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
-
-        List<TrainStation> result; //result from parser
-        List<String> trainStationCode = new ArrayList<>();
-        try {
-            result = trainStationParser.execute().get();
-            Log.d(TAG, query);
-            if (result.size() <= 0) {
-                Log.d(TAG, "trainStation: Data.gov returned no data");
-                return null;
-            }else{
-                //got result
-                Log.d(TAG, result.get(0).getStationCode());
-                for (TrainStation trainStation : result){
-                    trainStationCode.add(trainStation.getStationCode());
-                }
-                return trainStationCode;
-                //NavigateTransitCard navigateTransitCard = new NavigateTransitCard();
-                //navigateTransitCard.setDepartureStationCode(result.get(0).getStationCode()); //departure train station code
-            }
-        }catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /*private static List<TrainStation> lookUpAllStationsInLine(String query){
-        List<String> trainStationsQuery = new ArrayList<>();
-        List<TrainStation> trainStationsResult = new ArrayList<>();
-        trainStationsQuery.add(query);
-        Log.i(TAG,trainStationsQuery.toString());
-        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
-        List<TrainStation> result; //result from parser
-        try {
-            result = trainStationParser.execute().get();
-            Log.d(TAG, query);
-            if (result.size() <= 0) {
-                Log.d(TAG, "trainStation: Data.gov returned no data");
-                return null;
-            }else{
-                //got result
-                for (int i = 0; i < result.size(); i++) {
-                    trainStationsResult.add(result.get(i));
-                }
-            }
-        }catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        return trainStationsResult;
-    }*/
 }
