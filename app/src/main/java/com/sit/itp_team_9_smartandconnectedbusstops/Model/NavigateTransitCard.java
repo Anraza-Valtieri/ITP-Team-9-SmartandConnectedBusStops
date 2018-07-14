@@ -255,6 +255,18 @@ public class NavigateTransitCard extends Card {
                             int imageViewWalking = R.drawable.ic_baseline_directions_walk_24px;
                             walkingDetails.add(imageViewWalking);
                             walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
+                            walkingDetails.add(null);
+
+                            //get detailed walking steps
+                            List<String> walkingDetailedStepsChildren = new ArrayList<>();
+                            for (int j = 0; j < routeSteps.get(i).getDetailedSteps().size(); j++){
+                                walkingDetailedStepsChildren.add(routeSteps.get(i).getDetailedSteps().get(j).getHtmlInstructions());
+                            }
+                            for (int j = 3; j < 5; j++) {
+                                walkingDetails.add(j,null);
+                            }
+                            walkingDetails.add(5,routeSteps.get(i).getDuration());
+                            walkingDetails.add(6,walkingDetailedStepsChildren);
                             transitStations.put(routeSteps.get(i).getDistance(),walkingDetails);
                             break;
 

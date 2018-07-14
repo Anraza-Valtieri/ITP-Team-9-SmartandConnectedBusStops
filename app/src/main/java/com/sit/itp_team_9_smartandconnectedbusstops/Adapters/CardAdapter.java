@@ -568,20 +568,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
-                        //this.startingStation.setText(cardsTransit.getStartingStation());
-                        //this.numStops.setText(cardsTransit.getNumStops());
-                        //this.imageViewStartingStation.setImageResource(cardsTransit.getImageViewStartingStation());
-                        //this.imageViewStartingStation.setColorFilter(cardsTransit.getImageViewStartingStationColor(),PorterDuff.Mode.SRC_IN);
-                        //this.timeTaken.setText(cardsTransit.getStartingStationTimeTaken());
-                        //this.listViewNumStops.set
-                        //TODO set expandable list view
-                        //listDataHeader: list of titles (X mins (X stops) )
-                        //childMap: map of listHeader,list of stops
-                        /*List<String> startingStationHeader = new ArrayList<>();
-                        startingStationHeader.add(cardsTransit.getStartingStationTimeTaken()+cardsTransit.getNumStops());
-                        LinkedHashMap startingStationAllStops = new LinkedHashMap();
-                        ExpandableListAdapter listAdapter = new ExpandableListAdapter(this,startingStationHeader,mapChild);
-                        listViewNumStops.setAdapter(listAdapter);*/
 
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
@@ -594,19 +580,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             //List<Integer> stationImageStationColor = entry.getValue();
                             Integer stationImage = (Integer) entry.getValue().get(0);
                             Integer stationColor = (Integer) entry.getValue().get(1);
-                            String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null, numInBetweenStops = null;
-                            List<String> inBetweenStopNames = null;
-                            if (entry.getValue().size() > 5) {
-                                lineName = (String) entry.getValue().get(2);
-                                numInBetweenStops = (String) String.valueOf(entry.getValue().get(3));
-                                arrivalStop = (String) entry.getValue().get(4);
-                                timeTakenForEachWaypoint = (String)entry.getValue().get(5);
-                                if (entry.getValue().size() > 6){
-                                    //if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
-                                    inBetweenStopNames = (List<String>) entry.getValue().get(6);
-                                    //}
-                                }
-                            }
+                            String lineName = (String) entry.getValue().get(2);
+                            String numInBetweenStops = String.valueOf(entry.getValue().get(3));
+                            String arrivalStop = (String) entry.getValue().get(4);
+                            String timeTakenForEachWaypoint = (String)entry.getValue().get(5);
+                            List<String> inBetweenStopNames = (List<String>) entry.getValue().get(6);
 
                             LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                             assert inflater2 != null;
@@ -614,15 +592,40 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //walking layout
                                 View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_walking,
                                         (ViewGroup) itemView.getRootView(), false);
-                                TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
-                                //ImageView imageViewWalking = to_add_navigate.findViewById(R.id.imageViewWalking);
+                                //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
-                                String walkingInstructions = "Walk " + key;
-                                textViewWalking.setText(walkingInstructions);
-                                //imageViewWalking.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
-                                //imageViewWalking.setImageResource(stationImage);
-                                //TODO set expandable list view
-                                Log.i(TAG, "transitStationString=" + key);
+
+                                String walkingInstructions = "Walk " + key +
+                                        " ( " + timeTakenForEachWaypoint + ")";
+                                //For detailed steps (expandable list adapter and listeners)
+                                List<String> walkingHeader = new ArrayList<>();
+                                walkingHeader.add(walkingInstructions);
+                                HashMap<String, List<String>> detailedWalkingSteps = new HashMap<>();
+                                detailedWalkingSteps.put(walkingInstructions,inBetweenStopNames);
+                                ExpandableListAdapter walkingAdapter = new ExpandableListAdapter(mContext,
+                                        walkingHeader,detailedWalkingSteps);
+                                listViewDetailedWalking.setAdapter(walkingAdapter);
+
+                                listViewDetailedWalking.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+                                    @Override
+                                    public void onGroupExpand(int groupPosition) {
+                                        Log.i(TAG,"on group expand");
+                                        Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
+                                        listViewDetailedWalking.smoothScrollToPosition(groupPosition);
+
+                                    }
+                                });
+
+                                listViewDetailedWalking.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+                                    @Override
+                                    public void onGroupCollapse(int groupPosition) {
+                                        Log.i(TAG,"on group collapse");
+                                        Utils.setListViewToOriginal(listViewDetailedWalking);
+                                    }
+                                });
+
+
                                 transit_layout.addView(to_add_navigate);
 
                             }else {
