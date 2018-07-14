@@ -10,6 +10,8 @@ public class GoogleRoutesData {
     private String copyrights;
     private JSONArray warnings;
     private String summary;
+    private String placeidStart, placeidEnd, routeID;
+
     //public JSONArray legs;
 
     //within legs
@@ -119,5 +121,29 @@ public class GoogleRoutesData {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
     }
 }
