@@ -569,13 +569,6 @@ public class NavigateTransitCard extends Card {
 
                 FareDetails fareDetails = new FareDetails();
 
-                fareDetails.populateStudentFareDistance();
-                fareDetails.populateStudentFaresMap();
-                fareDetails.populateAdultFareDistance();
-                fareDetails.populateAdultFaresMap();
-                fareDetails.populateSeniorFareDistance();
-                fareDetails.populateSeniorFaresMap();
-
                 String price = "";
 
                 if(transitDistance > 0.0) {
