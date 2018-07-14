@@ -2060,7 +2060,7 @@ public class MainActivity extends AppCompatActivity
 //        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
 
         if(bar.equals(toolbar)) {
-            Log.d(TAG, "hideActionBar: SHOWN");
+//            Log.d(TAG, "hideActionBar: SHOWN");
             TypedValue tv = new TypedValue();
 //            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
             if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
@@ -2068,18 +2068,18 @@ public class MainActivity extends AppCompatActivity
             }
         }
         else {
-            Log.d(TAG, "hideActionBar: SHOWN2");
+//            Log.d(TAG, "hideActionBar: SHOWN2");
             mToolbarHeight = toolbarNavigate.getMinimumHeight();
         }
 
         if (mVaActionBar2 != null && mVaActionBar2.isRunning()) {
             // we are already animating a transition - block here
-            Log.d(TAG, "hideActionBar: we are already animating a transition");
+//            Log.d(TAG, "hideActionBar: we are already animating a transition");
             return;
         }
 
         // animate `Toolbar's` height to zero.
-        Log.d(TAG, "hideActionBar1: "+mToolbarHeight);
+//        Log.d(TAG, "hideActionBar1: "+mToolbarHeight);
         mVaActionBar2 = ValueAnimator.ofInt(mToolbarHeight , 0);
         mVaActionBar2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
@@ -2088,7 +2088,7 @@ public class MainActivity extends AppCompatActivity
 
                 ((CoordinatorLayout.LayoutParams)bar.getLayoutParams()).height
                         = (Integer)animation.getAnimatedValue();
-                Log.d(TAG, "hideActionBar2: "+bar.getLayoutParams().height);
+//                Log.d(TAG, "hideActionBar2: "+bar.getLayoutParams().height);
                 bar.requestLayout();
             }
         });
