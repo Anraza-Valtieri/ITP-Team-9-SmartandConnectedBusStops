@@ -609,20 +609,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
-                        //this.startingStation.setText(cardsTransit.getStartingStation());
-                        //this.numStops.setText(cardsTransit.getNumStops());
-                        //this.imageViewStartingStation.setImageResource(cardsTransit.getImageViewStartingStation());
-                        //this.imageViewStartingStation.setColorFilter(cardsTransit.getImageViewStartingStationColor(),PorterDuff.Mode.SRC_IN);
-                        //this.timeTaken.setText(cardsTransit.getStartingStationTimeTaken());
-                        //this.listViewNumStops.set
-                        //TODO set expandable list view
-                        //listDataHeader: list of titles (X mins (X stops) )
-                        //childMap: map of listHeader,list of stops
-                        /*List<String> startingStationHeader = new ArrayList<>();
-                        startingStationHeader.add(cardsTransit.getStartingStationTimeTaken()+cardsTransit.getNumStops());
-                        LinkedHashMap startingStationAllStops = new LinkedHashMap();
-                        ExpandableListAdapter listAdapter = new ExpandableListAdapter(this,startingStationHeader,mapChild);
-                        listViewNumStops.setAdapter(listAdapter);*/
 
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);

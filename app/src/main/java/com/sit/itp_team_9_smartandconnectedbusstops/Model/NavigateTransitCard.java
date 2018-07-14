@@ -388,7 +388,8 @@ public class NavigateTransitCard extends Card {
                                                         Log.i(TAG, "ONLY NEED ARRIVAL");
                                                         int arrivalBusDirection =
                                                                 busMapValue.get(j).getDirection();
-                                                        if (busMapValue.get(j - routeSteps.get(i)
+                                                        if ((j - routeSteps.get(i).getNumStops()) > 0
+                                                                && busMapValue.get(j - routeSteps.get(i)
                                                                 .getNumStops()) != null
                                                                 && busMapValue.get(j - routeSteps.get(i).getNumStops())
                                                                 .getDirection() == arrivalBusDirection) {
@@ -410,7 +411,8 @@ public class NavigateTransitCard extends Card {
                                                             .equals(potentialDepartureBusStopCode)){
                                                         Log.i(TAG, "ONLY NEED DEPARTURE");
                                                         int departureBusDirection = busMapValue.get(j).getDirection();
-                                                        if (busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
+                                                        if ((j + routeSteps.get(i).getNumStops()) < busMapValue.size()
+                                                                && busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
                                                                 && busMapValue.get(j + routeSteps.get(i).getNumStops())
                                                                 .getDirection() == departureBusDirection )
                                                         {
