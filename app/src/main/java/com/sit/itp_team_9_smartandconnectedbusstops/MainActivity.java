@@ -1845,27 +1845,6 @@ public class MainActivity extends AppCompatActivity
                         updateAdapterList(walkingCardList);
 
                     }else{/*
-                        //FOR SUGGESTIONS, if no difference from normal routes then will not display
-                        List listMatrix = new ArrayList();
-                        for(int i=0; i< result.size(); i++) {
-                            if(getDistanceMatrix(result.get(i))){
-                                listMatrix.add(i);
-                                Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
-                            }
-                        }
-                        int size = listMatrix.size();
-                        if (listMatrix.size() == result.size()) {
-                            Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                        }
-                        else {
-                            Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                            for (int i = 0; i < size; i++) {
-                                int j = (Integer) listMatrix.get(i);
-                                NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j), fareTypes);
-                                card.setType(card.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card);
-                            }
-                        }
                         //NORMAL ROUTES*/
                         for(int i=0; i< result.size(); i++) {
                             if(getDistanceMatrix(result.get(i))) {
