@@ -136,22 +136,21 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }
                                     } else if (steps.getTravelMode().matches("WALKING")) {
-                                        //JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
-                                        //List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
+                                        JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
+                                        List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
                                         //to store walking steps
-                                        /*for (int l = 0; l < detailedStepsArray.length(); l++) {
+                                        for (int l = 0; l < detailedStepsArray.length(); l++) {
                                             JSONObject detailedStepsObject = detailedStepsArray.getJSONObject(l);
                                             GoogleRoutesSteps detailedSteps = new GoogleRoutesSteps();
-                                            detailedSteps.setDistance(detailedStepsObject
+                                            /*detailedSteps.setDistance(detailedStepsObject
                                                     .getJSONObject("distance").getString("text"));
                                             detailedSteps.setDuration(detailedStepsObject
-                                                    .getJSONObject("duration").getString("text"));
+                                                    .getJSONObject("duration").getString("text"));*/
                                             detailedSteps.setHtmlInstructions(detailedStepsObject
                                                     .optString("html_instructions"));
                                             detailedStepsList.add(detailedSteps);
                                         }
-                                        steps.setDetailedSteps(detailedStepsList);*/
-                                        //steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                        steps.setDetailedSteps(detailedStepsList);
                                         steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                         steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     }
