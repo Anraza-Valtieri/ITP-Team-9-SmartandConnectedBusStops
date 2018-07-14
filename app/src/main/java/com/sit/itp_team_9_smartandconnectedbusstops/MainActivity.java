@@ -5,16 +5,23 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,12 +31,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
+import android.preference.PreferenceManager;
+import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -49,16 +61,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -135,6 +149,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -192,6 +207,13 @@ public class MainActivity extends AppCompatActivity
     RecyclerView recyclerView;
     View layer;
 
+    // Navigation Toolbar
+    private AutoCompleteTextView startingPointTextView;
+    private AutoCompleteTextView destinationTextView;
+
+    // Loading screen
+    private ConstraintLayout loadingScreen;
+
     //Database
     FirebaseFirestore db;
 
@@ -209,7 +231,7 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<Card> favCardList = new ArrayList<>(); // Favorite cards
     private ArrayList<Card> singleCardList = new ArrayList<>(); // single cards (POI)
     public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
-    public ArrayList<String> favBusStopID;
+    public ArrayList<String> favBusStopID = new ArrayList<>();
 
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
@@ -249,12 +271,26 @@ public class MainActivity extends AppCompatActivity
     //Navigate
     boolean optionMode = true;
 
+    FloatingActionButton fab;
+
+
     //PlaceAutoCompleteAdapter
     private PlaceAutoCompleteAdapter mPlaceAutoCompleteAdapter;
     private GeoDataClient mGeoDataClient;
     private AutocompleteFilter autoCompleteFilter;
     private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
             new LatLng(-1.3520828333333335, -103.81983583333334), new LatLng(1.3520828333333335, 103.8198358333334));
+
+    //Shared Preference for Language Alert Dialog
+    private static final String SELECTED_ITEM = "SelectedItem";
+    private SharedPreferences sharedPreference;
+    private SharedPreferences.Editor sharedPrefEditor;
+
+    // Context Variable for classes
+    public static Context context = null;
+
+    // Address for starting point
+    String convertedAddress;
 
     //direction query
     String query;
@@ -273,9 +309,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.AppTheme_NoActionBar);
+//        setTheme(R.style.AppTheme_NoActionBar);
+//        setContentView(R.layout.loadingscreen);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
         toolbar = findViewById(R.id.toolbar);
         toolbarNavigate = findViewById(R.id.navigate_toolbar);
         CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(
@@ -284,7 +322,7 @@ public class MainActivity extends AppCompatActivity
         );
         params.setMargins(0, 0, 0, 0);
         toolbarNavigate.setLayoutParams(params);
-        setSupportActionBar(toolbarNavigate);
+//        setSupportActionBar(toolbarNavigate);
         setSupportActionBar(toolbar);
         View rootView = findViewById(R.id.includeroot);
         navigationView = findViewById(R.id.nav_view);
@@ -297,8 +335,12 @@ public class MainActivity extends AppCompatActivity
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
+        loadingScreen = findViewById(R.id.splashscreen);
         // Toolbar :: Transparent
-        toolbar.setBackgroundColor(Color.TRANSPARENT);
+//        toolbar.setBackgroundColor(Color.TRANSPARENT);
+
+        startingPointTextView = findViewById(R.id.textViewStartingPoint);
+        destinationTextView = findViewById(R.id.textViewDestination);
 
         SharedPreferences prefs = getSharedPreferences(UUID_ID, MODE_PRIVATE);
         String restoredText = prefs.getString("UUID", null);
@@ -319,14 +361,17 @@ public class MainActivity extends AppCompatActivity
         // Status bar :: Transparent
         Window window = this.getWindow();
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            window.setNavigationBarColor(Color.WHITE);
+            window.setStatusBarColor(Color.WHITE);
+//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+            int flags = window.getDecorView().getSystemUiVisibility();
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            window.getDecorView().setSystemUiVisibility(flags);
         }
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            window.setSustainedPerformanceMode(true);
@@ -385,19 +430,21 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-                            handler.postDelayed(() -> location.setText(sgWeather.getmLocation()),500);
-                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+"°C"),500);
+
+                            handler.postDelayed(() -> location.setText( sgWeather.getmLocation()),500);
+                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                            handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+getString(R.string.degree)),500);
                             handler.postDelayed(() -> psi25.setText("PM2.5: "+sgWeather.getmPM25()),500);
                             handler.postDelayed(() -> psi10.setText("PM10: "+sgWeather.getmPM10()),500);
-                            handler.postDelayed(() -> uv.setText("UV Index: "+sgWeather.getmUV()),500);
-                            handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
+                            handler.postDelayed(() -> uv.setText(getString(R.string.uvIndex)+": "+sgWeather.getmUV()),500);
                         }else{
                             location.setText("Updating..");
+                            weather.setText("-");
                             temperature.setText("-°C");
                             psi25.setText("PM2.5: -");
                             psi10.setText("PM10: -");
                             uv.setText("UV Index: -");
-                            weather.setText("-");
+
                         }
                     }
 
@@ -413,6 +460,43 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
         );
+
+        fab = findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                @SuppressLint("StaticFieldLeak")
+                AsyncTask asyncTask = new AsyncTask() {
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        if(mCurrentLocation == null)
+                            return;
+                    }
+
+                    @Override
+                    protected Object doInBackground(Object[] objects) {
+                        if(mCurrentLocation == null)
+                            return null;
+
+                        return new CameraPosition.Builder()
+                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                                .build();
+                    }
+
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        super.onPostExecute(o);
+                        if(o != null)
+                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
+                    }
+                };
+
+                asyncTask.execute();
+            }
+        });
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -443,34 +527,19 @@ public class MainActivity extends AppCompatActivity
         if (mLocationPermissionGranted) {
             getDeviceLocation();
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Window window = this.getWindow();
-//            window.setSustainedPerformanceMode(true);
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        handler.removeCallbacks(runnable);
-        if (adapter != null)
-            adapter.pauseHandlers();
 
         if (adapter != null)
-            setFavBusStopID(adapter.getFavBusStopID());
+            adapter.pauseHandlers();
 
         if (mLocationPermissionGranted) {
             // pausing location updates
             stopLocationUpdates();
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Window window = this.getWindow();
-            window.setSustainedPerformanceMode(false);
-        }
-
-
     }
 
     @Override
@@ -532,9 +601,11 @@ public class MainActivity extends AppCompatActivity
                     // this part hides the button immediately and waits bottom sheet
                     // to collapse to show
                     if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-//                        Objects.requireNonNull(getSupportActionBar()).hide();
-                        if(getSupportActionBar().isShowing())
-                            hideActionBar();
+                        if(toolbarNavigate.isShown())
+                            hideActionBar(toolbarNavigate);
+                        if(toolbar.isShown())
+                            hideActionBar(toolbar);
+                        fab.hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -542,9 +613,14 @@ public class MainActivity extends AppCompatActivity
                         if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
+                        fab.show();
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                        hideActionBar();
+                        if(toolbarNavigate.isShown())
+                            hideActionBar(toolbarNavigate);
+                        if(toolbar.isShown())
+                            hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
+                        fab.hide();
                     }
                 }
 
@@ -552,7 +628,8 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-//                    getSupportActionBar().hide();
+                    fab.hide();
+//                    fab.setSize(1-(int)slideOffset);
                 }
             });
         }
@@ -563,6 +640,9 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
+
+        adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
+
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
@@ -580,26 +660,13 @@ public class MainActivity extends AppCompatActivity
 //                setSupportActionBar(toolbar);
 //                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
 
-                //STATUS Bar
-                Window window = this.getWindow();
-                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                window.setStatusBarColor(Color.TRANSPARENT);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    int flags = window.getDecorView().getSystemUiVisibility();
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                    window.getDecorView().setSystemUiVisibility(flags);
-                }
-
                 hideKeyboard();
-                if (adapter != null)
-                    setFavBusStopID(adapter.getFavBusStopID());
+//                if (adapter != null)
+//                    setFavBusStopID(adapter.getFavBusStopID());
 
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
@@ -611,28 +678,29 @@ public class MainActivity extends AppCompatActivity
                 }
             } else if (id == R.id.action_nav) {
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
 
-                if (adapter != null)
-                    setFavBusStopID(adapter.getFavBusStopID());
+//                if (adapter != null)
+//                    setFavBusStopID(adapter.getFavBusStopID());
 
-                //STATUS Bar
-                Window window = this.getWindow();
-//                window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                }
-                window.setStatusBarColor(Color.WHITE);
-
-                AutoCompleteTextView startingPointTextView = findViewById(R.id.textViewStartingPoint);
+                Spinner fareTypesSpinner = (Spinner) findViewById(R.id.fare_type_spinner);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                        R.array.fare_types_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the adapter to the spinner
+                fareTypesSpinner.setAdapter(adapter);
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
-                AutoCompleteTextView destinationTextView = findViewById(R.id.textViewDestination);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
-                ImageButton optionButton = findViewById(R.id.optionButton);
+                //ImageButton switchButton = findViewById(R.id.switchButton);
+                ImageButton startVoiceSearchButton = findViewById(R.id.imgBtnStartVoiceSearch);
+                ImageButton destVoiceSearchButton = findViewById(R.id.imgBtnDestVoiceSearch);
+                ImageButton switchButton = findViewById(R.id.switchButton);
                 ImageButton searchButton = findViewById(R.id.searchButton);
+                TabLayout navigationTabs = findViewById(R.id.tabLayout);
 
                 handler.postDelayed(() -> {
                     startingPointTextView.setSelectAllOnFocus(true);
@@ -640,17 +708,9 @@ public class MainActivity extends AppCompatActivity
                     showKeyboard(startingPointTextView);
                 },600);
 
+                startingPointTextView.setText(convertedAddress);
 
                 handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
-                optionButton.setOnClickListener(view -> {
-                    if (!optionMode) {
-                        optionButton.setBackgroundResource(R.drawable.ic_directions_bus_black_24dp); //transit
-                        optionMode = true;
-                    } else{
-                        optionButton.setBackgroundResource(R.drawable.ic_baseline_directions_walk_24px); //walking
-                        optionMode = false;
-                    }
-                });
 
                 destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                     @Override
@@ -658,11 +718,14 @@ public class MainActivity extends AppCompatActivity
                         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                             if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                                 Log.i(TAG,"lookUpRoutes!");
-                                String mode;
-                                if (optionMode){
+                                String mode ="";
+                                if (navigationTabs.getSelectedTabPosition() == 0){
                                     mode = "transit";
-                                }else{
+                                    optionMode = true;
+                                }
+                                else if(navigationTabs.getSelectedTabPosition() == 1){
                                     mode = "walking";
+                                    optionMode = false;
                                 }
                                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                         + startingPointTextView.getText().toString() + "&destination="
@@ -673,7 +736,7 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                                lookUpRoutes(query);
+                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -683,15 +746,33 @@ public class MainActivity extends AppCompatActivity
                         return false;
                     }
                 });
+
+                startVoiceSearchButton.setOnClickListener(v -> {
+                    promptSpeechInput(100);
+                });
+
+                destVoiceSearchButton.setOnClickListener(v -> {
+                    promptSpeechInput(200);
+                });
+
+                switchButton.setOnClickListener(v -> {
+                    String startPoint = startingPointTextView.getText().toString();
+                    startingPointTextView.setText(destinationTextView.getText());
+                    destinationTextView.setText(startPoint);
+                });
+
                 searchButton.setOnClickListener(v -> {
                 Log.i(TAG,"onClickListener!");
                     if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                         Log.i(TAG,"lookUpRoutes!");
-                        String mode;
-                        if (optionMode){
+                        String mode = "";
+                        if (navigationTabs.getSelectedTabPosition() == 0){
                             mode = "transit";
-                        }else{
+                            optionMode = true;
+                        }
+                        else if(navigationTabs.getSelectedTabPosition() == 1){
                             mode = "walking";
+                            optionMode = false;
                         }
                          query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
@@ -702,7 +783,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,query);
                         hideKeyboard();
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                        lookUpRoutes(query);
+                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -713,21 +794,8 @@ public class MainActivity extends AppCompatActivity
 //                setSupportActionBar(toolbar);
 //                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
-                    hideActionBar();
+                    hideActionBar(toolbarNavigate);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
-                }
-
-                //STATUS Bar
-                Window window = this.getWindow();
-                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                window.setStatusBarColor(Color.TRANSPARENT);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    int flags = window.getDecorView().getSystemUiVisibility();
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                    window.getDecorView().setSystemUiVisibility(flags);
                 }
 
                 if(mCurrentLocation==null){
@@ -826,7 +894,7 @@ public class MainActivity extends AppCompatActivity
                 if (!firstLocationUpdate) {
                     if (mCurrentLocation != null) {
                         firstLocationUpdate = true;
-
+                        loadFavoritesFromDB();
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
@@ -835,7 +903,26 @@ public class MainActivity extends AppCompatActivity
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        loadingScreen.setVisibility(View.GONE);
                         bottomNav.setSelectedItemId(R.id.action_fav);
+
+                        Geocoder gc = new Geocoder(getApplicationContext());
+                        try {
+                            Address address = gc.getFromLocation(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(), 1).get(0);
+                            convertedAddress = address.getAddressLine(0);
+                        }
+                        catch(IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }else{
+                    Geocoder gc = new Geocoder(getApplicationContext());
+                    try {
+                        Address address = gc.getFromLocation(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(), 1).get(0);
+                        convertedAddress = address.getAddressLine(0);
+                    }
+                    catch(IOException e) {
+                        e.printStackTrace();
                     }
                 }
                 try {
@@ -852,7 +939,7 @@ public class MainActivity extends AppCompatActivity
 
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
@@ -920,6 +1007,44 @@ public class MainActivity extends AppCompatActivity
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
+        }
+    }
+
+    /**
+     * voice search
+     */
+    public void promptSpeechInput(int requestCode) {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
+
+        try {
+            startActivityForResult(intent, requestCode);
+        }
+        catch(ActivityNotFoundException a) {
+            Toast.makeText(MainActivity.this, "Sorry! Your device doesn't support speech language!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void onActivityResult(int request_code, int result_code, Intent i) {
+
+        switch(request_code) {
+
+            case 100:
+                if(result_code == RESULT_OK && i != null) {
+                    ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    startingPointTextView.setText(result.get(0));
+                }
+                break;
+
+            case 200:
+
+                if(result_code == RESULT_OK && i != null) {
+                    ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    destinationTextView.setText(result.get(0));
+                }
+                break;
         }
     }
 
@@ -992,21 +1117,100 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        /*if (id == R.id.nav_bus) {
-            // Handle the camera action
-        } else if (id == R.id.nav_bus_stops) {
+        switch(id) {
 
-        } else if (id == R.id.nav_trainstations) {
+            case R.id.nav_language_preferences:
 
-        } else */
-        if (id == R.id.nav_about) {
-            Log.d(TAG, "onNavigationItemSelected: Settings");
-//            this.setTheme(R.style.Theme_AppCompat_NoActionBar);
+                final String[] listItems = {"English", "中文", "Bahasa Melayu", "தமிழ்"};
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+                mBuilder.setTitle("Choose your preferred language");
+                mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int option) {
+                        saveSelectedItem(option);
+                        switch (option) {
+                            case 0:
+                                //English
+                                setLocale("en");
+                                recreate();
+                                break;
+                            case 1:
+                                //chinese
+                                setLocale("zh");
+                                recreate();
+                                break;
+                            case 2:
+                                //malay
+                                setLocale("ms");
+                                recreate();
+                                break;
+                            case 3:
+                                //tamil
+                                setLocale("ta");
+                                recreate();
+                                break;
+                            default:
+                                break;
+                        }
+
+                        // dismiss alert dialog when language selected
+                        dialog.dismiss();
+                    }
+                });
+
+                AlertDialog mDialog = mBuilder.create();
+                // show alert dialog
+                mDialog.show();
+                break;
+
+            case R.id.nav_about:
+
+                Log.d(TAG, "onNavigationItemSelected: Settings");
+                break;
         }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    // method to localize the language
+    private void setLocale(String lang) {
+        Locale locale = new Locale(lang);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        // save data to Shared Preferences
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", lang);
+        editor.apply();
+    }
+
+    // load language saved in shared preferences
+    public void loadLocale() {
+        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        setLocale(language);
+    }
+
+    //shared preferences method for language alert dialog options
+    private int getSelectedItem() {
+        if (sharedPreference == null) {
+            sharedPreference = PreferenceManager
+                    .getDefaultSharedPreferences(MainActivity.this);
+        }
+        return sharedPreference.getInt(SELECTED_ITEM, -1);
+    }
+
+    //shared preferences method for language alert dialog options
+    private void saveSelectedItem(int item) {
+        if (sharedPreference == null) {
+            sharedPreference = PreferenceManager
+                    .getDefaultSharedPreferences(MainActivity.this);
+        }
+        sharedPrefEditor = sharedPreference.edit();
+        sharedPrefEditor.putInt(SELECTED_ITEM, item);
+        sharedPrefEditor.commit();
     }
 
     @Override
@@ -1163,6 +1367,7 @@ public class MainActivity extends AppCompatActivity
      * Fills up favBusStopID and syncs it to adapter
      */
     private void loadFavoritesFromDB(){
+        Log.d(TAG, "loadFavoritesFromDB: UUIDStr: "+UUIDStr);
         DocumentReference docRef = db.collection("user").document(UUIDStr);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -1301,7 +1506,7 @@ public class MainActivity extends AppCompatActivity
                     markerMap.put(value.getDescription(), infoWindowItem);
                     mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
                         if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+//                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
                             BusStopCards card = getBusStopData(mapMarkers.getSnippet());
                             if(card != null) {
                                 card.setType(Card.BUS_STOP_CARD);
@@ -1558,6 +1763,8 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        favCardList.clear();
+
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
             if (card != null) {
@@ -1597,12 +1804,12 @@ public class MainActivity extends AppCompatActivity
 //        updateAdapterList(favCardList);
     }
 
-    private void lookUpRoutes(String query){
+    private void lookUpRoutes(String query, String fareTypes){
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
         JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        List<GoogleRoutesData> result; //= new ArrayList<>(); //result from parser
         try {
             result = directionsParser.execute().get();
             Log.d(TAG,query);
@@ -1613,53 +1820,87 @@ public class MainActivity extends AppCompatActivity
             transitCardList.clear();
             walkingCardList.clear();
             progressBar.setVisibility(View.VISIBLE);
-            if (!optionMode){
-                //walking
-                for(int i=0; i< result.size(); i++) {
-                    NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i));
-                    card.setType(Card.NAVIGATE_WALKING_CARD);
-                    walkingCardList.add(card);
-                    Log.d(TAG, "lookUpRoute: "+card.toString());
-                }
-                updateAdapterList(walkingCardList);
 
-            }else{
-                //FOR SUGGESTIONS, if no difference from normal routes then will not display
-                List listMatrix = new ArrayList();
-                for(int i=0; i< result.size(); i++) {
-                    if(getDistanceMatrix(result.get(i))){
-                        listMatrix.add(i);
-                        Log.d("GETDISTANCEMATRIX", "added to list ===== " + String.valueOf(i));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!optionMode){
+                        //walking
+                        for(int i=0; i< result.size(); i++) {
+                            if (getWeatherData(result.get(i))) {
+                                String msg = "Remember to bring an umbrella with you!";
+                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                                card.setType(Card.NAVIGATE_WALKING_CARD);
+                                walkingCardList.add(card);
+                                Log.d(TAG, "lookUpRoute: " + card.toString());
+                            }
+                            else{
+                                String msg = "Weather looks good!";
+                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                                card.setType(Card.NAVIGATE_WALKING_CARD);
+                                walkingCardList.add(card);
+                                Log.d(TAG, "lookUpRoute: " + card.toString());
+                            }
+                        }
+                        updateAdapterList(walkingCardList);
+
+                    }else{/*
+                        //NORMAL ROUTES*/
+                        for(int i=0; i< result.size(); i++) {
+                            if(getDistanceMatrix(result.get(i))) {
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
+                            else{
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
+                        }
+                        updateAdapterList(transitCardList);
                     }
                 }
-                int size = listMatrix.size();
-                if (listMatrix.size() == result.size()) {
-                    Log.d("NO DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                }
-                else {
-                    Log.d("GOT DIFFERENCE", "listMatrix : " + String.valueOf(listMatrix.size()) + " result : " + String.valueOf(result.size()));
-                    for (int i = 0; i < size; i++) {
-                        int j = (Integer) listMatrix.get(i);
-                        NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(j));
-                        card.setType(card.NAVIGATE_TRANSIT_CARD);
-                        transitCardList.add(card);
-                    }
-                }
-                //NORMAL ROUTES
-                for(int i=0; i< result.size(); i++) {
-                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i));
-                    card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                    transitCardList.add(card1);
-                    Log.d(TAG, "lookUpRoute: "+card1.toString());
-                }
-                updateAdapterList(transitCardList);
-            }
+            }, 1500);
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
 
+    public boolean getWeatherData(GoogleRoutesData googleRoutesData){
+        List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+        boolean umbrella = false;
+        if (routeSteps != null) {
+            for (int i = 0; i < routeSteps.size(); i++) {
+                double startLat = routeSteps.get(i).getStartLocationLat();
+                double startLng = routeSteps.get(i).getStartLocationLng();
+                if (sgWeather!=null) {
+                    Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
+                    sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
+                    String temp = sgWeather.getmTempForLatLong();
+                    String weather = sgWeather.getmWeatherForLatLong();
+                    Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
+                    Log.d("WALKing -------------- ", "WEATHER " + weather);
+                    if (weather != null) {
+                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                            umbrella = true;
+                        } else {
+                            umbrella = false;
+                        }
+                    } else {
+                        umbrella = false;
+                    }
+                }
+            }
+        }
+        else{
+            Log.d(TAG, "routeSteps EMPTY" );
+        }
+        return umbrella;
+    }
     private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
         boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
@@ -1679,18 +1920,12 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "lookUpTrafficDuration: Google returned no data");
                 return pass;
             }
-            Log.d(TAG, "lookUpTrafficDuration: Google returned DM " + result1.size() + " data.");
-            Log.d(TAG, "lookUpTrafficDuration: Google returned DG " + result.size() + " data.");
             for(int i=0; i< result.size(); i++) {
-                Log.d("lookUpTrafficDuration", "ifelse");
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
                     if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
-                        Log.d(TAG, "lookUpTrafficDuration BUS MAT: " + i );
                         pass = true;
-                        Log.d(TAG, "lookUpTrafficDuration: BUSBUSBUS");
                     } else { // dont display
-                        Log.d(TAG, "getMatrix false");
                         pass = false;
                     }
                 }
@@ -1764,9 +1999,9 @@ public class MainActivity extends AppCompatActivity
     }
     private boolean getDistanceMatrix(GoogleRoutesData googleRoutesData) {
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-        Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
         boolean pass = false;
         if (routeSteps != null) {
+            Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
             for (int i = 0; i < routeSteps.size(); i++) {
                 Log.d("getDistanceMatrix",String.valueOf(i));
                 if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getTrainLine()!= null ) {
@@ -1786,7 +2021,6 @@ public class MainActivity extends AppCompatActivity
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     Log.d("DISTANCEMATRIX", "query");
                     pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
-
                 }
             }
         }
@@ -1815,32 +2049,47 @@ public class MainActivity extends AppCompatActivity
 
     int mToolbarHeightBackUp = 0;
     ValueAnimator mVaActionBar2 = null;
-    void hideActionBar() {
+    void hideActionBar(Toolbar bar) {
         // holds the original Toolbar height.
         // this can also be obtained via (an)other method(s)
         int mToolbarHeight = 0;
-        int mAnimDuration = 200/* milliseconds */;
+        int mAnimDuration = 150/* milliseconds */;
 //        ValueAnimator mVaActionBar = null;
         // initialize `mToolbarHeight`
-        mToolbarHeight = getSupportActionBar().getHeight();
-        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
-        if(mToolbarHeight == 0)
-            mToolbarHeight = mToolbarHeightBackUp;
+//        mToolbarHeight = getSupportActionBar().getHeight();
+//        Log.d(TAG, "hideActionBar: "+mToolbarHeight);
+
+        if(bar.equals(toolbar)) {
+//            Log.d(TAG, "hideActionBar: SHOWN");
+            TypedValue tv = new TypedValue();
+//            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+                mToolbarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            }
+        }
+        else {
+//            Log.d(TAG, "hideActionBar: SHOWN2");
+            mToolbarHeight = toolbarNavigate.getMinimumHeight();
+        }
 
         if (mVaActionBar2 != null && mVaActionBar2.isRunning()) {
             // we are already animating a transition - block here
+//            Log.d(TAG, "hideActionBar: we are already animating a transition");
             return;
         }
 
         // animate `Toolbar's` height to zero.
+//        Log.d(TAG, "hideActionBar1: "+mToolbarHeight);
         mVaActionBar2 = ValueAnimator.ofInt(mToolbarHeight , 0);
         mVaActionBar2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 // update LayoutParams
-                ((CoordinatorLayout.LayoutParams)toolbar.getLayoutParams()).height
+
+                ((CoordinatorLayout.LayoutParams)bar.getLayoutParams()).height
                         = (Integer)animation.getAnimatedValue();
-                toolbar.requestLayout();
+//                Log.d(TAG, "hideActionBar2: "+bar.getLayoutParams().height);
+                bar.requestLayout();
             }
         });
 
@@ -1848,7 +2097,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-
                 if (getSupportActionBar() != null) { // sanity check
                     getSupportActionBar().hide();
                 }
@@ -1877,11 +2125,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         else {
-            if (bar.getHeight() == 0)
-                mToolbarHeight = bar.getMinimumHeight();
-            else
-                mToolbarHeight = bar.getHeight();
-
+            mToolbarHeight = toolbarNavigate.getMinimumHeight();
             mToolbarHeightBackUp = mToolbarHeight;
         }
 

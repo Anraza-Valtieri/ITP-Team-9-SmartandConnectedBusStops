@@ -53,10 +53,11 @@ public class NavigateTransitCard extends Card {
     private String numStops;
     private List<String> inBetweenStops;
     private List<String> polyLines;
+    private String condition;
     private boolean isFavorite;
     //private List<String> transitStations;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
-                                                        // lineName(string), arrivalStop (string)>
+    // lineName(string), arrivalStop (string)>
     private String error;
 
     private List<String> inBetweenTrainStations;
@@ -126,6 +127,14 @@ public class NavigateTransitCard extends Card {
 
     public void setPolyLines(List<String> polyLines) {
         this.polyLines = polyLines;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     /*public String getTransferStation() {
@@ -212,14 +221,14 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData) {
+    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
-            
+
             //in Steps
             List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
             if (routeSteps != null) {
@@ -525,9 +534,9 @@ public class NavigateTransitCard extends Card {
                                                             if ((allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
                                                                     && (departureTrainStation.getStationCode().equals("CE1") ||
                                                                     departureTrainStation.getStationCode().equals("CE2"))) ||
-                                                            (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
-                                                                    && (departureTrainStation.getStationCode().equals("CG1") ||
-                                                                    departureTrainStation.getStationCode().equals("CG2")))
+                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
+                                                                            && (departureTrainStation.getStationCode().equals("CG1") ||
+                                                                            departureTrainStation.getStationCode().equals("CG2")))
                                                                     || (allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
                                                                     && (arrivalTrainStation.getStationCode().equals("CE1") ||
                                                                     arrivalTrainStation.getStationCode().equals("CE2"))) ||
@@ -571,25 +580,76 @@ public class NavigateTransitCard extends Card {
                 }
 
                 FareDetails fareDetails = new FareDetails();
-                fareDetails.populateAdultFareDistance();
-                fareDetails.populateAdultFaresMap();
 
                 String price = "";
 
                 if(transitDistance > 0.0) {
-                    for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+                    switch (fareTypes) {
+                        case "Student":
+                            for (int i = 0; i < fareDetails.getStudentFareDistance().size(); i++) {
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getStudentFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getStudentFareDistance().get(i - 1) && transitDistance <= fareDetails.getStudentFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getStudentFareDistance().get(fareDetails.getStudentFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
 
-                        if(i == 0) {
-                            if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
-                                price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
                             }
-                        }
-                        else {
-                            if(transitDistance > fareDetails.getAdultFareDistance().get(i-1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
-                                price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
-                            }
-                        }
+                            break;
+                        case "Adult":
+                            for (int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
 
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+                            }
+                            break;
+                        case "Senior Citizens":
+                            for (int i = 0; i < fareDetails.getSeniorFareDistance().size(); i++) {
+
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getSeniorFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getSeniorFareDistance().get(i - 1) && transitDistance <= fareDetails.getSeniorFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getSeniorFareDistance().get(fareDetails.getSeniorFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+
+                            }
+                            break;
+                        default: // ADULT
+                            for (int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+                            }
+                            break;
                     }
                 }
                 card.setPolyLines(listOfPolyLines);
@@ -597,6 +657,7 @@ public class NavigateTransitCard extends Card {
                 card.setCost(price);
                 card.setTimeTaken(timeTakenList);
                 card.setTransitStations(transitStations);
+                card.setCondition(trafCon);
             }
         }else{
             card.setError(googleRoutesData.getError());

@@ -2,7 +2,6 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Parser;
 
 import android.app.Activity;
 import android.os.AsyncTask;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
@@ -13,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -29,8 +29,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
     public JSONGoogleResponseRoute delegate = null;
 
 
-    public JSONGoogleDirectionsParser(Activity activity, List<String> urls){
-        this.urls = urls;
+    public JSONGoogleDirectionsParser(Activity activity, List<String> url){
+        urls = url;
         //this.activity = activity;
     }
 
@@ -51,15 +51,17 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
     @Override
     protected List<GoogleRoutesData> doInBackground(Void... voids) {
         GoogleRoutesData response;
+        if(getUrls().size() < 1)
+            return null;
+
         try {
             for(String url : getUrls()) {
+//                String newURL = java.net.URLEncoder.encode(url, "UTF-8");
                 URL link = new URL(url);
                 HttpURLConnection urlConnection = (HttpURLConnection) link.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.connect();
-                //String authKey = "AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
-                //Log.i(TAG, "Sent : " + authKey);
                 Log.i(TAG,url);
                 // Get the response code
                 int statusCode = urlConnection.getResponseCode();
@@ -186,10 +188,11 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                     }
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
 
             return routesList;
         }

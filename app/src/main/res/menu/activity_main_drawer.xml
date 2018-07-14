@@ -20,8 +20,12 @@
             -->
     </group>
 
-    <item android:title="Settings">
+    <item android:title="@string/action_settings">
         <menu>
+            <item
+                android:id="@+id/nav_language_preferences"
+                android:icon="@drawable/ic_language_black_24dp"
+                android:title="@string/language" />
             <item
                 android:id="@+id/nav_about"
                 android:icon="@drawable/ic_info_outline_black_24dp"

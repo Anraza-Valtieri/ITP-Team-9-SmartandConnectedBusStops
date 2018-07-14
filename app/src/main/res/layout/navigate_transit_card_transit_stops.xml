@@ -35,18 +35,21 @@
         android:id="@+id/textViewDepartureStop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-        app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
+        app:layout_constraintStart_toEndOf="@+id/relativeLayout"
         app:layout_constraintTop_toTopOf="@+id/imageViewTransitStation"
         tools:text="Dhoby Ghaut MRT" />
 
     <RelativeLayout
+        android:id="@+id/relativeLayout"
         android:layout_width="50dp"
         android:layout_height="20dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
         app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDepartureStop">
+        app:layout_constraintTop_toTopOf="@+id/imageViewTransitStation">
 
         <View
             android:id="@+id/viewLine"
@@ -58,8 +61,8 @@
             android:id="@+id/textViewLine"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
             android:layout_centerInParent="true"
+            android:textAlignment="center"
             android:textColor="@android:color/white"
             tools:text="text" />
 
@@ -67,6 +70,7 @@
 
     <ExpandableListView
         android:id="@+id/listViewNumStops"
+        style="@android:style/Widget.Material.ExpandableListView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -82,7 +86,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-        app:layout_constraintStart_toEndOf="@+id/imageViewTransitStation"
+        app:layout_constraintStart_toStartOf="@+id/textViewDepartureStop"
         app:layout_constraintTop_toBottomOf="@id/listViewNumStops"
         tools:text="TextView" />
 
