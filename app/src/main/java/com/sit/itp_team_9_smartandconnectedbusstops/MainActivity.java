@@ -108,6 +108,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -143,6 +144,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -193,6 +195,7 @@ public class MainActivity extends AppCompatActivity
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String UUID_ID = "uuid_id";
+    private static final String SETTING = "Settings";
     private String UUIDStr = "";
 
     // Header
@@ -315,6 +318,10 @@ public class MainActivity extends AppCompatActivity
 //        setTheme(R.style.AppTheme_NoActionBar);
 //        setContentView(R.layout.loadingscreen);
         super.onCreate(savedInstanceState);
+        String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
+                .getString("My_Lang", "en");
+        setLocale(language);
+        
         setContentView(R.layout.activity_main);
         context = this;
         toolbar = findViewById(R.id.toolbar);
@@ -392,19 +399,6 @@ public class MainActivity extends AppCompatActivity
                 return false;
             }
         });
-
-        /*
-        (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
-             To hide this warning and ensure your app does not break, you need to add the following code to your app before calling any other Cloud Firestore methods:
-
-        With this change, timestamps stored in Cloud Firestore will be read back as com.google.firebase.Timestamp objects instead of as system java.util.Date objects. So you will also need to update code expecting a java.util.Date to instead expect a Timestamp. For example:
-
-             // Old:
-             java.util.Date date = snapshot.getDate("created_at");
-             // New:
-             Timestamp timestamp = snapshot.getTimestamp("created_at");
-             java.util.Date date = timestamp.toDate();
-         */
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
@@ -625,10 +619,15 @@ public class MainActivity extends AppCompatActivity
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
                         fab.hide();
                     } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
-                        if(bottomNav.getSelectedItemId() == R.id.action_nearby)
-                            lookUpNearbyBusStops();
-                        if(bottomNav.getSelectedItemId() == R.id.action_fav)
-                            prepareFavoriteCards(getFavBusStopID());
+                        if(singleCardList.size() <= 0) {
+                            if (bottomNav.getSelectedItemId() == R.id.action_nearby)
+                                lookUpNearbyBusStops();
+                            if (bottomNav.getSelectedItemId() == R.id.action_fav) {
+                                ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
+                                favString.addAll(getFavRoute());
+                                prepareFavoriteCards(favString);
+                            }
+                        }
                     }
                 }
 
@@ -651,8 +650,17 @@ public class MainActivity extends AppCompatActivity
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
 
-        adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
-        adapter.setOnFavoriteClickListener(favRoute -> setFavRoute(favRoute));
+        adapter.setOnFavoriteClickListener(new OnFavoriteClick() {
+            @Override
+            public void onFavoriteBusClick(ArrayList<String> favBusStopID) {
+                setFavBusStopID(favBusStopID);
+            }
+
+            @Override
+            public void onFavoriteRouteClick(ArrayList<String> favRouteID) {
+                setFavRoute(favRouteID);
+            }
+        });
 
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
@@ -674,6 +682,7 @@ public class MainActivity extends AppCompatActivity
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
+                singleCardList.clear();
 
                 hideKeyboard();
 //                if (adapter != null)
@@ -684,7 +693,9 @@ public class MainActivity extends AppCompatActivity
                 if (favBusStopID.size() > 0 || favRoute.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
-                        prepareFavoriteCards(favBusStopID);
+                        ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
+                        favString.addAll(getFavRoute());
+                        prepareFavoriteCards(favString);
                     }else
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
@@ -695,9 +706,7 @@ public class MainActivity extends AppCompatActivity
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
-
-//                if (adapter != null)
-//                    setFavBusStopID(adapter.getFavBusStopID());
+                singleCardList.clear();
 
                 Spinner fareTypesSpinner = (Spinner) findViewById(R.id.fare_type_spinner);
                 // Create an ArrayAdapter using the string array and a default spinner layout
@@ -814,6 +823,8 @@ public class MainActivity extends AppCompatActivity
                     return false;
                 }
 
+                singleCardList.clear();
+
                 hideKeyboard();
 
                 CameraPosition pos = new CameraPosition.Builder()
@@ -864,6 +875,10 @@ public class MainActivity extends AppCompatActivity
             int grantedResult = grantResults[i];
             if (permission.equals(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
                 if (grantedResult == PackageManager.PERMISSION_GRANTED) {
+                    getLocationPermission();
+                    getDeviceLocation();
+                }
+                else{
                     getLocationPermission();
                 }
             }
@@ -1783,6 +1798,9 @@ public class MainActivity extends AppCompatActivity
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding " + card.getBusStopID() + " to favCardList");
             }
+            else{ // Nav cards
+                Log.d(TAG, "prepareFavoriteCards: Nav Cards");
+            }
         }
 
         @SuppressLint("StaticFieldLeak")
@@ -2036,7 +2054,7 @@ public class MainActivity extends AppCompatActivity
         }
         return pass;
     }
-          
+
     public void hideKeyboard(){
         // Check if no view has focus:
         View view = getCurrentFocus();

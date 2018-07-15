@@ -62,8 +62,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
-    public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRoute = new ArrayList<>();
+    private ArrayList<String> favBusStopID = new ArrayList<>();
+    private ArrayList<String> favRoute = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
 
@@ -76,8 +76,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
-        favBusStopID.clear();
-        favBusStopID = newFavBusStopID;
+        if(favBusStopID != null)
+            favBusStopID.clear();
+        if(newFavBusStopID != null)
+            favBusStopID = newFavBusStopID;
+        else
+            favBusStopID = new ArrayList<>();
     }
 
     public ArrayList<String> getFavRoute() {
@@ -85,8 +89,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavRoute(ArrayList<String> newFavRoute) {
-//        favRoute.clear();
-        favRoute = newFavRoute;
+        if(favRoute!= null)
+            favRoute.clear();
+        if(newFavRoute != null)
+            favRoute = newFavRoute;
+        else
+            favRoute = new ArrayList<>();
     }
 
     public ArrayList<Card> getmCard() {
@@ -171,7 +179,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteBusClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
@@ -198,17 +206,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-//                        favRoute.remove(transitCard.getRouteID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-//                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
-//                        Log.d("FAVROUTE LIST", "size " + favRoute.size());
-                       // favRoute.add(transitCard.getRouteID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.add(transitCard.getRouteID());
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favRoute);
+                        mOnFavoriteClickListener.onFavoriteRouteClick(favRoute);
                     }
                 });
                 break;

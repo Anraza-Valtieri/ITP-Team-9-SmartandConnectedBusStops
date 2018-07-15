@@ -60,6 +60,9 @@ public class NavigateTransitCard extends Card {
     // lineName(string), arrivalStop (string)>
     private String error;
 
+    private String placeidStart, placeidEnd, routeID;
+    public ArrayList<String> favRoute = new ArrayList<>();
+
     private List<String> inBetweenTrainStations;
 
     //private int imageViewTransitStation;
@@ -213,6 +216,30 @@ public class NavigateTransitCard extends Card {
         this.error = error;
     }
 
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
+    }
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -228,7 +255,13 @@ public class NavigateTransitCard extends Card {
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
-
+            card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+            card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID();
+            Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+            card.setRouteID(routeID);
+            card.setTotalDistance(googleRoutesData.getTotalDistance());
+            card.setTotalTime(googleRoutesData.getTotalDuration());
             //in Steps
             List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
             if (routeSteps != null) {

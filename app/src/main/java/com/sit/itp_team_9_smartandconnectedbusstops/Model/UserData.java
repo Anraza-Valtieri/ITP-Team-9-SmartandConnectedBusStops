@@ -3,8 +3,8 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 import java.util.ArrayList;
 
 public class UserData {
-    public ArrayList<String> favBusStopID;
-    public ArrayList<String> favRoute;
+    private ArrayList<String> favBusStopID = new ArrayList<>();
+    private ArrayList<String> favRoute = new ArrayList<>();
 
     public UserData() {
     }
