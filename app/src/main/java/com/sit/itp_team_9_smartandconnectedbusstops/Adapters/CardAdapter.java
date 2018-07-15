@@ -621,6 +621,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
+                        if(cardsTransit.getCondition()=="Slight delay"){
+                           this.condition.setTextColor(Color.RED);
+                        }
+                        else{
+                            this.condition.setTextColor(mContext.getResources().getColor(android.R.color.holo_green_dark));
+                        }
 
                         if(cardsTransit.isFavorite())
                             this.favTransit.setImageResource(R.drawable.ic_favorite_red);

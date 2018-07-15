@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity
     //Route cards
     private ArrayList<? super Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
-
+    private ArrayList<String> suggestedList = new ArrayList<>();
     // Bus Routes
     private JSONLTABusRoute busRoute;
 
@@ -1966,22 +1966,69 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(walkingCardList);
 
                 } else {
+                    //SUGGESTED route
+                    suggestedList.clear();
+                    for(int i=0; i< result.size(); i++) {
+                        if(getDistanceMatrix(result.get(i))){
+                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+                            Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                        }
+                    }
+                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *");
+                    card.setType(card.NAVIGATE_TRANSIT_CARD);
+                    transitCardList.add(card);
+                    suggestedList.add(card.getRouteID());
+                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card.getRouteID()))
+                        card.setFavorite(true);
+                    else
+                        card.setFavorite(false);
+
                     //NORMAL ROUTES
                     for (int i = 0; i < result.size(); i++) {
                         if (getDistanceMatrix(result.get(i))) {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                            if(suggestedList.contains(card1.getRouteID())) {
+                                Log.d("STATUS OF LIST","is suggested");
+                            }
+                            else {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                            }
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
                                 card1.setFavorite(true);
                             else
                                 card1.setFavorite(false);
-                        } else {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
+
+                        }
+                        else if (!getDistanceMatrix(result.get(i))) {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
+                            if(suggestedList.contains(card1.getRouteID())) {
+                                Log.d("STATUS OF LIST","is suggested");
+                            }
+                            else {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                            }
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
+                        }
+                        else {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");//<-if change words, change at CardAdapter also for text colour
+                            if(suggestedList.contains(card1.getRouteID())) {
+                                Log.d("STATUS OF LIST","is suggested");
+                            }
+                            else {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                            }
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2135,8 +2182,7 @@ public class MainActivity extends AppCompatActivity
         int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
         Log.d("GetMatrix()", "duration "+ duration + " , duration traffic " + duration_in_traffic );
-        //if (duration - duration_in_traffic > 0){ //no congestion.
-        if (duration - duration_in_traffic >= 4){
+        if (duration - duration_in_traffic >= 2){
             Log.d("GetMatrix()", "BOOLEAN NO CONGESTION");
             return true;
         }
