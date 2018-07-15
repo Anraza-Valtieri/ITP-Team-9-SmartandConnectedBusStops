@@ -25,6 +25,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -624,9 +625,7 @@ public class MainActivity extends AppCompatActivity
                             if (bottomNav.getSelectedItemId() == R.id.action_nearby)
                                 lookUpNearbyBusStops();
                             if (bottomNav.getSelectedItemId() == R.id.action_fav) {
-                                ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
-                                favString.addAll(getFavRoute());
-                                prepareFavoriteCards(favString);
+                                prepareFavoriteCards();
                             }
                         }
                     }
@@ -694,9 +693,9 @@ public class MainActivity extends AppCompatActivity
                 if (favBusStopID.size() > 0 || favRoute.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
-                        ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
-                        favString.addAll(getFavRoute());
-                        prepareFavoriteCards(favString);
+//                        ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
+//                        favString.addAll(getFavRoute());
+                        prepareFavoriteCards();
                     }else
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
@@ -1223,6 +1222,10 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_about:
 
                 Log.d(TAG, "onNavigationItemSelected: Settings");
+                break;
+            case R.id.nav_feedback:
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+                startActivity(browserIntent);
                 break;
         }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -1829,29 +1832,37 @@ public class MainActivity extends AppCompatActivity
      * <p>
      * This method always completes
      *
-     * @param  list List of Favorite Card
      */
-    private void prepareFavoriteCards(ArrayList<String> list){
-        if(list.size() < 1){
-            Log.e(TAG, "prepareFavoriteCards: list is empty!");
+    private void prepareFavoriteCards(){
+        ArrayList<String> favBusString = new ArrayList<>(getFavBusStopID());
+        ArrayList<String> favRouteString = new ArrayList<>(getFavRoute());
+        if(favBusString.size() < 1){
+            Log.e(TAG, "prepareFavoriteCards: favBusString is empty!");
             return;
         }
+
+        if(favRouteString.size() < 1){
+            Log.e(TAG, "prepareFavoriteCards: favRouteString is empty!");
+            return;
+        }
+
 
         favCardList.clear();
         favCardList1.clear();
 
-        for(int i=0; i< list.size(); i++) {
-            BusStopCards card = getBusStopData(list.get(i));
+        for(int i=0; i< favBusString.size(); i++) {
+            BusStopCards card = getBusStopData(favBusString.get(i));
             if (card != null) {
                 card.setType(Card.BUS_STOP_CARD);
                 card.setMajorUpdate(true);
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding " + card.getBusStopID() + " to favCardList");
             }
-            else{ // Nav cards
+        }
+        for(int i=0; i< favRouteString.size(); i++) {// Nav cards
                 Log.d(TAG, "prepareFavoriteCards: Nav Cards");
-                Log.d(TAG, " ---------------- ROUTE FAV CARD " + list.size());
-                String id = list.get(i);
+                Log.d(TAG, " ---------------- ROUTE FAV CARD " + favRouteString.size());
+                String id = favRouteString.get(i);
                 String[] deconcat = id.split("/");
                 String startPlaceId = deconcat[0];
                 String endPlaceId = deconcat[1];
@@ -1882,7 +1893,6 @@ public class MainActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
             }
-        }
 
         @SuppressLint("StaticFieldLeak")
         AsyncTask asyncTask = new AsyncTask() {

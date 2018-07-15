@@ -81,5 +81,6 @@
     <string name="km">km</string>
     <string name="m">m</string>
     <string name="walk">Berjalan</string>
+    <string name="feedback">Feedback</string>
 
 </resources>

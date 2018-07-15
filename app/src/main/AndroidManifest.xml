@@ -20,6 +20,26 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
+     See README(https://goo.gl/l4GJaQ) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_ic_notification" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorAccent" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="General Notification"/>
+
+        <meta-data android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -48,6 +68,13 @@
         android:name=".Services.NetworkSchedulerService"
         android:exported="true"
         android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+    <service
+        android:name=".TTFirebaseMessagingService">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+        </intent-filter>
+    </service>
 
     </application>
     <!-- Always required on api < 21, needed to keep a wake lock while your job is running -->

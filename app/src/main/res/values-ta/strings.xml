@@ -81,5 +81,6 @@
     <string name="km">கிலோமீட்டர்</string>
     <string name="m">மீட்டர்</string>
     <string name="walk">நடந்துவிட்டு</string>
+    <string name="feedback">Feedback</string>
 
 </resources>

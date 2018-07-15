@@ -81,4 +81,5 @@
     <string name="km">公里</string>
     <string name="m">米</string>
     <string name="walk">步行</string>
+    <string name="feedback">Feedback</string>
 </resources>
