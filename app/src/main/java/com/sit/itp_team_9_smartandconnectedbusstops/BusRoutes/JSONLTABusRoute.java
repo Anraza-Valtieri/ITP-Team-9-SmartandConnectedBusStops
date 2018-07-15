@@ -58,7 +58,7 @@ public class JSONLTABusRoute {
             @Override
             protected Object doInBackground(Object[] objects) {
                 for(Value entry : getValue()){
-                    Log.d(TAG, "doInBackground: Got entry "+entry.toString() );
+//                    Log.d(TAG, "doInBackground: Got entry "+entry.toString() );
                     String busNo = entry.getServiceNo();
                     Value data = entry;
                     if(busRouteMap.get(busNo) != null){ // We have data of this bus

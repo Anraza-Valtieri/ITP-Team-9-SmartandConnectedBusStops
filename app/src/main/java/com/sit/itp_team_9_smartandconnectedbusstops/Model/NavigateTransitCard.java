@@ -54,6 +54,10 @@ public class NavigateTransitCard extends Card {
     private boolean isFavorite;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
 
+    private String placeidStart, placeidEnd, routeID;
+    public ArrayList<String> favRoute = new ArrayList<>();
+    private List<String> inBetweenTrainStations;
+
     //For sorting
     private float totalWalkingDistance;
     private int totalTimeInt;
@@ -185,6 +189,30 @@ public class NavigateTransitCard extends Card {
         this.error = error;
     }
 
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
+    }
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -197,10 +225,15 @@ public class NavigateTransitCard extends Card {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
+            card.setRouteID(routeID);
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
-
+            card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+            card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
+            Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+           
             //For sorting
             card.setTotalDistanceFloat(convertDistanceToKm(googleRoutesData.getTotalDistance()));
             card.setTotalTimeInt(convertTimeToMinutes(googleRoutesData.getTotalDuration()));

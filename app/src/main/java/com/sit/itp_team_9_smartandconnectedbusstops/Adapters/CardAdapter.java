@@ -62,8 +62,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
-    public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRouteID = new ArrayList<>();
+    private ArrayList<String> favBusStopID = new ArrayList<>();
+    private ArrayList<String> favRoute = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
 
@@ -76,17 +76,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
-        favBusStopID.clear();
-        favBusStopID = newFavBusStopID;
+        if(favBusStopID != null)
+            favBusStopID.clear();
+        if(newFavBusStopID != null)
+            favBusStopID = newFavBusStopID;
+        else
+            favBusStopID = new ArrayList<>();
     }
 
-    public ArrayList<String> getFavRouteID() {
-        return favRouteID;
+    public ArrayList<String> getFavRoute() {
+        return favRoute;
     }
 
-    public void setFavRouteID(ArrayList<String> newFavBusStopID) {
-        favRouteID.clear();
-        favRouteID = newFavBusStopID;
+    public void setFavRoute(ArrayList<String> newFavRoute) {
+        if(favRoute!= null)
+            favRoute.clear();
+        if(newFavRoute != null)
+            favRoute = newFavRoute;
+        else
+            favRoute = new ArrayList<>();
     }
 
     public ArrayList<Card> getmCard() {
@@ -171,7 +179,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteBusClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
@@ -198,15 +206,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                        favRouteID.remove(transitCard.getID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        favRouteID.add(String.valueOf(transitCard.getID()));
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.add(transitCard.getRouteID());
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteRouteClick(favRoute);
                     }
                 });
                 break;
@@ -404,6 +414,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView timeTaken;
         TextView numStops;
         ExpandableListView listViewNumStops;
+        ImageButton favTransit;
 
         //For navigate walking card
         TextView walkingTime;
@@ -445,6 +456,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             breakdownBar = itemView.findViewById(R.id.breakdownBar);
             listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
             condition = itemView.findViewById(R.id.textViewCondition);
+            favTransit = itemView.findViewById(R.id.favoritebtnTransit);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -610,6 +622,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
 
+                        if(cardsTransit.isFavorite())
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_red);
+                        else
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
                         LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
@@ -751,6 +768,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setPadding(300,0,300,0);
                         this.totalDistance.setText(R.string.transit_error);
                     }
+                    if (cardsTransit.isFavorite())
+                        favTransit.setImageResource(R.drawable.ic_favorite_red);
                     break;
                 case NAVIGATE_WALKING_CARD:
                     NavigateWalkingCard cardsWalking = (NavigateWalkingCard)card;

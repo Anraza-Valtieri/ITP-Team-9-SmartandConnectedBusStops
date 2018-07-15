@@ -77,7 +77,7 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
 
                     DistanceData durationDetails = new DistanceData();
                     if(response1.getString("status").equals("OK")) {
-                        Log.e(TAG, "STATUS OK!");
+//                        Log.e(TAG, "STATUS OK!");
                         for (int i = 0; i < jsonArrayRows.length(); i++) {
                             JSONObject obj = jsonArrayRows.getJSONObject(i);
 

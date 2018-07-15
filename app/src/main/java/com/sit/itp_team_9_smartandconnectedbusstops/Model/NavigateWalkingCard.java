@@ -20,6 +20,7 @@ public class NavigateWalkingCard extends Card {
     private boolean isFavorite;
     private List<String> summary;
     private HashMap<String, List<String>> detailedSteps;
+    private String placeidStart, placeidEnd, routeID,mode;
 
     public int getID() {
         return ID;
@@ -74,6 +75,48 @@ public class NavigateWalkingCard extends Card {
         this.description = description;
     }
 
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
+    }
+
+    public void setFavRouteID(ArrayList<String> newFavRoute) {
+        favRouteID.clear();
+        favRouteID = newFavRoute;
+    }
+
+    public ArrayList<String> favRouteID = new ArrayList<>();
     /**
      * Sets and returns a NavigateWalkingCard card
      * <p>
@@ -125,6 +168,12 @@ public class NavigateWalkingCard extends Card {
                 translatedDuration = hourTranslate.replace("min", MainActivity.context.getResources().getString(R.string.minute));
             }
         }
+
+        card.setID(googleRoutesData.getID());
+        card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+        card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+        card.setRouteID(googleRoutesData.getRouteID());
+        card.setMode("walking");
 
         card.setTotalTime(translatedDuration);
         card.setRemark(umbrella);

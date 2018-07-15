@@ -108,6 +108,8 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
@@ -143,6 +145,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -193,6 +196,7 @@ public class MainActivity extends AppCompatActivity
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String UUID_ID = "uuid_id";
+    private static final String SETTING = "Settings";
     private String UUIDStr = "";
 
     // Header
@@ -234,6 +238,8 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
+    public ArrayList<String> favRoute = new ArrayList<>();
+    private ArrayList<Card> favCardList1 = new ArrayList<>(); // Favorite cards
     //Route cards
     private ArrayList<? super Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
@@ -313,6 +319,10 @@ public class MainActivity extends AppCompatActivity
 //        setTheme(R.style.AppTheme_NoActionBar);
 //        setContentView(R.layout.loadingscreen);
         super.onCreate(savedInstanceState);
+        String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
+                .getString("My_Lang", "en");
+        setLocale(language);
+        
         setContentView(R.layout.activity_main);
         context = this;
         toolbar = findViewById(R.id.toolbar);
@@ -390,19 +400,6 @@ public class MainActivity extends AppCompatActivity
                 return false;
             }
         });
-
-        /*
-        (0.6.6-dev) [Firestore]: The behavior for java.util.Date objects stored in Firestore is going to change AND YOUR APP MAY BREAK.
-             To hide this warning and ensure your app does not break, you need to add the following code to your app before calling any other Cloud Firestore methods:
-
-        With this change, timestamps stored in Cloud Firestore will be read back as com.google.firebase.Timestamp objects instead of as system java.util.Date objects. So you will also need to update code expecting a java.util.Date to instead expect a Timestamp. For example:
-
-             // Old:
-             java.util.Date date = snapshot.getDate("created_at");
-             // New:
-             Timestamp timestamp = snapshot.getTimestamp("created_at");
-             java.util.Date date = timestamp.toDate();
-         */
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
@@ -594,7 +591,7 @@ public class MainActivity extends AppCompatActivity
     private void prepareBottomSheet() {
         // Bottom sheet
         bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.bottom_sheet));
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         if (bottomSheetBehavior != null) {
             bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
                 @Override
@@ -622,8 +619,20 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
                         fab.hide();
+                    } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
+                        if(singleCardList.size() <= 0) {
+                            if (bottomNav.getSelectedItemId() == R.id.action_nearby)
+                                lookUpNearbyBusStops();
+                            if (bottomNav.getSelectedItemId() == R.id.action_fav) {
+                                ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
+                                favString.addAll(getFavRoute());
+                                prepareFavoriteCards(favString);
+                            }
+                        }
                     }
                 }
+
+
 
                 @Override
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
@@ -642,7 +651,17 @@ public class MainActivity extends AppCompatActivity
         adapter = new CardAdapter(getApplicationContext(), new ArrayList(), mMap, bottomSheetBehavior, recyclerView);
         adapter.doAutoRefresh();
 
-        adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
+        adapter.setOnFavoriteClickListener(new OnFavoriteClick() {
+            @Override
+            public void onFavoriteBusClick(ArrayList<String> favBusStopID) {
+                setFavBusStopID(favBusStopID);
+            }
+
+            @Override
+            public void onFavoriteRouteClick(ArrayList<String> favRouteID) {
+                setFavRoute(favRouteID);
+            }
+        });
 
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
@@ -664,6 +683,7 @@ public class MainActivity extends AppCompatActivity
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
+                singleCardList.clear();
 
                 hideKeyboard();
 //                if (adapter != null)
@@ -671,20 +691,23 @@ public class MainActivity extends AppCompatActivity
 
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-                if (favBusStopID.size() > 0) {
+                if (favBusStopID.size() > 0 || favRoute.size() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
+                        favString.addAll(getFavRoute());
+                        prepareFavoriteCards(favString);
+                    }else
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
                 }
+
             } else if (id == R.id.action_nav) {
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
                 }
-
-//                if (adapter != null)
-//                    setFavBusStopID(adapter.getFavBusStopID());
+                singleCardList.clear();
 
                 Spinner fareTypesSpinner = (Spinner) findViewById(R.id.fare_type_spinner);
                 // Create an ArrayAdapter using the string array and a default spinner layout
@@ -750,8 +773,7 @@ public class MainActivity extends AppCompatActivity
                 },600);
 
                 startingPointTextView.setText(convertedAddress);
-
-                handler.postDelayed(() -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN), 100);
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
                 destinationTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                     @Override
@@ -831,9 +853,6 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
             } else if (id == R.id.action_nearby) {
-//                getSupportActionBar().hide();
-//                setSupportActionBar(toolbar);
-//                getSupportActionBar().show();
                 if(toolbar.getVisibility() != View.VISIBLE) {
                     hideActionBar(toolbarNavigate);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
@@ -845,32 +864,23 @@ public class MainActivity extends AppCompatActivity
                     return false;
                 }
 
+                singleCardList.clear();
+
                 hideKeyboard();
 
-                @SuppressLint("StaticFieldLeak")
-                AsyncTask asyncTask = new AsyncTask() {
-                    @Override
-                    protected Object doInBackground(Object[] objects) {
-                        return new CameraPosition.Builder()
-                                .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
-                                .zoom(DEFAULT_ZOOM)                   // Sets the zoom
-                                .build();
-                    }
+                CameraPosition pos = new CameraPosition.Builder()
+                        .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
+                        .zoom(DEFAULT_ZOOM)                   // Sets the zoom
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
 
-                    @Override
-                    protected void onPostExecute(Object o) {
-                        super.onPostExecute(o);
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
-                    }
-                };
-
-                asyncTask.execute();
                 if (!isPooling()) {
                     setPooling(true);
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-//                    lookUpNearbyBusStops();
+                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        lookUpNearbyBusStops();
+                    }else
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(this::lookUpNearbyBusStops, 600);
                     handler.postDelayed(runnable, 3000);
                 }
             }
@@ -906,6 +916,10 @@ public class MainActivity extends AppCompatActivity
             int grantedResult = grantResults[i];
             if (permission.equals(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
                 if (grantedResult == PackageManager.PERMISSION_GRANTED) {
+                    getLocationPermission();
+                    getDeviceLocation();
+                }
+                else{
                     getLocationPermission();
                 }
             }
@@ -945,7 +959,9 @@ public class MainActivity extends AppCompatActivity
                         mMap.setMinZoomPreference(MIN_ZOOM);
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
                         loadingScreen.setVisibility(View.GONE);
-                        bottomNav.setSelectedItemId(R.id.action_fav);
+//                        bottomNav.setSelectedItemId(R.id.action_fav);
+                        bottomNav.setVisibility(View.VISIBLE);
+                        bottomNav.setSelectedItemId(R.id.action_nearby);
 
                         Geocoder gc = new Geocoder(getApplicationContext());
                         try {
@@ -1383,10 +1399,21 @@ public class MainActivity extends AppCompatActivity
         this.favCardList = favCardList;
     }
 
+    public ArrayList<Card> getFavCardList1() {
+        return favCardList1;
+    }
+
+    public void setFavCardList1(ArrayList<Card> favCardList1) {
+        this.favCardList1 = favCardList1;
+    }
+
     public ArrayList<String> getFavBusStopID() {
         return favBusStopID;
     }
 
+    public ArrayList<String> getFavRoute() {
+        return favRoute;
+    }
     /**
      * Sets up favoritecards from list
      * <p>
@@ -1398,6 +1425,13 @@ public class MainActivity extends AppCompatActivity
         this.favCardList.clear();
         this.favBusStopID = favBusStopID;
         userData.setFavBusStopID(favBusStopID);
+        db.collection("user").document(UUIDStr).set(userData);
+    }
+
+    public void setFavRoute(ArrayList<String> favRoute) {
+        this.favCardList.clear();
+        this.favRoute = favRoute;
+        userData.setFavRoute(favRoute);
         db.collection("user").document(UUIDStr).set(userData);
     }
 
@@ -1418,8 +1452,10 @@ public class MainActivity extends AppCompatActivity
                     userData = document.toObject(UserData.class);
                     if (userData != null) {
                         favBusStopID = userData.getFavBusStopID();
+                        favRoute = userData.getFavRoute();
                     }
                     adapter.setFavBusStopID(favBusStopID);
+                    adapter.setFavRoute(favRoute);
 
 //                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
@@ -1606,6 +1642,7 @@ public class MainActivity extends AppCompatActivity
         else
             result.setFavorite(false);
 
+
         // Pull bus stop data
         List<String> urlsList = new ArrayList<>();
         urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=");
@@ -1701,13 +1738,9 @@ public class MainActivity extends AppCompatActivity
                         nearbyCardList.add(card);
                         Log.d(TAG, "lookUpNearbyBusStops: " + card.toString());
                     }
-                }
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
+                    if(i==10)
                         updateAdapterList(nearbyCardList);
-                    }
-                },400);
+                }
 //                updateAdapterList(nearbyCardList);
             }
         };
@@ -1805,6 +1838,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         favCardList.clear();
+        favCardList1.clear();
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
@@ -1813,6 +1847,40 @@ public class MainActivity extends AppCompatActivity
                 card.setMajorUpdate(true);
                 favCardList.add(card);
                 Log.d(TAG, "prepareFavoriteCards: adding " + card.getBusStopID() + " to favCardList");
+            }
+            else{ // Nav cards
+                Log.d(TAG, "prepareFavoriteCards: Nav Cards");
+                Log.d(TAG, " ---------------- ROUTE FAV CARD " + list.size());
+                String id = list.get(i);
+                String[] deconcat = id.split("/");
+                String startPlaceId = deconcat[0];
+                String endPlaceId = deconcat[1];
+                String routeid = deconcat[2];
+                String fareType = deconcat[3];
+                String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
+                        + startPlaceId + "&destination=place_id:"
+                        + endPlaceId
+                        + "&mode=transit"
+                        + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                List<String> directionsQuery = new ArrayList<>();
+                directionsQuery.add(query);
+                Log.i(TAG, directionsQuery.toString());
+                JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
+                List<GoogleRoutesData> result;
+                try {
+                    result = directionsParser.execute().get();
+                    if (result.size() <= 0) {
+                        return;
+                    }
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
+                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                        card1.setFavorite(true);
+                    else
+                        card1.setFavorite(false);
+                    favCardList1.add(card1);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -1837,69 +1905,79 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                updateAdapterList(favCardList);
+                favCardList1.addAll(favCardList);
+                updateAdapterList(favCardList1);
             }
         };
         asyncTask.execute();
 
 //        updateAdapterList(favCardList);
     }
-
+          
     private void lookUpRoutes(String query, String fareTypes, String spinnerSelectedItem){
+        transitCardList.clear();
+        walkingCardList.clear();
+        progressBar.setVisibility(View.VISIBLE);
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
         JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<>(); //result from parser
-        try {
-            result = directionsParser.execute().get();
-            Log.d(TAG,query);
-            if(result.size() <= 0){
-                Log.d(TAG, "lookUpRoute: Google returned no data");
-                return;
+        directionsParser.delegate = new JSONGoogleResponseRoute() {
+            @Override
+            public boolean processBoolean(List<GoogleRoutesData> result) {
+                return false;
             }
-            transitCardList.clear();
-            walkingCardList.clear();
-            progressBar.setVisibility(View.VISIBLE);
 
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!optionMode){
-                        //walking
-                        for(int i=0; i< result.size(); i++) {
-                            if (getWeatherData(result.get(i))) {
-                                String msg = "Remember to bring an umbrella with you!";
-                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
-                                card.setType(Card.NAVIGATE_WALKING_CARD);
-                                walkingCardList.add(card);
-                                Log.d(TAG, "lookUpRoute: " + card.toString());
-                            }
-                            else{
-                                String msg = "Weather looks good!";
-                                NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
-                                card.setType(Card.NAVIGATE_WALKING_CARD);
-                                walkingCardList.add(card);
-                                Log.d(TAG, "lookUpRoute: " + card.toString());
-                            }
+            @Override
+            public void processFinishFromGoogle(List<GoogleRoutesData> result) {
+                if (result.size() <= 0) {
+                    Log.d(TAG, "lookUpRoute: Google returned no data");
+                    progressBar.setVisibility(View.GONE);
+                    return;
+                }
+
+                if (!optionMode) {
+                    //walking
+                    for (int i = 0; i < result.size(); i++) {
+                        if (getWeatherData(result.get(i))) {
+                            String msg = "Remember to bring an umbrella with you!";
+                            NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                            card.setType(Card.NAVIGATE_WALKING_CARD);
+                            walkingCardList.add(card);
+                            Log.d(TAG, "lookUpRoute: " + card.toString());
+                        } else {
+                            String msg = "Weather looks good!";
+                            NavigateWalkingCard card = NavigateWalkingCard.getRouteDataWalking(result.get(i), msg);
+                            card.setType(Card.NAVIGATE_WALKING_CARD);
+                            walkingCardList.add(card);
+                            Log.d(TAG, "lookUpRoute: " + card.toString());
                         }
-                        updateAdapterList(walkingCardList);
+                    }
+                    updateAdapterList(walkingCardList);
 
-                    }else{/*
-                        //NORMAL ROUTES*/
-                        for(int i=0; i< result.size(); i++) {
-                            if(getDistanceMatrix(result.get(i))) {
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
-                            else{
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
+                } else {
+                    //NORMAL ROUTES
+                    for (int i = 0; i < result.size(); i++) {
+                        if (getDistanceMatrix(result.get(i))) {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
+                        } else {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
                         }
                         ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
                         navigateCardList = (ArrayList<? extends Card>) transitCardList;
@@ -1923,12 +2001,11 @@ public class MainActivity extends AppCompatActivity
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);
                     }
+                    //updateAdapterList(transitCardList);
                 }
-            }, 1500);
-
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+            }
+        };
+        directionsParser.execute();
     }
 
     public boolean getWeatherData(GoogleRoutesData googleRoutesData){
@@ -1946,7 +2023,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
                     Log.d("WALKing -------------- ", "WEATHER " + weather);
                     if (weather != null) {
-                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
                             umbrella = true;
                         } else {
                             umbrella = false;
@@ -1962,7 +2039,7 @@ public class MainActivity extends AppCompatActivity
         }
         return umbrella;
     }
-    private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
+    private boolean lookUpTrafficDuration(String type, String train, GoogleRoutesData routesData, String queryMatrix, String queryDir){
         boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
@@ -1971,10 +2048,9 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG,durationQuery.toString());
         JSONDistanceMatrixParser durationParser = new JSONDistanceMatrixParser(MainActivity.this,durationQuery);
         List<DistanceData> result1;  //result from parser
-        JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        List<GoogleRoutesData> result = new ArrayList<>(); //= new ArrayList<GoogleRoutesData>(); //result from parser
         try {
-            result = directionsParser.execute().get();
+            result.add(routesData);
             result1 = durationParser.execute().get();
             Log.d(TAG,queryMatrix);
             if(result.size() <= 0){
@@ -2069,7 +2145,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "IS A TRAIN" + i);
                     String trainline = routeSteps.get(i).getTrainLine();
                     Log.d(TAG, trainline);
-                    pass =  lookUpTrafficDuration("mrt", trainline, "", query);
+                    pass =  lookUpTrafficDuration("mrt", trainline, googleRoutesData, "", query);
                 }
                 else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
                     Log.d(TAG, "IS A BUS" + i);
@@ -2080,8 +2156,7 @@ public class MainActivity extends AppCompatActivity
                     Double endLng = routeSteps.get(i).getEndLocationLng();
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
-                    Log.d("DISTANCEMATRIX", "query");
-                    pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
+                    pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
                 }
             }
         }
@@ -2091,7 +2166,7 @@ public class MainActivity extends AppCompatActivity
         }
         return pass;
     }
-          
+
     public void hideKeyboard(){
         // Check if no view has focus:
         View view = getCurrentFocus();
