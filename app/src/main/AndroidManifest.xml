@@ -1,21 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sit.itp_team_9_smartandconnectedbusstops">
+
+    <!-- Always required on api < 21, needed to keep a wake lock while your job is running -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required on api < 21 if you are using setRequiredNetworkType(int) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Required on all api levels if you are using setPersisted(true) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/product_logo_144dp"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/product_logo_144dp_round"
-        android:hardwareAccelerated="true"
         android:supportsRtl="true">
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s"/>
+            android:value="AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s" />
         <meta-data
             android:name="com.google.android.awareness.API_KEY"
             android:value="AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s" />
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -23,46 +39,44 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <meta-data android:name="android.app.searchable"
+            <meta-data
+                android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+        <activity
+            android:name=".SearchResultsActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".AppGuideActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AboutActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".DataSourcesActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
 
-        <activity android:name=".SearchResultsActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="portrait">
-        <intent-filter>
-            <action android:name="android.intent.action.SEARCH" />
-        </intent-filter>
-    </activity>
-
-    <!-- Define your service, make sure to add the permision! -->
-    <service
-        android:name=".Services.NetworkSchedulerService"
-        android:exported="true"
-        android:permission="android.permission.BIND_JOB_SERVICE"/>
-
+        <!-- Define your service, make sure to add the permision! -->
+        <service
+            android:name=".Services.NetworkSchedulerService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
-    <!-- Always required on api < 21, needed to keep a wake lock while your job is running -->
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <!-- Required on api < 21 if you are using setRequiredNetworkType(int) -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <!-- Required on all api levels if you are using setPersisted(true) -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
-
-    <uses-feature
-        android:glEsVersion="0x00020000"
-        android:required="true"/>
 
 </manifest>

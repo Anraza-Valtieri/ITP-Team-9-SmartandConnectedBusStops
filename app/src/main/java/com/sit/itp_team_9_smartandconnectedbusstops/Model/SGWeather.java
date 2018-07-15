@@ -224,20 +224,32 @@ public class SGWeather {
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
 
-                        String dayNightForecast = "";
+                        /*String dayNightForecast = "";
                         if(entry.getForecast().contains("Day")) {
                             dayNightForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.day));
                         }
                         else if(entry.getForecast().contains("Night")) {
                             dayNightForecast = entry.getForecast().replace("Night", MainActivity.context.getResources().getString(R.string.night));
-                        }
+                        }*/
 
                         String translatedForecast = "";
-                        if(dayNightForecast.contains("Fair")) {
-                            translatedForecast = dayNightForecast.replace("Fair", MainActivity.context.getResources().getString(R.string.fair));
+                        if(entry.getForecast().contains("Fair")) {
+                            translatedForecast = entry.getForecast().replace("Fair", MainActivity.context.getResources().getString(R.string.fair));
                         }
                         else if(entry.getForecast().contains("Partly Cloudy")) {
-                            translatedForecast = dayNightForecast.replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.partcloudy));
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.partcloudy));
+                        }
+                        else if(entry.getForecast().contains("Cloudy")) {
+                            translatedForecast = entry.getForecast().replace("Cloudy", MainActivity.context.getResources().getString(R.string.cloudy));
+                        }
+                        else if(entry.getForecast().contains("Light Showers")) {
+                            translatedForecast = entry.getForecast().replace("Cloudy", MainActivity.context.getResources().getString(R.string.lightshowers));
+                        }
+                        else if(entry.getForecast().contains("Showers")) {
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.showers));
+                        }
+                        else if(entry.getForecast().contains("Thundery Showers")) {
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.thunderyshowers));
                         }
 
                         setmWeatherForecast(translatedForecast);

@@ -241,28 +241,21 @@ public class NavigateTransitCard extends Card {
 
                     String translatedDuration = "";
                     String hourTranslate = "";
+
+                    if(googleRoutesData.getTotalDuration().contains("0 mins")) {
+                        googleRoutesData.setTotalDuration(googleRoutesData.getTotalDuration().replace("0 mins", ""));
+                    }
+
                     if(!(googleRoutesData.getTotalDuration().contains("hour")) && googleRoutesData.getTotalDuration().contains("mins")) {
                         translatedDuration = googleRoutesData.getTotalDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
                     }
-                    else if(googleRoutesData.getTotalDuration().contains("hour") && (googleRoutesData.getTotalDuration().contains("mins")|| googleRoutesData.getTotalDuration().contains("min"))) {
+                    else if(googleRoutesData.getTotalDuration().contains("hour") && googleRoutesData.getTotalDuration().contains("mins")) {
                         hourTranslate = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
-
-                        if(hourTranslate.contains("mins")) {
-                            translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
-                        }
-                        else if(hourTranslate.contains("min")) {
-                            translatedDuration = hourTranslate.replace("min", MainActivity.context.getResources().getString(R.string.minute));
-                        }
+                        translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
                     }
-                    else if(googleRoutesData.getTotalDuration().contains("hours") && (googleRoutesData.getTotalDuration().contains("mins") || googleRoutesData.getTotalDuration().contains("min"))) {
+                    else if(googleRoutesData.getTotalDuration().contains("hours") && googleRoutesData.getTotalDuration().contains("mins")) {
                         hourTranslate = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
-
-                        if(hourTranslate.contains("mins")) {
-                            translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
-                        }
-                        else if(hourTranslate.contains("min")) {
-                            translatedDuration = hourTranslate.replace("min", MainActivity.context.getResources().getString(R.string.minute));
-                        }
+                        translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
                     }
 
                     card.setTotalTime(translatedDuration);
@@ -293,6 +286,7 @@ public class NavigateTransitCard extends Card {
                             float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
                             Log.i(TAG,"largestDuration= "+largestDuration);
                             Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
+                            Log.d("Byebye", routeSteps.get(i).getDuration());
                             timeTakenEachStep.add(routeSteps.get(i).getDuration());
                             timeTakenEachStep.add(timeTakenWeight);
                             switch (travelMode){
@@ -303,13 +297,14 @@ public class NavigateTransitCard extends Card {
                                     walkingDetails.add(imageViewWalking);
                                     walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
 
-                                    String updatedWalkTranslation = routeSteps.get(i).getDistance().replace("Walk", MainActivity.context.getResources().getString(R.string.walk));
+
                                     String translatedWalkingDistance = "";
-                                    if(updatedWalkTranslation.contains("km")) {
-                                        translatedWalkingDistance = updatedWalkTranslation.replace("km", MainActivity.context.getResources().getString(R.string.km));
+                                    if(routeSteps.get(i).getDistance().contains("km")) {
+                                        translatedWalkingDistance = routeSteps.get(i).getDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
                                     }
-                                    else if(updatedWalkTranslation.contains("m")) {
-                                        translatedWalkingDistance = updatedWalkTranslation.replace("m", MainActivity.context.getResources().getString(R.string.m));
+
+                                    else if(routeSteps.get(i).getDistance().contains("m")) {
+                                        translatedWalkingDistance = routeSteps.get(i).getDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
                                     }
 
                                     transitStations.put(translatedWalkingDistance,walkingDetails);
@@ -383,12 +378,12 @@ public class NavigateTransitCard extends Card {
                                             //MainActivity mainActivity = new MainActivity();
                                             Map<String, String> allBusByIdMap = MainActivity.allBusByID;
 //                                            Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
-                                            String departureBusStopCode = null;
+                                            String departureBusStopCode = "";
 //                                            for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
 //                                        Log.i(TAG,"allBusByIdMap.entrySet()");
                                             if(allBusByIdMap.containsKey(routeSteps.get(i).getDepartureStop())){
 //                                                String busStopIDCode = entry.getKey();
-                                                Log.i(TAG,"busStopIDCode "+routeSteps.get(i).getDepartureStop());
+                                                Log.i(TAG,"c "+routeSteps.get(i).getDepartureStop());
 //                                                String busStopName = entry.getValue();
                                                 String busStopName = allBusByIdMap.get(routeSteps.get(i).getDepartureStop());
                                                 if (busStopName.equals(routeSteps.get(i).getDepartureStop())){

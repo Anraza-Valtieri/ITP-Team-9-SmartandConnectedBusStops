@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="degree">பட்டம்</string>
     <string name="uvIndex">uv குறியீட்டு</string>
     <string name="action_settings">அமைப்புகளை</string>
@@ -79,5 +79,13 @@
     <string name="km">கிலோமீட்டர்</string>
     <string name="m">மீட்டர்</string>
     <string name="walk">நடந்துவிட்டு</string>
+    <string name="chooselanguage">நீங்கள் விரும்பும் மொழியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="suggestedroute">* பரிந்துரைக்கப்பட்ட வழி *</string>
+    <string name="publictransport">பொது போக்குவரத்து</string>
+    <string name="walking">நடைபயிற்சி</string>
+    <string name="thunderyshowers">அடர்ந்த மழை</string>
+    <string name="showers">மழை</string>
+    <string name="lightshowers">ஒளி மழை</string>
+    <string name="cloudy">மேகமூட்டம்</string>
 
 </resources>
