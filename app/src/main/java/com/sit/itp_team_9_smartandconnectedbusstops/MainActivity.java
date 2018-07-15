@@ -1993,10 +1993,32 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
 
-                        } else {
+                        }
+                        else if (!getDistanceMatrix(result.get(i))) {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
+                            if(suggestedList.contains(card1.getRouteID())) {
+                                Log.d("STATUS OF LIST","is suggested");
+                            }
+                            else {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                            }
+                            Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
+                        }
+                        else {
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");//<-if change words, change at CardAdapter also for text colour
+                            if(suggestedList.contains(card1.getRouteID())) {
+                                Log.d("STATUS OF LIST","is suggested");
+                            }
+                            else {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                            }
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2150,7 +2172,7 @@ public class MainActivity extends AppCompatActivity
         int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
         Log.d("GetMatrix()", "duration "+ duration + " , duration traffic " + duration_in_traffic );
-        if (duration - duration_in_traffic >= 2){
+        if (duration - duration_in_traffic >= 4){
             Log.d("GetMatrix()", "BOOLEAN NO CONGESTION");
             return true;
         }
@@ -2181,9 +2203,6 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
-                }
-                else if (routeSteps.get(i).getTravelMode().equals("WALKING")) {
-                    pass =  true;
                 }
             }
         }
