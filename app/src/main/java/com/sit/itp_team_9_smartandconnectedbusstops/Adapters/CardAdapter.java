@@ -32,7 +32,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
-import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClickRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -63,18 +62,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
-    public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRouteID = new ArrayList<>();
+    private ArrayList<String> favBusStopID = new ArrayList<>();
+    private ArrayList<String> favRoute = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
-    private OnFavoriteClickRoute rOnFavoriteClickListener;
 
     public void setOnFavoriteClickListener(OnFavoriteClick l) {
         mOnFavoriteClickListener = l;
-    }
-
-    public void setOnFavoriteClickListenerRoute(OnFavoriteClickRoute l) {
-        rOnFavoriteClickListener = l;
     }
 
     public ArrayList<String> getFavBusStopID() {
@@ -82,17 +76,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
-        favBusStopID.clear();
-        favBusStopID = newFavBusStopID;
+        if(favBusStopID != null)
+            favBusStopID.clear();
+        if(newFavBusStopID != null)
+            favBusStopID = newFavBusStopID;
+        else
+            favBusStopID = new ArrayList<>();
     }
 
-    public ArrayList<String> getFavRouteID() {
-        return favRouteID;
+    public ArrayList<String> getFavRoute() {
+        return favRoute;
     }
 
-    public void setFavRouteID(ArrayList<String> newFavRoute) {
-        favRouteID.clear();
-        favRouteID = newFavRoute;
+    public void setFavRoute(ArrayList<String> newFavRoute) {
+        if(favRoute!= null)
+            favRoute.clear();
+        if(newFavRoute != null)
+            favRoute = newFavRoute;
+        else
+            favRoute = new ArrayList<>();
     }
 
     public ArrayList<Card> getmCard() {
@@ -177,7 +179,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteBusClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
@@ -204,16 +206,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                        favRouteID.remove(transitCard.getRouteID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
-                        favRouteID.add(transitCard.getRouteID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.add(transitCard.getRouteID());
                     }
 
-                    if (rOnFavoriteClickListener != null) {
-                        rOnFavoriteClickListener.onFavoriteClickRoute(favRouteID);
+                    if (mOnFavoriteClickListener != null) {
+                        mOnFavoriteClickListener.onFavoriteRouteClick(favRoute);
                     }
                 });
                 break;
@@ -618,11 +621,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
-
-                        if(cardsTransit.isFavorite())
-                            this.favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        else
-                            this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
