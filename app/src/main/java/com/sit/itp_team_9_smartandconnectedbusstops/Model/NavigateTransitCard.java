@@ -225,13 +225,13 @@ public class NavigateTransitCard extends Card {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
-            card.setRouteID(routeID);
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
             String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
+            card.setRouteID(routeID);
             Log.d(TAG, "getRouteData: setRouteID: "+routeID);
            
             //For sorting
