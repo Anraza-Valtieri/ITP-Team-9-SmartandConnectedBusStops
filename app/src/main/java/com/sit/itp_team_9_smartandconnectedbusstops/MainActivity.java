@@ -2172,7 +2172,7 @@ public class MainActivity extends AppCompatActivity
         int duration = Integer.parseInt(distanceData.getDuration().replaceAll("[^0-9]", ""));
         int duration_in_traffic = Integer.parseInt(distanceData.getDuration_in_traffic().replaceAll("[^0-9]", ""));
         Log.d("GetMatrix()", "duration "+ duration + " , duration traffic " + duration_in_traffic );
-        if (duration - duration_in_traffic >= 4){
+        if (duration - duration_in_traffic >= 2){
             Log.d("GetMatrix()", "BOOLEAN NO CONGESTION");
             return true;
         }
