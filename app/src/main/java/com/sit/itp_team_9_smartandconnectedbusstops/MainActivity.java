@@ -66,6 +66,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -240,7 +241,7 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<String> favRoute = new ArrayList<>();
     private ArrayList<Card> favCardList1 = new ArrayList<>(); // Favorite cards
     //Route cards
-    private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
+    private ArrayList<? super Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
 
     // Bus Routes
@@ -716,6 +717,46 @@ public class MainActivity extends AppCompatActivity
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 // Apply the adapter to the spinner
                 fareTypesSpinner.setAdapter(adapter);
+
+                Spinner sortBySpinner = (Spinner) findViewById(R.id.sort_by_spinner);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapterSort = ArrayAdapter.createFromResource(this,
+                        R.array.sort_by_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                adapterSort.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the adapter to the spinner
+                sortBySpinner.setAdapter(adapterSort);
+
+                sortBySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+                            switch (sortBySpinner.getSelectedItem().toString()) {
+                                case "Least time":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least distance":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
+                                    //transitCardList = (ArrayList<? super Card>) castToNavigate;
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least walking":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                            }
+                        }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
+
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 //ImageButton switchButton = findViewById(R.id.switchButton);
@@ -758,7 +799,7 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
+                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -805,7 +846,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,query);
                         hideKeyboard();
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
+                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -1872,12 +1913,11 @@ public class MainActivity extends AppCompatActivity
 
 //        updateAdapterList(favCardList);
     }
-    private void lookUpRoutes(String query, String fareTypes){
-
+          
+    private void lookUpRoutes(String query, String fareTypes, String spinnerSelectedItem){
         transitCardList.clear();
         walkingCardList.clear();
         progressBar.setVisibility(View.VISIBLE);
-
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
@@ -1939,8 +1979,29 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
                         }
+                        ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                        navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                        List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+                        switch (spinnerSelectedItem) {
+                            case "Least time":
+                                Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                            case "Least distance":
+                                Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
+                                //transitCardList = (ArrayList<? super Card>) castToNavigate;
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                            case "Least walking":
+                                Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                        }
+
+                        //updateAdapterList((ArrayList<? extends Card>) transitCardList);
                     }
-                    updateAdapterList(transitCardList);
+                    //updateAdapterList(transitCardList);
                 }
             }
         };

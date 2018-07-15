@@ -1,5 +1,7 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.List;
 
 public class GoogleRoutesSteps {
@@ -14,7 +16,7 @@ public class GoogleRoutesSteps {
     private String duration;
     private String htmlInstructions;
     private String travelMode;
-    private String polyline;
+    private List<LatLng> polyline;
 
     //in expandable list
     private List<GoogleRoutesSteps> detailedSteps; //WALKING, step-by-step turns to take etc.
@@ -96,11 +98,11 @@ public class GoogleRoutesSteps {
         this.travelMode = travelMode;
     }
 
-    public String getPolyline() {
+    public List<LatLng> getPolyline() {
         return polyline;
     }
 
-    public void setPolyline(String polyline) {
+    public void setPolyline(List<LatLng> polyline) {
         this.polyline = polyline;
     }
 
