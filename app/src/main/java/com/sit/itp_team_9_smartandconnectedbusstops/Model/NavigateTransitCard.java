@@ -486,12 +486,19 @@ public class NavigateTransitCard extends Card {
                                             String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + "环线延长线";
                                             List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
-                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(1));
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(0));
+                                            }
                                         }else if (trainLine.equals("East West Line")){
                                             String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + "Changi Airport Branch Line";
                                             List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
-                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                for (TrainStation trainStationExtension : allTrainStationsExtension) {
+                                                    allTrainStationsInLine.add(0, trainStationExtension);
+                                                }
+                                            }
                                         }
 
                                         for(TrainStation trainStation: allTrainStationsInLine){
@@ -528,19 +535,17 @@ public class NavigateTransitCard extends Card {
                                                     if (departureTrainStation.getStationNum()
                                                             < arrivalTrainStation.getStationNum()) {
                                                         //if departure comes before arrival in list
-                                                        for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
+                                                        int numStops = routeSteps.get(i).getNumStops();
+                                                        for (int k = 1; k < numStops; k++) {
                                                             //add until it reaches end of num of stops
-                                                            if (departureTrainStation.getStationCode().equals("CE1") ||
-                                                                    departureTrainStation.getStationCode().equals("CE2") ||
-                                                                    departureTrainStation.getStationCode().equals("CG1") ||
-                                                                    departureTrainStation.getStationCode().equals("CG2") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE2") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CG1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CG2")){
+                                                            if ((departureTrainStation.getStationCode().equals("CE1") ||
+                                                                    departureTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j+k).getStationCode().equals("CC1")
+                                                                    ){
                                                                 //extension line stops placed after stations in original line
-                                                                Log.i(TAG,"EXTENSION LINE");
-                                                                k+=2;
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
+                                                                numStops+=3;
                                                             }
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j + k).getStationName());
@@ -549,21 +554,19 @@ public class NavigateTransitCard extends Card {
                                                         //if departure comes after arrival in list
                                                         for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
                                                             //add until it reaches end of num of stops
-                                                            if ((allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
-                                                                    && (departureTrainStation.getStationCode().equals("CE1") ||
-                                                                    departureTrainStation.getStationCode().equals("CE2"))) ||
-                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
-                                                                            && (departureTrainStation.getStationCode().equals("CG1") ||
-                                                                            departureTrainStation.getStationCode().equals("CG2")))
-                                                                    || (allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
-                                                                    && (arrivalTrainStation.getStationCode().equals("CE1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE2"))) ||
-                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
-                                                                            && (arrivalTrainStation.getStationCode().equals("CG1") ||
-                                                                            arrivalTrainStation.getStationCode().equals("CG2")))){
+                                                            if((arrivalTrainStation.getStationCode().equals("CG1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CG2"))
+                                                                    && departureTrainStation.getStationCode().equals("EW4")) {
                                                                 //extension line stops placed before stations in original line
-                                                                Log.i(TAG,"EXTENSION LINE");
-                                                                k+=2;
+                                                                Log.i(TAG,"EXTENSION LINE EWL");
+                                                                k+=3;
+                                                            }
+
+                                                            if ((arrivalTrainStation.getStationCode().equals("CE1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j-k).getStationCode().equals("CC3")){
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
                                                             }
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j - k).getStationName());
