@@ -257,8 +257,9 @@ public class NavigateTransitCard extends Card {
             card.setTotalTime(googleRoutesData.getTotalDuration());
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
-            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID();
+            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
             Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+
             card.setRouteID(routeID);
             card.setTotalDistance(googleRoutesData.getTotalDistance());
             card.setTotalTime(googleRoutesData.getTotalDuration());
