@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick1;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -63,12 +64,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRoute = new ArrayList<>();
+    public ArrayList<String> favRouteID = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
 
     public void setOnFavoriteClickListener(OnFavoriteClick l) {
         mOnFavoriteClickListener = l;
+    }
+
+    private OnFavoriteClick1 rOnFavoriteClickListener;
+
+    public void setOnFavoriteClickListener1(OnFavoriteClick1 l) {
+        rOnFavoriteClickListener = l;
     }
 
     public ArrayList<String> getFavBusStopID() {
@@ -80,13 +87,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         favBusStopID = newFavBusStopID;
     }
 
-    public ArrayList<String> getFavRoute() {
-        return favRoute;
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
     }
 
-    public void setFavRoute(ArrayList<String> newFavRoute) {
-//        favRoute.clear();
-        favRoute = newFavRoute;
+    public void setFavRouteID(ArrayList<String> newFavRoute) {
+        favRouteID.clear();
+        favRouteID = newFavRoute;
     }
 
     public ArrayList<Card> getmCard() {
@@ -198,17 +205,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-//                        favRoute.remove(transitCard.getRouteID());
+                        favRouteID.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
                         Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
-//                        Log.d("FAVROUTE LIST", "size " + favRoute.size());
-                       // favRoute.add(transitCard.getRouteID());
+                        favRouteID.add(transitCard.getRouteID());
                     }
 
-                    if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favRoute);
+                    if (rOnFavoriteClickListener != null) {
+                        rOnFavoriteClickListener.onFavoriteClick1(favRouteID);
                     }
                 });
                 break;
@@ -322,6 +328,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     //updateCardData(mCard);
                     doAutoRefresh();
                 }
+                else{
+                    return;
+                }
             }
         }
     };
@@ -406,7 +415,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView timeTaken;
         TextView numStops;
         ExpandableListView listViewNumStops;
-        ImageButton favTransit;
+        ImageButton favTransit, favWalk;
 
         //For navigate walking card
         TextView walkingTime;
@@ -460,6 +469,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             walkingDistance = itemView.findViewById(R.id.textViewWalkingDistance);
             listViewDetailedSteps = itemView.findViewById(R.id.listViewDetailedSteps);
             remark = itemView.findViewById(R.id.textViewRemark);
+            favWalk = itemView.findViewById(R.id.favoritebtnWalk);
 
             cardType = type;
         }
@@ -766,7 +776,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     String walkingDistance = "( " + cardsWalking.getTotalDistance() +")";
                     this.walkingDistance.setText(walkingDistance);
                     this.remark.setText(cardsWalking.getRemark());
-
+                    if(cardsWalking.isFavorite())
+                        this.favWalk.setImageResource(R.drawable.ic_favorite_red);
+                    else
+                        this.favWalk.setImageResource(R.drawable.ic_favorite_border_black_24dp);
                     //For detailed steps (expandable list adapter and listeners)
                     ExpandableListAdapter walkingListAdapter = new ExpandableListAdapter(mContext,
                             cardsWalking.getDescription(),cardsWalking.getDetailedSteps());

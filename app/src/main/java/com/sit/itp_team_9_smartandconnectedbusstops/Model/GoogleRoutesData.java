@@ -11,6 +11,7 @@ public class GoogleRoutesData {
     private JSONArray warnings;
     private String summary;
     private String placeidStart, placeidEnd, routeID;
+    boolean isFavorite;
 
     //public JSONArray legs;
 
@@ -146,4 +147,8 @@ public class GoogleRoutesData {
     public void setRouteID(String routeID) {
         this.routeID = routeID;
     }
+
+    public boolean isFavorite() { return isFavorite; }
+
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
 }

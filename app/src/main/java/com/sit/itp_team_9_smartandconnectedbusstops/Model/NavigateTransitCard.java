@@ -55,6 +55,8 @@ public class NavigateTransitCard extends Card {
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
                                                         // lineName(string), arrivalStop (string)>
     private String error;
+    private String placeidStart, placeidEnd, routeID,mode;
+    public ArrayList<String> favRouteID = new ArrayList<>();
     //private String transferStation;
     //private String endingStation;
 
@@ -201,6 +203,47 @@ public class NavigateTransitCard extends Card {
         return condition;
     }
 
+    public String getStartPlaceId() {
+        return placeidStart;
+    }
+
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
+    }
+
+    public void setFavRouteID(ArrayList<String> newFavRoute) {
+        favRouteID.clear();
+        favRouteID = newFavRoute;
+    }
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -227,7 +270,10 @@ public class NavigateTransitCard extends Card {
                 card.setType(Card.NAVIGATE_TRANSIT_CARD);
                 if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
                     card.setID(googleRoutesData.getID());
-
+                    card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+                    card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+                    card.setRouteID(googleRoutesData.getRouteID());
+                    card.setMode("transit");
                     String translatedDistance = "";
 
                     if(googleRoutesData.getTotalDistance().contains("km")) {
@@ -236,7 +282,6 @@ public class NavigateTransitCard extends Card {
                     else if(googleRoutesData.getTotalDistance().contains("m")) {
                         translatedDistance = googleRoutesData.getTotalDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
                     }
-
                     card.setTotalDistance(translatedDistance);
 
                     String translatedDuration = "";

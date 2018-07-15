@@ -90,6 +90,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                             Log.d("PLACE ID ----", jsonGeo.getJSONObject(0).getString("place_id") + " " + jsonGeo.getJSONObject(1).getString("place_id"));
 
                             entry.setID(i);
+                            String routeID = (jsonGeo.getJSONObject(0).getString("place_id"))+"/"+ (jsonGeo.getJSONObject(1).getString("place_id"))+"/"+i;
+                            entry.setRouteID(routeID);
                             entry.setCopyrights(obj.getString("copyrights"));
                             entry.setWarnings(obj.getJSONArray("warnings"));
                             entry.setSummary(obj.getString("summary"));

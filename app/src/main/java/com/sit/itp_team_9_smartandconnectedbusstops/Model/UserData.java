@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class UserData {
     public ArrayList<String> favBusStopID;
-    public ArrayList<String> favRoute;
+    public ArrayList<String> favRouteID;
 
     public UserData() {
     }
@@ -17,11 +17,11 @@ public class UserData {
         this.favBusStopID = favBusStopID;
     }
 
-    public ArrayList<String> getFavRoute() {
-        return favRoute;
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
     }
 
-    public void setFavRoute(ArrayList<String> favRoute) {
-        this.favRoute = favRoute;
+    public void setFavRouteID(ArrayList<String> favRouteID) {
+        this.favRouteID = favRouteID;
     }
 }
