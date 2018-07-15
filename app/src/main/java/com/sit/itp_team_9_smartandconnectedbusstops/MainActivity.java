@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity
         String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
                 .getString("My_Lang", "en");
         setLocale(language);
-        
+
         setContentView(R.layout.activity_main);
         context = this;
         toolbar = findViewById(R.id.toolbar);
