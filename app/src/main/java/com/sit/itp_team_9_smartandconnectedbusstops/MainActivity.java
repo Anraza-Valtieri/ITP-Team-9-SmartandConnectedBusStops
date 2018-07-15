@@ -234,7 +234,8 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<Card> nearbyCardList = new ArrayList<>(); // NearbyList
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
-    public ArrayList<String> favRoute = new ArrayList<>();
+    private ArrayList<Card> favCardList1 = new ArrayList<>(); // Favorite cards
+    public ArrayList<String> favRouteID = new ArrayList<>();
 
     //Route cards
     private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
@@ -652,7 +653,7 @@ public class MainActivity extends AppCompatActivity
         adapter.doAutoRefresh();
 
         adapter.setOnFavoriteClickListener(favBusStopID -> setFavBusStopID(favBusStopID));
-        adapter.setOnFavoriteClickListener(favRoute -> setFavRoute(favRoute));
+        adapter.setOnFavoriteClickListenerRoute(favRouteID -> setFavRouteID(favRouteID));
 
         recyclerView.setAdapter(adapter);
         recyclerView.setDrawingCacheEnabled(true);
@@ -681,13 +682,19 @@ public class MainActivity extends AppCompatActivity
 
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-                if (favBusStopID.size() > 0 || favRoute.size() > 0) {
+                if (favRouteID.size() > 0){
+                    Log.d("FAV LIST SSIZE ", "--------- " + favRouteID.size());
                     progressBar.setVisibility(View.VISIBLE);
-                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
-                        prepareFavoriteCards(favBusStopID);
-                    }else
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
+                    handler.postDelayed(() -> prepareFavoriteCards1(getFavRouteID()), 600);
+                }
+                if (favBusStopID.size() > 0){
+                    progressBar.setVisibility(View.VISIBLE);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    recyclerView.scrollToPosition(0);
+                    handler.postDelayed(() -> prepareFavoriteCards(getFavBusStopID()), 600);
+
                 }
 
             } else if (id == R.id.action_nav) {
@@ -731,7 +738,7 @@ public class MainActivity extends AppCompatActivity
                         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                             if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                                 Log.i(TAG,"lookUpRoutes!");
-                                String mode ="";
+                                String mode="";
                                 if (navigationTabs.getSelectedTabPosition() == 0){
                                     mode = "transit";
                                     optionMode = true;
@@ -1343,12 +1350,20 @@ public class MainActivity extends AppCompatActivity
         this.favCardList = favCardList;
     }
 
+    public ArrayList<Card> getFavCardList1() {
+        return favCardList1;
+    }
+
+    public void setFavCardList1(ArrayList<Card> favCardList1) {
+        this.favCardList1 = favCardList1;
+    }
+
     public ArrayList<String> getFavBusStopID() {
         return favBusStopID;
     }
 
-    public ArrayList<String> getFavRoute() {
-        return favRoute;
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
     }
     /**
      * Sets up favoritecards from list
@@ -1364,10 +1379,10 @@ public class MainActivity extends AppCompatActivity
         db.collection("user").document(UUIDStr).set(userData);
     }
 
-    public void setFavRoute(ArrayList<String> favRoute) {
-        this.favCardList.clear();
-        this.favRoute = favRoute;
-        userData.setFavRoute(favRoute);
+    public void setFavRouteID(ArrayList<String> favRouteID) {
+        this.favCardList1.clear();
+        this.favRouteID = favRouteID;
+        userData.setFavRouteID(favRouteID);
         db.collection("user").document(UUIDStr).set(userData);
     }
 
@@ -1388,10 +1403,10 @@ public class MainActivity extends AppCompatActivity
                     userData = document.toObject(UserData.class);
                     if (userData != null) {
                         favBusStopID = userData.getFavBusStopID();
-                        favRoute = userData.getFavRoute();
+                        favRouteID = userData.getFavRouteID();
                     }
                     adapter.setFavBusStopID(favBusStopID);
-                    adapter.setFavRoute(favRoute);
+                    adapter.setFavRouteID(favRouteID);
 
 //                    bottomNav.setSelectedItemId(R.id.action_fav);
                 } else {
@@ -1806,13 +1821,55 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                updateAdapterList(favCardList);
+              //  updateAdapterList(favCardList);
             }
         };
         asyncTask.execute();
 
-//        updateAdapterList(favCardList);
+       favCardList1.addAll(favCardList);
+       updateAdapterList(favCardList1);
     }
+    private void prepareFavoriteCards1(ArrayList<String> list){
+        if(list.size() < 1){
+            Log.e(TAG, "prepareFavoriteCards1: list is empty!");
+            return;
+        }
+        favCardList1.clear();
+        for(int i=0; i< list.size(); i++) {
+            Log.d(TAG, " ---------------- ROUTE FAV CARD " + list.size());
+            String id = list.get(i);
+            String[] deconcat = id.split("/");
+            String startPlaceId = deconcat[0];
+            String endPlaceId = deconcat[1];
+            String routeid = deconcat[2];
+            String fareType = deconcat[3];
+            String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
+                    + startPlaceId + "&destination=place_id:"
+                    + endPlaceId
+                    + "&mode=transit"
+                    + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+            List<String> directionsQuery = new ArrayList<>();
+            directionsQuery.add(query);
+            Log.i(TAG, directionsQuery.toString());
+            JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
+            List<GoogleRoutesData> result;
+            try {
+                result = directionsParser.execute().get();
+                if (result.size() <= 0) {
+                    return;
+                }
+                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
+                if (favRouteID != null && favRouteID.size() > 0 && favRouteID.contains(card1.getRouteID()))
+                    card1.setFavorite(true);
+                else
+                    card1.setFavorite(false);
+                favCardList1.add(card1);
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void lookUpRoutes(String query, String fareTypes){
 
         transitCardList.clear();
@@ -1857,18 +1914,28 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(walkingCardList);
 
                 } else {
-                    //NORMAL ROUTES
+                    //transit
                     for (int i = 0; i < result.size(); i++) {
                         if (getDistanceMatrix(result.get(i))) {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
                             card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                             transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d("TEST FAVV ", String.valueOf(favRouteID.size()));
+                            if (favRouteID != null && favRouteID.size() > 0 && favRouteID.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
+                            Log.d("TEST FAVVV ", card1.getRouteID() + card1.isFavorite());
                         } else {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
                             card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                             transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            if (favRouteID != null && favRouteID.size() > 0 && favRouteID.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
                         }
                     }
                     updateAdapterList(transitCardList);
@@ -1893,7 +1960,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
                     Log.d("WALKing -------------- ", "WEATHER " + weather);
                     if (weather != null) {
-                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
                             umbrella = true;
                         } else {
                             umbrella = false;
