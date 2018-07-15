@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClickRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -63,12 +64,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
     public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRoute = new ArrayList<>();
+    public ArrayList<String> favRouteID = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
+    private OnFavoriteClickRoute rOnFavoriteClickListener;
 
     public void setOnFavoriteClickListener(OnFavoriteClick l) {
         mOnFavoriteClickListener = l;
+    }
+
+    public void setOnFavoriteClickListenerRoute(OnFavoriteClickRoute l) {
+        rOnFavoriteClickListener = l;
     }
 
     public ArrayList<String> getFavBusStopID() {
@@ -80,13 +86,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         favBusStopID = newFavBusStopID;
     }
 
-    public ArrayList<String> getFavRoute() {
-        return favRoute;
+    public ArrayList<String> getFavRouteID() {
+        return favRouteID;
     }
 
-    public void setFavRoute(ArrayList<String> newFavRoute) {
-//        favRoute.clear();
-        favRoute = newFavRoute;
+    public void setFavRouteID(ArrayList<String> newFavRoute) {
+        favRouteID.clear();
+        favRouteID = newFavRoute;
     }
 
     public ArrayList<Card> getmCard() {
@@ -198,17 +204,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-//                        favRoute.remove(transitCard.getRouteID());
+                        favRouteID.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-//                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
-//                        Log.d("FAVROUTE LIST", "size " + favRoute.size());
-                       // favRoute.add(transitCard.getRouteID());
+                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
+                        favRouteID.add(transitCard.getRouteID());
                     }
 
-                    if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favRoute);
+                    if (rOnFavoriteClickListener != null) {
+                        rOnFavoriteClickListener.onFavoriteClickRoute(favRouteID);
                     }
                 });
                 break;
@@ -613,6 +618,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
+
+                        if(cardsTransit.isFavorite())
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_red);
+                        else
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
