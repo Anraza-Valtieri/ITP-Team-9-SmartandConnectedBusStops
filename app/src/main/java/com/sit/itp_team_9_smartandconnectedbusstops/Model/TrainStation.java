@@ -75,11 +75,7 @@ public class TrainStation implements Comparable<TrainStation> {
     @Override
     public int compareTo(@NonNull TrainStation trainStation) {
         int compareStationNum= trainStation.getStationNum();
-        /* For Ascending order*/
-        return this.stationNum-compareStationNum;
-
-        /* For Descending order do like this */
-        //return compareage-this.studentage;
+        return this.stationNum-compareStationNum; //ascending order
     }
 
     @Override
