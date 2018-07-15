@@ -2182,6 +2182,9 @@ public class MainActivity extends AppCompatActivity
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
                 }
+                else if (routeSteps.get(i).getTravelMode().equals("WALKING")) {
+                    pass =  true;
+                }
             }
         }
         else{
