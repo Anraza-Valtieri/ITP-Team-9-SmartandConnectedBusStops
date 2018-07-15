@@ -25,15 +25,17 @@
 
     <!-- Alert Dialog -->
     <string-array name="fare_types_array">
-        <item>@string/student</item>
         <item>@string/adult</item>
         <item>@string/seniorcitizens</item>
+        <item>@string/student</item>
     </string-array>
 
     <string name="hour">hour</string>
     <string name="hours">hours</string>
     <string name="minute">min</string>
     <string name="minutes">mins</string>
+    <string name="secs">secs</string>
+    <string name="arriving">Arriving</string>
 
     <string name="day">Day</string>
     <string name="night">Night</string>

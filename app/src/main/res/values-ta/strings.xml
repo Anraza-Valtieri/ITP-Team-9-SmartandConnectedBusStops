@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="degree">பட்டம்</string>
     <string name="uvIndex">uv குறியீட்டு</string>
     <string name="action_settings">அமைப்புகளை</string>
@@ -76,6 +76,8 @@
     <string name="minute">நிமிடம்</string>
     <string name="hours">மணி</string>
     <string name="hour">மணி</string>
+    <string name="secs">வினாடி</string>
+    <string name="arriving">வந்து</string>
     <string name="km">கிலோமீட்டர்</string>
     <string name="m">மீட்டர்</string>
     <string name="walk">நடந்துவிட்டு</string>

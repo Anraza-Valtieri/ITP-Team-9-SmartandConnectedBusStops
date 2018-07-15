@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="degree">Ijazah</string>
     <string name="uvIndex">Indeks uv</string>
     <string name="action_settings">Tetapan</string>
@@ -76,6 +76,8 @@
     <string name="minute">minit</string>
     <string name="hours">jam</string>
     <string name="minutes">minit</string>
+    <string name="secs">detik</string>
+    <string name="arriving">Tiba</string>
     <string name="km">km</string>
     <string name="m">m</string>
     <string name="walk">Berjalan</string>

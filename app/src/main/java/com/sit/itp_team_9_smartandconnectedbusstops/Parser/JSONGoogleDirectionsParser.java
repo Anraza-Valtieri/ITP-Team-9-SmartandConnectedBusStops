@@ -31,7 +31,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
     public JSONGoogleDirectionsParser(Activity activity, List<String> url){
         urls = url;
-        //this.activity = activity;
+//        this.activity = activity;
     }
 
     public List<String> getUrls() {
@@ -113,6 +113,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                     steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                    steps.setPolyline(stepsObject.getJSONObject("polyline").getString("points"));
+                                    Log.d(TAG,"polyline"+ steps.getPolyline());
                                     steps.setTravelMode(stepsObject.getString("travel_mode"));
 
                                     //detailed, step-by-step instructions
@@ -141,22 +143,21 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }
                                     } else if (steps.getTravelMode().matches("WALKING")) {
-                                        //JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
-                                        //List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
+                                        JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
+                                        List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
                                         //to store walking steps
-                                        /*for (int l = 0; l < detailedStepsArray.length(); l++) {
+                                        for (int l = 0; l < detailedStepsArray.length(); l++) {
                                             JSONObject detailedStepsObject = detailedStepsArray.getJSONObject(l);
                                             GoogleRoutesSteps detailedSteps = new GoogleRoutesSteps();
-                                            detailedSteps.setDistance(detailedStepsObject
+                                            /*detailedSteps.setDistance(detailedStepsObject
                                                     .getJSONObject("distance").getString("text"));
                                             detailedSteps.setDuration(detailedStepsObject
-                                                    .getJSONObject("duration").getString("text"));
+                                                    .getJSONObject("duration").getString("text"));*/
                                             detailedSteps.setHtmlInstructions(detailedStepsObject
                                                     .optString("html_instructions"));
                                             detailedStepsList.add(detailedSteps);
                                         }
-                                        steps.setDetailedSteps(detailedStepsList);*/
-                                        //steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                        steps.setDetailedSteps(detailedStepsList);
                                         steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                         steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     }
@@ -198,18 +199,18 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-
-            return routesList;
         }
+            return routesList;
     }
 
     @Override
     protected void onPostExecute(List<GoogleRoutesData> result) {
         //Do something with the JSON string
-
-        Log.i(TAG, "onPostExecute: Total of "+result.size()+ " routes added");
-        Log.i(TAG,"routes: " + result + "\n");
-        //delegate.processFinishFromGoogle(result);
+        if(result != null) {
+            Log.i(TAG, "onPostExecute: Total of " + result.size() + " routes added");
+            Log.i(TAG, "routes: " + result + "\n");
+            if (delegate != null)
+                delegate.processFinishFromGoogle(result);
+        }
     }
 }

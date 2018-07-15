@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="language">语言</string>
     <string name="about">关于</string>
     <string name="current_weather">目前的天气</string>
@@ -76,6 +76,8 @@
     <string name="hours">小时</string>
     <string name="minute">分钟</string>
     <string name="minutes">分钟</string>
+    <string name="secs">秒</string>
+    <string name="arriving">到达</string>
     <string name="km">公里</string>
     <string name="m">米</string>
     <string name="walk">步行</string>

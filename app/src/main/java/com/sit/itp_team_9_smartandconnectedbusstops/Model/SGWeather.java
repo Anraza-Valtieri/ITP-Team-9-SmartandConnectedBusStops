@@ -101,6 +101,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "updateTemperature: No Metadata?");
+                    setmTemperature("Refreshing data..");
                     getTemperature();
                     return null;
                 }
@@ -147,6 +148,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "getTemperatureForLatLong: No Metadata?");
+                    setmTemperature("Refreshing data..");
                     getTemperature();
                     return null;
                 }
@@ -196,6 +198,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "updateForecast: No Metadata?");
+                    setmWeatherForecast("Refreshing data..");
                     getForecast();
                     return null;
                 }
@@ -259,6 +262,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "getForecastForLatLong: No Metadata?");
+                    setmWeatherForLatLong("Refreshing data..");
                     getForecast();
                     return null;
                 }
@@ -304,6 +308,7 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(psiParser == null) {
                     Log.e(TAG, "updatePSI: No Metadata?");
+                    setmPM10("Refreshing data..");
                     getDataForPSI();
                     return null;
                 }
@@ -385,7 +390,8 @@ public class SGWeather {
             @Override
             protected Object doInBackground(Object[] objects) {
                 if(pm25Parser == null) {
-                    Log.e(TAG, "updatePM25: No data?");
+                    Log.e(TAG, "updatePM25: No metadata?");
+                    setmPM25("Refreshing data..");
                     getDataForPM25();
                     return null;
                 }
