@@ -204,10 +204,11 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
     @Override
     protected void onPostExecute(List<GoogleRoutesData> result) {
         //Do something with the JSON string
-
-        Log.i(TAG, "onPostExecute: Total of "+result.size()+ " routes added");
-        Log.i(TAG,"routes: " + result + "\n");
-        if(delegate != null)
-            delegate.processFinishFromGoogle(result);
+        if(result != null) {
+            Log.i(TAG, "onPostExecute: Total of " + result.size() + " routes added");
+            Log.i(TAG, "routes: " + result + "\n");
+            if (delegate != null)
+                delegate.processFinishFromGoogle(result);
+        }
     }
 }

@@ -1909,7 +1909,7 @@ public class MainActivity extends AppCompatActivity
         }
         return umbrella;
     }
-    private boolean lookUpTrafficDuration(String type, String train, String queryMatrix, String queryDir){
+    private boolean lookUpTrafficDuration(String type, String train, GoogleRoutesData routesData, String queryMatrix, String queryDir){
         boolean pass = false;
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
@@ -1918,11 +1918,9 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG,durationQuery.toString());
         JSONDistanceMatrixParser durationParser = new JSONDistanceMatrixParser(MainActivity.this,durationQuery);
         List<DistanceData> result1;  //result from parser
-        JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this,directionsQuery);
-        List<GoogleRoutesData> result; //= new ArrayList<GoogleRoutesData>(); //result from parser
+        List<GoogleRoutesData> result = new ArrayList<>(); //= new ArrayList<GoogleRoutesData>(); //result from parser
         try {
-            result = directionsParser.execute().get();
-            Log.d(TAG, "lookUpTrafficDuration: "+result);
+            result.add(routesData);
             result1 = durationParser.execute().get();
             Log.d(TAG,queryMatrix);
             if(result.size() <= 0){
@@ -2017,7 +2015,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "IS A TRAIN" + i);
                     String trainline = routeSteps.get(i).getTrainLine();
                     Log.d(TAG, trainline);
-                    pass =  lookUpTrafficDuration("mrt", trainline, "", query);
+                    pass =  lookUpTrafficDuration("mrt", trainline, googleRoutesData, "", query);
                 }
                 else if (routeSteps.get(i).getTravelMode().equals("TRANSIT") && routeSteps.get(i).getBusNum()!= null ) {
                     Log.d(TAG, "IS A BUS" + i);
@@ -2028,7 +2026,7 @@ public class MainActivity extends AppCompatActivity
                     Double endLng = routeSteps.get(i).getEndLocationLng();
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
-                    pass =  lookUpTrafficDuration("bus", "", queryMatrix, query);
+                    pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
                 }
             }
         }

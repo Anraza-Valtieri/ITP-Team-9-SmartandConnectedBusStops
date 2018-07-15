@@ -202,7 +202,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
+//                        Log.d(TAG, "FAV------------ " + transitCard.getRouteID());
 //                        Log.d("FAVROUTE LIST", "size " + favRoute.size());
                        // favRoute.add(transitCard.getRouteID());
                     }
