@@ -255,10 +255,10 @@
                 <Spinner
                     android:id="@+id/sort_by_spinner"
                     android:layout_width="0dp"
-                    android:layout_height="28dp"
+                    android:layout_height="24dp"
                     android:layout_marginEnd="8dp"
-                    android:entries="@string/fui_error_unknown"
                     android:minHeight="32dp"
+                    android:outlineProvider="bounds"
                     android:popupTheme="@style/AppTheme"
                     android:theme="@style/AppTheme"
                     app:layout_constraintBottom_toBottomOf="@+id/tvSortBy"

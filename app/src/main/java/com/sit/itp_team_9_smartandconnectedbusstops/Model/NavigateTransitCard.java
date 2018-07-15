@@ -12,6 +12,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -45,28 +46,24 @@ public class NavigateTransitCard extends Card {
     private String cost;
     private String totalDistance;
     private List<List<Object>> timeTaken; //time(int),weight(float), colour(int) (breakdown bar based on this)
-    private String startingStation;
-    private String startingStationTimeTaken;
-    private int imageViewStartingStation;
-    private int imageViewStartingStationColor;
     private String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
     private List<String> polyLines;
     private String condition;
     private boolean isFavorite;
-    //private List<String> transitStations;
-    private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
-    // lineName(string), arrivalStop (string)>
-    private String error;
+    private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
 
     private String placeidStart, placeidEnd, routeID;
     public ArrayList<String> favRoute = new ArrayList<>();
-
     private List<String> inBetweenTrainStations;
 
-    //private int imageViewTransitStation;
-    //private int imageViewTransitStationColor;
+    //For sorting
+    private float totalWalkingDistance;
+    private int totalTimeInt;
+    private float totalDistanceFloat;
+
+    private String error;
 
     public int getID() {
         return ID;
@@ -140,54 +137,6 @@ public class NavigateTransitCard extends Card {
         this.condition = condition;
     }
 
-    /*public String getTransferStation() {
-        return transferStation;
-    }
-
-    public void setTransferStation(String transferStation) {
-        this.transferStation = transferStation;
-    }
-
-    public String getEndingStation() {
-        return endingStation;
-    }
-
-    public void setEndingStation(String endingStation) {
-        this.endingStation = endingStation;
-    }*/
-
-    /*public int getImageViewStartingStation() {
-        return imageViewStartingStation;
-    }
-
-    public void setImageViewStartingStation(int imageViewStartingStation) {
-        this.imageViewStartingStation = imageViewStartingStation;
-    }
-
-    public int getImageViewStartingStationColor() {
-        return imageViewStartingStationColor;
-    }
-
-    public void setImageViewStartingStationColor(int imageViewStartingStationColor) {
-        this.imageViewStartingStationColor = imageViewStartingStationColor;
-    }
-
-    public String getStartingStationTimeTaken() {
-        return startingStationTimeTaken;
-    }
-
-    public void setStartingStationTimeTaken(String startingStationTimeTaken) {
-        this.startingStationTimeTaken = startingStationTimeTaken;
-    }
-
-    /*public List<String> getTransitStations() {
-        return transitStations;
-    }
-
-    public void setTransitStations(List<String> transitStations) {
-        this.transitStations = transitStations;
-    }*/
-
     public String getDepartureStationCode() {
         return departureStationCode;
     }
@@ -207,6 +156,30 @@ public class NavigateTransitCard extends Card {
     public boolean isFavorite() { return isFavorite; }
 
     public void setFavorite(boolean favorite) { isFavorite = favorite; }
+
+    public float getTotalWalkingDistance() {
+        return totalWalkingDistance;
+    }
+
+    public void setTotalWalkingDistance(float totalWalkingDistance) {
+        this.totalWalkingDistance = totalWalkingDistance;
+    }
+
+    public int getTotalTimeInt() {
+        return totalTimeInt;
+    }
+
+    public void setTotalTimeInt(int totalTimeInt) {
+        this.totalTimeInt = totalTimeInt;
+    }
+
+    public float getTotalDistanceFloat() {
+        return totalDistanceFloat;
+    }
+
+    public void setTotalDistanceFloat(float totalDistanceFloat) {
+        this.totalDistanceFloat = totalDistanceFloat;
+    }
 
     public String getError() {
         return error;
@@ -257,11 +230,14 @@ public class NavigateTransitCard extends Card {
             card.setTotalTime(googleRoutesData.getTotalDuration());
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
-            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID();
-            Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
             card.setRouteID(routeID);
-            card.setTotalDistance(googleRoutesData.getTotalDistance());
-            card.setTotalTime(googleRoutesData.getTotalDuration());
+            Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+           
+            //For sorting
+            card.setTotalDistanceFloat(convertDistanceToKm(googleRoutesData.getTotalDistance()));
+            card.setTotalTimeInt(convertTimeToMinutes(googleRoutesData.getTotalDuration()));
+
             //in Steps
             List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
             if (routeSteps != null) {
@@ -269,6 +245,7 @@ public class NavigateTransitCard extends Card {
                 List<List<Object>> timeTakenList = new ArrayList<>();
                 List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
                 List<String> listOfPolyLines = new ArrayList<>();
+                float totalWalkingDistance = 0;
                 //find largest duration of each step for weights in breakdownBar
                 int largestDuration = 0;
                 for (int i = 0; i < routeSteps.size(); i++) {
@@ -282,7 +259,7 @@ public class NavigateTransitCard extends Card {
 
                 for (int i = 0; i < routeSteps.size(); i++) {
                     List<Object> timeTakenEachStep = new ArrayList<>();
-                    listOfPolyLines.add(routeSteps.get(i).getPolyline());
+                    //listOfPolyLines.add(routeSteps.get(i).getPolyline());
                     String travelMode = routeSteps.get(i).getTravelMode();
                     String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                     float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
@@ -310,6 +287,12 @@ public class NavigateTransitCard extends Card {
                             walkingDetails.add(5,routeSteps.get(i).getDuration());
                             walkingDetails.add(6,walkingDetailedStepsChildren);
                             transitStations.put(routeSteps.get(i).getDistance(),walkingDetails);
+
+                            //for sorting by walking distance
+                            float walkingDistance = convertDistanceToKm(routeSteps.get(i).getDistance());
+                            Log.i(TAG, "walkingDistance"+ walkingDistance);
+                            totalWalkingDistance += walkingDistance;
+                            Log.i(TAG, "totalWalkingDistance"+ totalWalkingDistance);
                             break;
 
                         case "TRANSIT":
@@ -503,12 +486,19 @@ public class NavigateTransitCard extends Card {
                                             String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + "环线延长线";
                                             List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
-                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(1));
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(0));
+                                            }
                                         }else if (trainLine.equals("East West Line")){
                                             String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + "Changi Airport Branch Line";
                                             List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
-                                            allTrainStationsInLine.addAll(0,allTrainStationsExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                for (TrainStation trainStationExtension : allTrainStationsExtension) {
+                                                    allTrainStationsInLine.add(0, trainStationExtension);
+                                                }
+                                            }
                                         }
 
                                         for(TrainStation trainStation: allTrainStationsInLine){
@@ -545,19 +535,17 @@ public class NavigateTransitCard extends Card {
                                                     if (departureTrainStation.getStationNum()
                                                             < arrivalTrainStation.getStationNum()) {
                                                         //if departure comes before arrival in list
-                                                        for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
+                                                        int numStops = routeSteps.get(i).getNumStops();
+                                                        for (int k = 1; k < numStops; k++) {
                                                             //add until it reaches end of num of stops
-                                                            if (departureTrainStation.getStationCode().equals("CE1") ||
-                                                                    departureTrainStation.getStationCode().equals("CE2") ||
-                                                                    departureTrainStation.getStationCode().equals("CG1") ||
-                                                                    departureTrainStation.getStationCode().equals("CG2") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE2") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CG1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CG2")){
+                                                            if ((departureTrainStation.getStationCode().equals("CE1") ||
+                                                                    departureTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j+k).getStationCode().equals("CC1")
+                                                                    ){
                                                                 //extension line stops placed after stations in original line
-                                                                Log.i(TAG,"EXTENSION LINE");
-                                                                k+=2;
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
+                                                                numStops+=3;
                                                             }
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j + k).getStationName());
@@ -566,21 +554,19 @@ public class NavigateTransitCard extends Card {
                                                         //if departure comes after arrival in list
                                                         for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
                                                             //add until it reaches end of num of stops
-                                                            if ((allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
-                                                                    && (departureTrainStation.getStationCode().equals("CE1") ||
-                                                                    departureTrainStation.getStationCode().equals("CE2"))) ||
-                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
-                                                                            && (departureTrainStation.getStationCode().equals("CG1") ||
-                                                                            departureTrainStation.getStationCode().equals("CG2")))
-                                                                    || (allTrainStationsInLine.get(j-k).getStationCode().equals("CC4")
-                                                                    && (arrivalTrainStation.getStationCode().equals("CE1") ||
-                                                                    arrivalTrainStation.getStationCode().equals("CE2"))) ||
-                                                                    (allTrainStationsInLine.get(j-k).getStationCode().equals("EW4")
-                                                                            && (arrivalTrainStation.getStationCode().equals("CG1") ||
-                                                                            arrivalTrainStation.getStationCode().equals("CG2")))){
+                                                            if((arrivalTrainStation.getStationCode().equals("CG1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CG2"))
+                                                                    && departureTrainStation.getStationCode().equals("EW4")) {
                                                                 //extension line stops placed before stations in original line
-                                                                Log.i(TAG,"EXTENSION LINE");
-                                                                k+=2;
+                                                                Log.i(TAG,"EXTENSION LINE EWL");
+                                                                k+=3;
+                                                            }
+
+                                                            if ((arrivalTrainStation.getStationCode().equals("CE1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j-k).getStationCode().equals("CC3")){
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
                                                             }
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j - k).getStationName());
@@ -688,6 +674,7 @@ public class NavigateTransitCard extends Card {
                     }
                 }
                 card.setPolyLines(listOfPolyLines);
+                card.setTotalWalkingDistance(totalWalkingDistance);
                 Log.i(TAG,listOfPolyLines.toString());
                 card.setCost(price);
                 card.setTimeTaken(timeTakenList);
@@ -739,4 +726,88 @@ public class NavigateTransitCard extends Card {
         return null;
     }
 
+    //Comparator for sorting the list by total distance
+    public static Comparator<NavigateTransitCard> distanceComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            //Float c1TotalDistance = convertDistanceToKm(c1.getTotalDistance());
+            //Float c2TotalDistance = convertDistanceToKm(c2.getTotalDistance());
+            Float c1TotalDistance = c1.getTotalDistanceFloat();
+            Float c2TotalDistance = c2.getTotalDistanceFloat();
+            //ascending order
+            //return c1TotalDistance.compareTo(c2TotalDistance);
+
+            return Float.compare(c1TotalDistance,c2TotalDistance);
+        }
+    };
+
+    //Comparator for sorting the list by total time
+    public static Comparator<NavigateTransitCard> timeComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            int c1TotalTime = c1.getTotalTimeInt();
+            int c2TotalTime = c2.getTotalTimeInt();
+            //ascending order
+            return Integer.compare(c1TotalTime,c2TotalTime);
+        }
+    };
+
+    //Comparator for sorting the list by total walking distance
+    public static Comparator<NavigateTransitCard> walkingDistanceComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            //need new walking only distance
+            float c1TotalWalkingDistance = c1.getTotalWalkingDistance();
+            float c2TotalWalkingDistance = c2.getTotalWalkingDistance();
+            //ascending order
+            return Float.compare(c1TotalWalkingDistance,c2TotalWalkingDistance);
+        }
+    };
+
+    private static Float convertDistanceToKm(String distanceString){
+        float distanceInKm;
+        if (distanceString.contains(" m")){
+            //convert m to km
+            Float walkingDistanceInMetres = Float.parseFloat(distanceString.replaceAll("[^0-9]",""));
+            distanceInKm = walkingDistanceInMetres / 1000;
+        }else{
+            //already in kilometres
+            //removes anything that is not a . or number
+            distanceInKm = Float.parseFloat(distanceString.replaceAll("[^.0-9]",""));
+        }
+
+        Log.i(TAG, "distanceInKm"+ distanceInKm);
+        return distanceInKm;
+    }
+
+    private static int convertTimeToMinutes(String timeString){
+        int totalTimeInMinutes, timeFromHoursAndMinutes = 0;
+        if (timeString.contains(" hour")){
+            int timeFromMinutes = 0;
+
+            //convert hour to minutes
+            int hours = Integer.parseInt(timeString.replaceAll(" hour.*$",""));
+            int timeFromHours = hours * 60;
+
+            if (timeString.contains(" min")){
+                Log.i(TAG,"originalTime " + timeString);
+                //if time also contains min, get the minutes
+                String removeHours = timeString.replaceFirst(".*hours ","");
+                String removeHour = removeHours.replaceFirst(".*hour ","");
+                Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
+                String removeMins = removeHour.replaceAll(" mins.*$","");
+                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+                timeFromMinutes = minutes;
+            }
+            totalTimeInMinutes = timeFromHours + timeFromMinutes;
+        }else {
+            //already in min
+            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(" min.*$", ""));
+        }
+
+        //totalTimeInMinutes = timeFromHoursAndMinutes +  timeFromMinutes;
+
+        Log.i(TAG, "totalTimeInMinutes"+ totalTimeInMinutes);
+        return totalTimeInMinutes;
+    }
 }

@@ -622,6 +622,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
 
+                        if(cardsTransit.isFavorite())
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_red);
+                        else
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
                         LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);

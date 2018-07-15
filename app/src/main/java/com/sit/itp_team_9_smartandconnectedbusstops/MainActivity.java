@@ -66,6 +66,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -238,9 +239,9 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<String> favBusStopID = new ArrayList<>();
 
     public ArrayList<String> favRoute = new ArrayList<>();
-
+    private ArrayList<Card> favCardList1 = new ArrayList<>(); // Favorite cards
     //Route cards
-    private ArrayList<Card> transitCardList = new ArrayList<>(); // Public transport cards
+    private ArrayList<? super Card> transitCardList = new ArrayList<>(); // Public transport cards
     private ArrayList<Card> walkingCardList = new ArrayList<>(); // Walking cards
 
     // Bus Routes
@@ -716,6 +717,46 @@ public class MainActivity extends AppCompatActivity
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 // Apply the adapter to the spinner
                 fareTypesSpinner.setAdapter(adapter);
+
+                Spinner sortBySpinner = (Spinner) findViewById(R.id.sort_by_spinner);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapterSort = ArrayAdapter.createFromResource(this,
+                        R.array.sort_by_array, android.R.layout.simple_spinner_item);
+                // Specify the layout to use when the list of choices appears
+                adapterSort.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                // Apply the adapter to the spinner
+                sortBySpinner.setAdapter(adapterSort);
+
+                sortBySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+                            switch (sortBySpinner.getSelectedItem().toString()) {
+                                case "Least time":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least distance":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
+                                    //transitCardList = (ArrayList<? super Card>) castToNavigate;
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least walking":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                            }
+                        }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
+
                 startingPointTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 destinationTextView.setAdapter(mPlaceAutoCompleteAdapter);
                 //ImageButton switchButton = findViewById(R.id.switchButton);
@@ -758,7 +799,7 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
+                                lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -805,7 +846,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,query);
                         hideKeyboard();
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString());
+                        lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
                         Toast.makeText(MainActivity.this,"Starting point and Destination cannot be empty!",Toast.LENGTH_LONG).show();
@@ -1358,6 +1399,14 @@ public class MainActivity extends AppCompatActivity
         this.favCardList = favCardList;
     }
 
+    public ArrayList<Card> getFavCardList1() {
+        return favCardList1;
+    }
+
+    public void setFavCardList1(ArrayList<Card> favCardList1) {
+        this.favCardList1 = favCardList1;
+    }
+
     public ArrayList<String> getFavBusStopID() {
         return favBusStopID;
     }
@@ -1789,6 +1838,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         favCardList.clear();
+        favCardList1.clear();
 
         for(int i=0; i< list.size(); i++) {
             BusStopCards card = getBusStopData(list.get(i));
@@ -1800,6 +1850,37 @@ public class MainActivity extends AppCompatActivity
             }
             else{ // Nav cards
                 Log.d(TAG, "prepareFavoriteCards: Nav Cards");
+                Log.d(TAG, " ---------------- ROUTE FAV CARD " + list.size());
+                String id = list.get(i);
+                String[] deconcat = id.split("/");
+                String startPlaceId = deconcat[0];
+                String endPlaceId = deconcat[1];
+                String routeid = deconcat[2];
+                String fareType = deconcat[3];
+                String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
+                        + startPlaceId + "&destination=place_id:"
+                        + endPlaceId
+                        + "&mode=transit"
+                        + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                List<String> directionsQuery = new ArrayList<>();
+                directionsQuery.add(query);
+                Log.i(TAG, directionsQuery.toString());
+                JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
+                List<GoogleRoutesData> result;
+                try {
+                    result = directionsParser.execute().get();
+                    if (result.size() <= 0) {
+                        return;
+                    }
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
+                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                        card1.setFavorite(true);
+                    else
+                        card1.setFavorite(false);
+                    favCardList1.add(card1);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -1824,19 +1905,19 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                updateAdapterList(favCardList);
+                favCardList1.addAll(favCardList);
+                updateAdapterList(favCardList1);
             }
         };
         asyncTask.execute();
 
 //        updateAdapterList(favCardList);
     }
-    private void lookUpRoutes(String query, String fareTypes){
-
+          
+    private void lookUpRoutes(String query, String fareTypes, String spinnerSelectedItem){
         transitCardList.clear();
         walkingCardList.clear();
         progressBar.setVisibility(View.VISIBLE);
-
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
         Log.i(TAG,directionsQuery.toString());
@@ -1882,14 +1963,45 @@ public class MainActivity extends AppCompatActivity
                             card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                             transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
                         } else {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
                             card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                             transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                card1.setFavorite(true);
+                            else
+                                card1.setFavorite(false);
                         }
+                        ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                        navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                        List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+                        switch (spinnerSelectedItem) {
+                            case "Least time":
+                                Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                            case "Least distance":
+                                Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
+                                //transitCardList = (ArrayList<? super Card>) castToNavigate;
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                            case "Least walking":
+                                Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
+                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                break;
+                        }
+
+                        //updateAdapterList((ArrayList<? extends Card>) transitCardList);
                     }
-                    updateAdapterList(transitCardList);
+                    //updateAdapterList(transitCardList);
                 }
             }
         };
@@ -1911,7 +2023,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
                     Log.d("WALKing -------------- ", "WEATHER " + weather);
                     if (weather != null) {
-                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms")) {
+                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
                             umbrella = true;
                         } else {
                             umbrella = false;

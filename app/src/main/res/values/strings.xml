@@ -30,6 +30,16 @@
         <item>@string/student</item>
     </string-array>
 
+    <string name="leastTime">Least time</string>
+    <string name="leastDistance">Least distance</string>
+    <string name="leastWalking">Least walking</string>
+
+    <string-array name="sort_by_array">
+        <item>@string/leastTime</item>
+        <item>@string/leastDistance</item>
+        <item>@string/leastWalking</item>
+    </string-array>
+
     <string name="hour">hour</string>
     <string name="hours">hours</string>
     <string name="minute">min</string>
