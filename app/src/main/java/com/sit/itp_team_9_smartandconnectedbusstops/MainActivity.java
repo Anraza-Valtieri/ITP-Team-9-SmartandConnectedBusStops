@@ -2090,7 +2090,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     Log.d("LookUpTrafficDuration", train);
-                    Log.d("LookUpTrafficDuration", mrtLine);
+                    //Log.d("LookUpTrafficDuration", mrtLine);
                     String keyTwitter = "[" + mrtLine + "]";
                     Log.d("MRTLINE", keyTwitter);
                     for(String s : twitterList){
