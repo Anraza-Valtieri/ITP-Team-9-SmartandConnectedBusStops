@@ -84,7 +84,6 @@
     <string name="m">米</string>
     <string name="walk">步行</string>
     <string name="feedback">Feedback</string>
-    <string name="app_name">TransitThere</string>
     <string name="chooselanguage">选择您首选的语言</string>
     <string name="suggestedroute">* 建议路线 *</string>
     <string name="publictransport">公共交通</string>

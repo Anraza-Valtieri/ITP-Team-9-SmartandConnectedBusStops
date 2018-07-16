@@ -5,6 +5,7 @@ public class Card {
     public final static int NAVIGATE_TRANSIT_CARD = 1;
     public final static int NAVIGATE_WALKING_CARD = 2;
     private int type;
+    private boolean needsUpdate;
 
     public int getType() {
         return type;
@@ -12,6 +13,14 @@ public class Card {
 
     public void setType(int type) {
         this.type = type;
+    }
+
+    public boolean isNeedsUpdate() {
+        return needsUpdate;
+    }
+
+    public void setNeedsUpdate(boolean needsUpdate) {
+        this.needsUpdate = needsUpdate;
     }
 
     @Override
