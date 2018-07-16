@@ -1,6 +1,8 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
 import android.graphics.Color;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -582,6 +584,22 @@ public class NavigateTransitCard extends Card {
                                             }
                                         }
 
+                                        //change order of stations in list to account for LRT loops
+                                        /*if (trainLine.equals("Bukit Panjang LRT")){
+                                            List<TrainStation> changeOrderBP = new ArrayList<>();
+                                            for (int j = 10; j < allTrainStationsInLine.size()-1; j++){
+                                                changeOrderBP.add(allTrainStationsInLine.get(j));
+                                            }
+                                            Collections.reverse(changeOrderBP);
+                                            allTrainStationsInLine.removeIf((TrainStation ts) -> ts.getStationNum() >= 11);
+                                            allTrainStationsInLine.addAll(changeOrderBP);
+
+                                        }else if (trainLine.equals("Sengkang LRT")){
+
+                                        }else if (trainLine.equals("Punggol LRT")){
+
+                                        }*/
+
                                         for(TrainStation trainStation: allTrainStationsInLine){
                                             System.out.println("sortedStation: "+trainStation.toString()+"\n");
                                         }
@@ -637,7 +655,6 @@ public class NavigateTransitCard extends Card {
 //>>>>>>> jerry
                                             }
                                             //TODO LRT loops
-                                            //TODO Ten Mile Junction(BP14) is in between BP5 and BP6
                                         }
                                         if (departureTrainStation != null && arrivalTrainStation != null ){
                                             //if both stations found
@@ -660,6 +677,29 @@ public class NavigateTransitCard extends Card {
                                                                 k+=3;
                                                                 numStops+=3;
                                                             }
+                                                            if(trainLine.equals("Bukit Panjang LRT") &&
+                                                                    arrivalTrainStation.getStationNum() >= 11 &&
+                                                                    allTrainStationsInLine.get(j+k).getStationCode().equals("BP7")
+                                                                    ){
+                                                                Log.i(TAG,"BP LRT");
+                                                                for (TrainStation ts : allTrainStationsInLine){
+                                                                    if (ts.getStationCode().equals("BP14")){
+                                                                        allTrainStationsInLine.remove(ts);
+                                                                    }
+                                                                }
+                                                                for (int l=1; l < 3; l++){
+
+                                                                    //add from last index, in reverse order
+                                                                    trainStationNames.add(allTrainStationsInLine
+                                                                            .get(allTrainStationsInLine.size()-l).getStationName());
+                                                                    if (arrivalTrainStation.getStationNum() == 12 ){
+                                                                        break;
+                                                                    }
+                                                                    Log.i(TAG, "l = "+l);
+                                                                }
+                                                                break;
+                                                            }
+
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j + k).getStationName());
                                                         }
@@ -680,6 +720,31 @@ public class NavigateTransitCard extends Card {
                                                                     allTrainStationsInLine.get(j-k).getStationCode().equals("CC3")){
                                                                 Log.i(TAG,"EXTENSION LINE CCL");
                                                                 k+=3;
+                                                            }
+                                                            if(trainLine.equals("Bukit Panjang LRT") &&
+                                                                    departureTrainStation.getStationNum() >= 11 &&
+                                                                    arrivalTrainStation.getStationNum() < 7
+                                                                    ){
+                                                                for (TrainStation ts : allTrainStationsInLine){
+                                                                    if (ts.getStationCode().equals("BP14")){
+                                                                        allTrainStationsInLine.remove(ts);
+                                                                    }
+                                                                }
+                                                                //add forward until end of LRT line
+                                                                for (int l=departureTrainStation.getStationNum();
+                                                                     l < allTrainStationsInLine.size(); l++) {
+                                                                    trainStationNames.add(allTrainStationsInLine
+                                                                            .get(l).getStationName());
+                                                                }
+
+                                                                //then continue adding from BP6 till BP1
+                                                                for (int m=5;
+                                                                     m > arrivalTrainStation.getStationNum()-1; m--) {
+                                                                    Log.i(TAG,"m7");
+                                                                    trainStationNames.add(allTrainStationsInLine
+                                                                            .get(m).getStationName());
+                                                                }
+                                                                break;
                                                             }
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j - k).getStationName());
