@@ -29,6 +29,10 @@
                 android:id="@+id/nav_datasources"
                 android:icon="@drawable/ic_data_sources_black_24dp"
                 android:title="Data Sources" />
+            <item
+                android:id="@+id/nav_feedback"
+                android:icon="@drawable/ic_feedback_black_24dp"
+                android:title="@string/feedback" />
         </menu>
     </item>
 </menu>

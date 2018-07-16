@@ -3,6 +3,7 @@ package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.Value;
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
@@ -57,6 +58,8 @@ public class NavigateTransitCard extends Card {
     private String placeidStart, placeidEnd, routeID;
     public ArrayList<String> favRoute = new ArrayList<>();
     private List<String> inBetweenTrainStations;
+
+    private LatLng latLng;
 
     //For sorting
     private float totalWalkingDistance;
@@ -157,6 +160,14 @@ public class NavigateTransitCard extends Card {
 
     public void setFavorite(boolean favorite) { isFavorite = favorite; }
 
+    public LatLng getLatLng() {
+        return latLng;
+    }
+
+    public void setLatLng(LatLng latLng) {
+        this.latLng = latLng;
+    }
+
     public float getTotalWalkingDistance() {
         return totalWalkingDistance;
     }
@@ -224,6 +235,7 @@ public class NavigateTransitCard extends Card {
     public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
+        card.setNeedsUpdate(true);
         if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
             card.setID(googleRoutesData.getID());
             card.setTotalDistance(googleRoutesData.getTotalDistance());

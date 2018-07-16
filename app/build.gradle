@@ -16,9 +16,10 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName "1.0"
+        versionName '1.2'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        versionNameSuffix 'Beta'
     }
     buildTypes {
         release {
@@ -52,6 +53,8 @@ android {
         abortOnError false
         ignoreWarnings true
     }
+    productFlavors {
+    }
 }
 
 dependencies {
@@ -65,6 +68,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.google.firebase:firebase-firestore:17.0.2'
     implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.google.firebase:firebase-messaging:17.1.0'
     //noinspection GradleDynamicVersion
     implementation 'com.google.maps.android:android-maps-utils:0.5+'
     implementation 'com.firebaseui:firebase-ui:4.0.0'
@@ -83,6 +87,10 @@ dependencies {
     }
     implementation 'org.apache.httpcomponents:httpcore:4.4.1'
     implementation 'commons-io:commons-io:2.4'
+<<<<<<< HEAD
+=======
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.4'
+>>>>>>> jerry
 }
 
 apply plugin: 'com.google.gms.google-services'
