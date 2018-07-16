@@ -20,6 +20,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -56,6 +57,7 @@ import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -1171,6 +1173,9 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+        Intent intent = null;
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -1180,7 +1185,16 @@ public class MainActivity extends AppCompatActivity
 
                 final String[] listItems = {"English", "中文", "Bahasa Melayu", "தமிழ்"};
                 AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-                mBuilder.setTitle("Choose your preferred language");
+
+                TextView title = new TextView(this);
+                title.setText(getString(R.string.chooselanguage));
+                title.setTextColor(Color.BLACK);
+                title.setTextSize(16);
+                title.setGravity(Gravity.CENTER);
+                title.setTypeface(Typeface.DEFAULT_BOLD);
+                title.setPadding(8,16,8,0);
+
+                mBuilder.setCustomTitle(title);
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
@@ -1220,10 +1234,26 @@ public class MainActivity extends AppCompatActivity
                 mDialog.show();
                 break;
 
-            case R.id.nav_about:
+            case R.id.nav_app_guide:
 
-                Log.d(TAG, "onNavigationItemSelected: Settings");
+                intent = new Intent(context, AppGuideActivity.class);
+                startActivity(intent);
                 break;
+
+            case R.id.nav_about_app:
+
+                intent = new Intent(context, AboutActivity.class);
+                startActivity(intent);
+                break;
+
+            case R.id.nav_datasources:
+
+                intent = new Intent(context, DataSourcesActivity.class);
+                startActivity(intent);
+                break;
+
+            default:
+                    break;
         }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -2026,6 +2056,22 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
                         }
+<<<<<<< HEAD
+                        //NORMAL ROUTES*/
+                        for(int i=0; i< result.size(); i++) {
+                            if(getDistanceMatrix(result.get(i))) {
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, getString(R.string.suggestedroute));
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
+                            else{
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                            }
+=======
                         ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
                         navigateCardList = (ArrayList<? extends Card>) transitCardList;
                         List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
@@ -2044,6 +2090,7 @@ public class MainActivity extends AppCompatActivity
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                 break;
+>>>>>>> jerry
                         }
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);

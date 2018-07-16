@@ -289,7 +289,7 @@
                     android:id="@+id/tabItem"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:text="Public Transport"
+                    android:text="@string/publictransport"
                     android:textColor="@android:color/darker_gray"
                     android:theme="@style/AppTheme.NoActionBar"
                     android:visibility="visible" />
@@ -298,8 +298,9 @@
                     android:id="@+id/tabItem2"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:text="Walking"
+                    android:text="@string/walking"
                     android:textColor="@android:color/darker_gray"
+                    android:theme="@style/AppTheme.NoActionBar"
                     android:visibility="visible" />
 
             </android.support.design.widget.TabLayout>

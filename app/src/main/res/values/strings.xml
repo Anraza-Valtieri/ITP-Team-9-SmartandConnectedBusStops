@@ -18,12 +18,17 @@
     <string name="destination">Destination</string>
     <string name="transit_error">No routes available</string>
     <string name="stops">stops</string>
+    <string name="publictransport">Public Transport</string>
+    <string name="walking">Walking</string>
 
     <string name="student">Student</string>
     <string name="adult">Adult</string>
     <string name="seniorcitizens">Senior Citizens</string>
 
     <!-- Alert Dialog -->
+    <string name="chooselanguage">Choose your preferred language</string>
+
+    <!-- Fare Types Spinner -->
     <string-array name="fare_types_array">
         <item>@string/adult</item>
         <item>@string/seniorcitizens</item>
@@ -52,7 +57,12 @@
 
     <string name="fair">Fair</string>
     <string name="partcloudy">Partly Cloudy</string>
+    <string name="cloudy">Cloudy</string>
+    <string name="lightshowers">Light Showers</string>
+    <string name="showers">Showers</string>
+    <string name="thunderyshowers">Thundery Showers</string>
 
+    <string name="suggestedroute">* Suggested Route *</string>
     <string name="walk">Walk</string>
     <string name="km">km</string>
     <string name="m">m</string>
@@ -77,6 +87,7 @@
     <string name="degree">°C</string>
     <string name="uvIndex">UV Index</string>
     <string name="language">Language Preferences</string>
+    <string name="appguide">App Guide</string>
     <string name="about">About</string>
 
     <string name="displayfares">Displaying Fares for:</string>

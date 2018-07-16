@@ -81,5 +81,13 @@
     <string name="km">km</string>
     <string name="m">m</string>
     <string name="walk">Berjalan</string>
+    <string name="chooselanguage">Pilih Bahasa Pilihan Anda</string>
+    <string name="suggestedroute">* Laluan Yang Dicadangkan *</string>
+    <string name="publictransport">Pengangkutan Awam</string>
+    <string name="walking">Berjalan</string>
+    <string name="showers">Hujan</string>
+    <string name="thunderyshowers">Pancuran Hujan</string>
+    <string name="lightshowers">Pancuran Air</string>
+    <string name="cloudy">Mendung</string>
 
 </resources>
