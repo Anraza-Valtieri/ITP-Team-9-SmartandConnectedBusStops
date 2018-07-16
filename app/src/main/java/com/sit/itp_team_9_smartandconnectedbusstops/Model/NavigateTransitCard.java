@@ -223,7 +223,6 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
@@ -570,7 +569,11 @@ public class NavigateTransitCard extends Card {
                                                                     allTrainStationsInLine.get(j+k).getStationCode().equals("BP7")
                                                                     ){
                                                                 Log.i(TAG,"BP LRT");
-                                                                allTrainStationsInLine.removeIf((TrainStation ts) -> ts.getStationCode().equals("BP14"));
+                                                                for (TrainStation ts : allTrainStationsInLine){
+                                                                    if (ts.getStationCode().equals("BP14")){
+                                                                        allTrainStationsInLine.remove(ts);
+                                                                    }
+                                                                }
                                                                 for (int l=1; l < 3; l++){
 
                                                                     //add from last index, in reverse order
@@ -609,7 +612,11 @@ public class NavigateTransitCard extends Card {
                                                                     departureTrainStation.getStationNum() >= 11 &&
                                                                     arrivalTrainStation.getStationNum() < 7
                                                                     ){
-                                                                allTrainStationsInLine.removeIf((TrainStation ts) -> ts.getStationCode().equals("BP14"));
+                                                                for (TrainStation ts : allTrainStationsInLine){
+                                                                    if (ts.getStationCode().equals("BP14")){
+                                                                        allTrainStationsInLine.remove(ts);
+                                                                    }
+                                                                }
                                                                 //add forward until end of LRT line
                                                                 for (int l=departureTrainStation.getStationNum();
                                                                      l < allTrainStationsInLine.size(); l++) {
