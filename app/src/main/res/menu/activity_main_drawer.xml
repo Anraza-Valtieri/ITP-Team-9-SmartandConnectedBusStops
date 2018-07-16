@@ -3,39 +3,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <!--
-        <item
-            android:id="@+id/nav_bus"
-            android:icon="@drawable/ic_directions_bus_black_24dp"
-            android:title="Buses" />
-        <item
-            android:id="@+id/nav_bus_stops"
-            android:icon="@drawable/ic_local_activity_black_24dp"
-            android:title="Bus Stations" />
-        <item
-            android:id="@+id/nav_trainstations"
-            android:icon="@drawable/ic_directions_train_black_24dp"
-            android:title="Train Stations" />
-            -->
-    </group>
-
     <item android:title="@string/action_settings">
         <menu>
             <item
                 android:id="@+id/nav_language_preferences"
                 android:icon="@drawable/ic_language_black_24dp"
                 android:title="@string/language" />
+        </menu>
+    </item>
+    <item android:title="Help">
+        <menu>
             <item
-                android:id="@+id/nav_about"
+                android:id="@+id/nav_app_guide"
+                android:icon="@drawable/ic_app_guide_black_24dp"
+                android:title="@string/appguide" />
+        </menu>
+    </item>
+    <item android:title="@string/about">
+        <menu>
+            <item
+                android:id="@+id/nav_about_app"
                 android:icon="@drawable/ic_info_outline_black_24dp"
-                android:title="@string/about" />
-
+                android:title="About App" />
+            <item
+                android:id="@+id/nav_datasources"
+                android:icon="@drawable/ic_data_sources_black_24dp"
+                android:title="Data Sources" />
             <item
                 android:id="@+id/nav_feedback"
                 android:icon="@drawable/ic_feedback_black_24dp"
                 android:title="@string/feedback" />
         </menu>
     </item>
-
 </menu>
