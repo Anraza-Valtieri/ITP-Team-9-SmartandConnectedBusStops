@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AboutActivity"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:background="@color/error_red"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:orientation="vertical">
+
+        <Button
+            android:layout_marginTop="@dimen/margin_medium"
+            android:layout_marginLeft="@dimen/margin_medium"
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/ic_arrow_back_white_24dp" />
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_launcher"/>
+
+        <TextView
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:textSize="21sp"/>
+
+        <TextView
+            android:id="@+id/version"
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Version 1.0"
+            android:textColor="#FFF"
+            android:textStyle="italic"
+            android:textSize="18sp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_marginTop="@dimen/margin_large"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="A student project by students of" />
+
+    <ImageView
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
+        android:src="@drawable/logo_sit"/>
+
+    <TextView
+        android:layout_marginTop="@dimen/margin_large"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="In collaboration with" />
+
+    <ImageView
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
+        android:src="@drawable/logo_stengineering"/>
+</LinearLayout>
