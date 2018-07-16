@@ -2009,22 +2009,7 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
                         }
-<<<<<<< HEAD
-                        //NORMAL ROUTES*/
-                        for(int i=0; i< result.size(); i++) {
-                            if(getDistanceMatrix(result.get(i))) {
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, getString(R.string.suggestedroute));
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
-                            else{
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            }
-=======
+
                         ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
                         navigateCardList = (ArrayList<? extends Card>) transitCardList;
                         List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
@@ -2043,7 +2028,6 @@ public class MainActivity extends AppCompatActivity
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                 break;
->>>>>>> jerry
                         }
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);

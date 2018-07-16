@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">TransitThere</string>
-
     <string name="language">语言</string>
     <string name="about">关于</string>
     <string name="current_weather">目前的天气</string>
@@ -83,7 +81,6 @@
     <string name="km">公里</string>
     <string name="m">米</string>
     <string name="walk">步行</string>
-    <string name="app_name">TransitThere</string>
     <string name="chooselanguage">选择您首选的语言</string>
     <string name="suggestedroute">* 建议路线 *</string>
     <string name="publictransport">公共交通</string>

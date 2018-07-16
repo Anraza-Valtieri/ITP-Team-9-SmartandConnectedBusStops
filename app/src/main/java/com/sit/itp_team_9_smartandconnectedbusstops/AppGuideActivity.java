@@ -11,9 +11,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.AppGuideAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.AppGuideChildDataItem;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.AppGuideParentDataItem;
@@ -188,7 +190,7 @@ public class AppGuideActivity extends AppCompatActivity {
         dummyChildDataItems.add(dummyChildDataItem);
         //
         dummyChildDataItem = new AppGuideChildDataItem();
-        dummyChildDataItem.setChildName("NOTE: The app will experience a tiny blackout to display the contents in your preferred language.");
+        dummyChildDataItem.setChildName("Note: The app will experience a tiny blackout to display the contents in your preferred language. ");
         dummyChildDataItems.add(dummyChildDataItem);
         //
         dummyParentDataItem.setChildDataItems(dummyChildDataItems);
@@ -224,17 +226,17 @@ public class AppGuideActivity extends AppCompatActivity {
 
 
 
-                    TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(index);
-                    currentTextView.setVisibility(View.GONE);
+//                    TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(index);
+//                    currentTextView.setVisibility(View.GONE);
 
-//                    if(dummyParentDataItem.getChildDataItems().get(index).getChildName().contains("file:")) {
-//                        ImageView imgView = (ImageView) holder.linearLayout_childItems.getChildAt(index);
-//                        imgView.setVisibility(View.GONE);
-//                    }
-//                    else {
-//                        TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(index);
-//                        currentTextView.setVisibility(View.GONE);
-//                    }
+                    /*if(dummyParentDataItem.getChildDataItems().get(index).getChildName().contains("@drawable")) {
+                        ImageView imgView = (ImageView) holder.linearLayout_childItems.getChildAt(index);
+                        imgView.setVisibility(View.GONE);
+                    }
+                    else {*/
+                        TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(index);
+                        currentTextView.setVisibility(View.GONE);
+                    //}
 
 
                 }
@@ -246,18 +248,20 @@ public class AppGuideActivity extends AppCompatActivity {
                 //TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(textViewIndex);
                 //currentTextView.setText(dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName());
 
-                /*if(dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName().contains("file:")) {
+                /*if(dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName().contains("@drawable")) {
                     Log.d("WASSUP", "ImageView + index" + textViewIndex + " " + dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName());
-                    //ImageView imgView = (ImageView) holder.linearLayout_childItems.getChildAt(textViewIndex);
+                    ImageView imgView = (ImageView) holder.linearLayout_childItems.getChildAt(textViewIndex);
                     //Log.d("HELLA", holder.linearLayout_childItems.getChildAt(4).toString());
-                    TextView cvbf = (TextView) holder.linearLayout_childItems.getChildAt(textViewIndex);
-                    //String filename = dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName();
-                    //Glide.with(holder.context)
-                            //.load(filename.substring(5, filename.length()))
-                                    //.into(imgView);
+                    //TextView cvbf = (TextView) holder.linearLayout_childItems.getChildAt(textViewIndex);
+                    String filename = dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName();
+
+                    int imageResource = mContext.getResources().getIdentifier(filename, null, mContext.getPackageName());
+
+                    imgView.setImageDrawable(mContext.getResources().getDrawable(imageResource));
+
                 }
-                else {*/
-                    Log.d("WASSUP", "TextView + index" + textViewIndex + " " + dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName());
+                else {
+                    Log.d("WASSUP", "TextView + index" + textViewIndex + " " + dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName());*/
                     TextView currentTextView = (TextView) holder.linearLayout_childItems.getChildAt(textViewIndex);
                     currentTextView.setText(dummyParentDataItem.getChildDataItems().get(textViewIndex).getChildName());
                 //}
@@ -294,18 +298,18 @@ public class AppGuideActivity extends AppCompatActivity {
                 for (int index = 0; index < dummyParentDataItems.size(); index++) {
                     int intMaxSizeTemp = dummyParentDataItems.get(index).getChildDataItems().size();
                     if (intMaxSizeTemp > intMaxNoOfChild) intMaxNoOfChild = intMaxSizeTemp;
-                }
+
                     for (int indexView = 0; indexView < intMaxNoOfChild; indexView++) {
 
-                        /*if (dummyParentDataItems.get(index).getChildDataItems().get(indexView).getChildName().contains("file:")) {
+                        /*if (dummyParentDataItems.get(index).getChildDataItems().get(indexView).getChildName().contains("@drawable")) {
 
 
                             ImageView imageView = new ImageView(context);
-                            linearLayout_childItems.removeViewAt(indexView);
+                            //linearLayout_childItems.removeViewAt(indexView);
                             imageView.setId(indexView);
                             imageView.setPadding(0, 20, 0, 20);
                             imageView.setBackground(ContextCompat.getDrawable(context, R.drawable.background_sub_module_text));
-                            LinearLayout.LayoutParams layoutParams2 = new LinearLayout.LayoutParams(100, 100);
+                            LinearLayout.LayoutParams layoutParams2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                             //linearLayout_childItems.removeViewAt(indexView);
                             Log.d("Sub", "CreatedImageView + Index " + indexView + " " + dummyParentDataItems.get(index).getChildDataItems().get(indexView).getChildName());
                             //linearLayout_childItems.removeViewAt(indexView);
@@ -321,12 +325,13 @@ public class AppGuideActivity extends AppCompatActivity {
                             textView.setBackground(ContextCompat.getDrawable(context, R.drawable.background_sub_module_text));
                             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                             //textView.setOnClickListener(this);
-
+                            //Log.d("Sub", "CreatedTextView + Index " + indexView + " " + dummyParentDataItems.get(index).getChildDataItems().get(indexView).getChildName());
                             linearLayout_childItems.addView(textView, layoutParams);
 
-                            Log.d("Sub2", linearLayout_childItems.getChildAt(indexView).toString());
-                        }
-                    //}
+                            //Log.d("Sub2", linearLayout_childItems.getChildAt(indexView).toString());
+                        //}
+                    }
+                }
 
 
 
