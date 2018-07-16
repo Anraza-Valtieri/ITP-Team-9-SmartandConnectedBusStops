@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface JSONGoogleResponseRoute {
     void processFinishFromGoogle(List<GoogleRoutesData> result);
+    boolean processBoolean(List<GoogleRoutesData> result);
 }

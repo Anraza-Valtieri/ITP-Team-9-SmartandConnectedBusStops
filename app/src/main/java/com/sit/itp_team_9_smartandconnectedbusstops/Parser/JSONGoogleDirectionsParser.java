@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
@@ -31,7 +32,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
 
     public JSONGoogleDirectionsParser(Activity activity, List<String> url){
         urls = url;
-        //this.activity = activity;
+//        this.activity = activity;
     }
 
     public List<String> getUrls() {
@@ -77,6 +78,7 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                         buffer.append(line + "\n");
                     }
                     JSONObject response1 = new JSONObject(buffer.toString());
+                    JSONArray jsonGeo = response1.getJSONArray("geocoded_waypoints");
                     JSONArray jsonArray = response1.getJSONArray("routes");
                     Log.i(TAG, "jsonArray");
                     if(response1.getString("status").equals("OK")) {
@@ -84,7 +86,13 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
                             GoogleRoutesData entry = new GoogleRoutesData();
+                            entry.setStartPlaceId(jsonGeo.getJSONObject(0).getString("place_id"));
+                            entry.setEndPlaceId(jsonGeo.getJSONObject(1).getString("place_id"));
+                            Log.d("PLACE ID ----", jsonGeo.getJSONObject(0).getString("place_id") + " " + jsonGeo.getJSONObject(1).getString("place_id"));
+
                             entry.setID(i);
+                            String routeID = (jsonGeo.getJSONObject(0).getString("place_id"))+"/"+ (jsonGeo.getJSONObject(1).getString("place_id"))+"/"+i;
+                            entry.setRouteID(routeID);
                             entry.setCopyrights(obj.getString("copyrights"));
                             entry.setWarnings(obj.getJSONArray("warnings"));
                             entry.setSummary(obj.getString("summary"));
@@ -106,6 +114,8 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                     steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                    steps.setPolyline(decodePolyLine(stepsObject.getJSONObject("polyline").getString("points")));
+                                    Log.d(TAG,"polyline"+ steps.getPolyline());
                                     steps.setTravelMode(stepsObject.getString("travel_mode"));
 
                                     //detailed, step-by-step instructions
@@ -134,22 +144,21 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }
                                     } else if (steps.getTravelMode().matches("WALKING")) {
-                                        //JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
-                                        //List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
+                                        JSONArray detailedStepsArray = stepsObject.getJSONArray("steps");
+                                        List<GoogleRoutesSteps> detailedStepsList = new ArrayList<>();
                                         //to store walking steps
-                                        /*for (int l = 0; l < detailedStepsArray.length(); l++) {
+                                        for (int l = 0; l < detailedStepsArray.length(); l++) {
                                             JSONObject detailedStepsObject = detailedStepsArray.getJSONObject(l);
                                             GoogleRoutesSteps detailedSteps = new GoogleRoutesSteps();
-                                            detailedSteps.setDistance(detailedStepsObject
+                                            /*detailedSteps.setDistance(detailedStepsObject
                                                     .getJSONObject("distance").getString("text"));
                                             detailedSteps.setDuration(detailedStepsObject
-                                                    .getJSONObject("duration").getString("text"));
+                                                    .getJSONObject("duration").getString("text"));*/
                                             detailedSteps.setHtmlInstructions(detailedStepsObject
                                                     .optString("html_instructions"));
                                             detailedStepsList.add(detailedSteps);
                                         }
-                                        steps.setDetailedSteps(detailedStepsList);*/
-                                        //steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
+                                        steps.setDetailedSteps(detailedStepsList);
                                         steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                         steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     }
@@ -191,18 +200,55 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-
-            return routesList;
         }
+            return routesList;
     }
 
     @Override
     protected void onPostExecute(List<GoogleRoutesData> result) {
         //Do something with the JSON string
+        if(result != null) {
+            Log.i(TAG, "onPostExecute: Total of " + result.size() + " routes added");
+            Log.i(TAG, "routes: " + result + "\n");
+            if (delegate != null)
+                delegate.processFinishFromGoogle(result);
+        }
+    }
 
-        Log.i(TAG, "onPostExecute: Total of "+result.size()+ " routes added");
-        Log.i(TAG,"routes: " + result + "\n");
-        //delegate.processFinishFromGoogle(result);
+    private List<LatLng> decodePolyLine(final String poly) {
+        int len = poly.length();
+        int index = 0;
+        List<LatLng> decoded = new ArrayList<LatLng>();
+        int lat = 0;
+        int lng = 0;
+
+        while (index < len) {
+            int b;
+            int shift = 0;
+            int result = 0;
+            do {
+                b = poly.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = poly.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            decoded.add(new LatLng(
+                    lat / 100000d, lng / 100000d
+            ));
+        }
+
+        return decoded;
     }
 }

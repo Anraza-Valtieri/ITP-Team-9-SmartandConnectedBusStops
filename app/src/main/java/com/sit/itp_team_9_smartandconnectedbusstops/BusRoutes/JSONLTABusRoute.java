@@ -3,12 +3,12 @@ package com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class JSONLTABusRoute {
     @Expose
     private List<Value> value = null;
 
-    private Map<String, LinkedList<Value>> busRouteMap = new HashMap<>();
+    private static Map<String, LinkedList<Value>> busRouteMap = new HashMap<>();
 
     private String getOdataMetadata() {
         return odataMetadata;
@@ -57,12 +57,10 @@ public class JSONLTABusRoute {
         AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
-                List<Value> list = getValue();
-                Iterator<Value> iterator = list.iterator();
-                while(iterator.hasNext()){
-                    String busNo = iterator.next().getServiceNo();
-                    Value data = iterator.next();
-
+                for(Value entry : getValue()){
+//                    Log.d(TAG, "doInBackground: Got entry "+entry.toString() );
+                    String busNo = entry.getServiceNo();
+                    Value data = entry;
                     if(busRouteMap.get(busNo) != null){ // We have data of this bus
                         LinkedList<Value> oldData = busRouteMap.get(busNo);
                         oldData.add(data);
@@ -74,7 +72,6 @@ public class JSONLTABusRoute {
                         busRouteMap.put(busNo, listData);
 //                        Log.d(TAG, "doInBackground: createMap == null"+data.toString() );
                     }
-
                 }
 //                Log.d(TAG, "doInBackground: createMap "+busRouteMap.toString());
                 return null;

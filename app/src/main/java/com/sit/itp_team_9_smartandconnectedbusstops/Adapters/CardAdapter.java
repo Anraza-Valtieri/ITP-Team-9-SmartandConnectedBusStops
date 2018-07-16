@@ -62,8 +62,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<Card> mCard;
     private final Handler handler = new Handler();
     private final Handler handler2 = new Handler();
-    public ArrayList<String> favBusStopID = new ArrayList<>();
-    public ArrayList<String> favRouteID = new ArrayList<>();
+    private ArrayList<String> favBusStopID = new ArrayList<>();
+    private ArrayList<String> favRoute = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
 
@@ -76,17 +76,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void setFavBusStopID(ArrayList<String> newFavBusStopID) {
-        favBusStopID.clear();
-        favBusStopID = newFavBusStopID;
+        if(favBusStopID != null)
+            favBusStopID.clear();
+        if(newFavBusStopID != null)
+            favBusStopID = newFavBusStopID;
+        else
+            favBusStopID = new ArrayList<>();
     }
 
-    public ArrayList<String> getFavRouteID() {
-        return favRouteID;
+    public ArrayList<String> getFavRoute() {
+        return favRoute;
     }
 
-    public void setFavRouteID(ArrayList<String> newFavBusStopID) {
-        favRouteID.clear();
-        favRouteID = newFavBusStopID;
+    public void setFavRoute(ArrayList<String> newFavRoute) {
+        if(favRoute!= null)
+            favRoute.clear();
+        if(newFavRoute != null)
+            favRoute = newFavRoute;
+        else
+            favRoute = new ArrayList<>();
     }
 
     public ArrayList<Card> getmCard() {
@@ -171,7 +179,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteBusClick(favBusStopID);
                     }
                 });
                 cardview.setOnClickListener(v -> {
@@ -198,15 +206,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     if (transitCard.isFavorite()) {
                         transitCard.setFavorite(false);
                         favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                        favRouteID.remove(transitCard.getID());
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.remove(transitCard.getRouteID());
                     } else {
                         transitCard.setFavorite(true);
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        favRouteID.add(String.valueOf(transitCard.getID()));
+                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
+                        favRoute.add(transitCard.getRouteID());
                     }
 
                     if (mOnFavoriteClickListener != null) {
-                        mOnFavoriteClickListener.onFavoriteClick(favBusStopID);
+                        mOnFavoriteClickListener.onFavoriteRouteClick(favRoute);
                     }
                 });
                 break;
@@ -404,6 +414,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView timeTaken;
         TextView numStops;
         ExpandableListView listViewNumStops;
+        ImageButton favTransit;
 
         //For navigate walking card
         TextView walkingTime;
@@ -445,6 +456,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             breakdownBar = itemView.findViewById(R.id.breakdownBar);
             listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
             condition = itemView.findViewById(R.id.textViewCondition);
+            favTransit = itemView.findViewById(R.id.favoritebtnTransit);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -609,20 +621,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
-                        //this.startingStation.setText(cardsTransit.getStartingStation());
-                        //this.numStops.setText(cardsTransit.getNumStops());
-                        //this.imageViewStartingStation.setImageResource(cardsTransit.getImageViewStartingStation());
-                        //this.imageViewStartingStation.setColorFilter(cardsTransit.getImageViewStartingStationColor(),PorterDuff.Mode.SRC_IN);
-                        //this.timeTaken.setText(cardsTransit.getStartingStationTimeTaken());
-                        //this.listViewNumStops.set
-                        //TODO set expandable list view
-                        //listDataHeader: list of titles (X mins (X stops) )
-                        //childMap: map of listHeader,list of stops
-                        /*List<String> startingStationHeader = new ArrayList<>();
-                        startingStationHeader.add(cardsTransit.getStartingStationTimeTaken()+cardsTransit.getNumStops());
-                        LinkedHashMap startingStationAllStops = new LinkedHashMap();
-                        ExpandableListAdapter listAdapter = new ExpandableListAdapter(this,startingStationHeader,mapChild);
-                        listViewNumStops.setAdapter(listAdapter);*/
+
+                        if(cardsTransit.isFavorite())
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_red);
+                        else
+                            this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
@@ -635,18 +638,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             //List<Integer> stationImageStationColor = entry.getValue();
                             Integer stationImage = (Integer) entry.getValue().get(0);
                             Integer stationColor = (Integer) entry.getValue().get(1);
-                            String lineName = null, arrivalStop = null, timeTakenForEachWaypoint = null;
-                            List<String> busStopNames = null;
-                            if (entry.getValue().size() > 4) {
-                                lineName = (String) entry.getValue().get(2);
-                                arrivalStop = (String) entry.getValue().get(3);
-                                timeTakenForEachWaypoint = (String)entry.getValue().get(4);
-                                if (entry.getValue().size() > 5){
-                                    if (stationImage == R.drawable.ic_directions_bus_black_24dp) {
-                                        busStopNames = (List<String>) entry.getValue().get(5);
-                                    }
-                                }
-                            }
+                            String lineName = (String) entry.getValue().get(2);
+                            String numInBetweenStops = String.valueOf(entry.getValue().get(3));
+                            String arrivalStop = (String) entry.getValue().get(4);
+                            String timeTakenForEachWaypoint = (String)entry.getValue().get(5);
+                            List<String> inBetweenStopNames = (List<String>) entry.getValue().get(6);
 
                             LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                             assert inflater2 != null;
@@ -654,15 +650,40 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //walking layout
                                 View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_walking,
                                         (ViewGroup) itemView.getRootView(), false);
-                                TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
-                                //ImageView imageViewWalking = to_add_navigate.findViewById(R.id.imageViewWalking);
+                                //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
-                                String walkingInstructions = "Walk " + key;
-                                textViewWalking.setText(walkingInstructions);
-                                //imageViewWalking.setColorFilter(stationColor, PorterDuff.Mode.SRC_IN);
-                                //imageViewWalking.setImageResource(stationImage);
-                                //TODO set expandable list view
-                                Log.i(TAG, "transitStationString=" + key);
+
+                                String walkingInstructions = "Walk " + key +
+                                        " ( " + timeTakenForEachWaypoint + ")";
+                                //For detailed steps (expandable list adapter and listeners)
+                                List<String> walkingHeader = new ArrayList<>();
+                                walkingHeader.add(walkingInstructions);
+                                HashMap<String, List<String>> detailedWalkingSteps = new HashMap<>();
+                                detailedWalkingSteps.put(walkingInstructions,inBetweenStopNames);
+                                ExpandableListAdapter walkingAdapter = new ExpandableListAdapter(mContext,
+                                        walkingHeader,detailedWalkingSteps);
+                                listViewDetailedWalking.setAdapter(walkingAdapter);
+
+                                listViewDetailedWalking.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+                                    @Override
+                                    public void onGroupExpand(int groupPosition) {
+                                        Log.i(TAG,"on group expand");
+                                        Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
+                                        listViewDetailedWalking.smoothScrollToPosition(groupPosition);
+
+                                    }
+                                });
+
+                                listViewDetailedWalking.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+                                    @Override
+                                    public void onGroupCollapse(int groupPosition) {
+                                        Log.i(TAG,"on group collapse");
+                                        Utils.setListViewToOriginal(listViewDetailedWalking);
+                                    }
+                                });
+
+
                                 transit_layout.addView(to_add_navigate);
 
                             }else {
@@ -686,12 +707,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
                                 String inBetweenStopsHeaderString = timeTakenForEachWaypoint
-                                        + " (" + cardsTransit.getNumStops() + " "
+                                        + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
                                 Log.i(TAG, inBetweenStopsHeaderString);
                                 inBetweenStopsHeader.add(inBetweenStopsHeaderString);
                                 HashMap<String, List<String>> inBetweenStops = new HashMap<>();
-                                inBetweenStops.put(inBetweenStopsHeaderString,busStopNames);
+                                inBetweenStops.put(inBetweenStopsHeaderString,inBetweenStopNames);
 
                                 ExpandableListAdapter transitListAdapter = new ExpandableListAdapter(mContext,
                                         inBetweenStopsHeader,inBetweenStops);
@@ -747,6 +768,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setPadding(300,0,300,0);
                         this.totalDistance.setText(R.string.transit_error);
                     }
+                    if (cardsTransit.isFavorite())
+                        favTransit.setImageResource(R.drawable.ic_favorite_red);
                     break;
                 case NAVIGATE_WALKING_CARD:
                     NavigateWalkingCard cardsWalking = (NavigateWalkingCard)card;

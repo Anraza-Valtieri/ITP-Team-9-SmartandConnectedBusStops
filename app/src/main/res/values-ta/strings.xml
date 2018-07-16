@@ -76,6 +76,8 @@
     <string name="minute">நிமிடம்</string>
     <string name="hours">மணி</string>
     <string name="hour">மணி</string>
+    <string name="secs">வினாடி</string>
+    <string name="arriving">வந்து</string>
     <string name="km">கிலோமீட்டர்</string>
     <string name="m">மீட்டர்</string>
     <string name="walk">நடந்துவிட்டு</string>

@@ -1,17 +1,19 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
-import android.content.res.Resources;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.Value;
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONTrainStationParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.FareDetails;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class NavigateTransitCard extends Card {
-
     private static final String TAG = NavigateTransitCard.class.getSimpleName();
 
     private final static int CCL_COLOR = Color.argb(249,244, 168, 37);
@@ -36,30 +37,33 @@ public class NavigateTransitCard extends Card {
     private final static String NORTH_EAST_LINE = "NEL";
     private final static String EAST_WEST_LINE = "EWL";
     private final static String NORTH_SOUTH_LINE = "NSL";
+    private final static String CHANGI_AIRPORT_BRANCH_LINE = "CGL";
+    private final static String CIRCLE_LINE_EXTENSION = "CEL";
     private final static String LRT_LINE = "LRT";
 
     private int ID;
     private String totalTime;
     private String cost;
     private String totalDistance;
-    private String condition;
     private List<List<Object>> timeTaken; //time(int),weight(float), colour(int) (breakdown bar based on this)
-    private String startingStation;
-    private String startingStationTimeTaken;
-    private int imageViewStartingStation;
-    private int imageViewStartingStationColor;
+    private String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
+    private List<String> polyLines;
+    private String condition;
     private boolean isFavorite;
-    //private List<String> transitStations;
-    private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int),
-                                                        // lineName(string), arrivalStop (string)>
-    private String error;
-    //private String transferStation;
-    //private String endingStation;
+    private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
 
-    //private int imageViewTransitStation;
-    //private int imageViewTransitStationColor;
+    private String placeidStart, placeidEnd, routeID;
+    public ArrayList<String> favRoute = new ArrayList<>();
+    private List<String> inBetweenTrainStations;
+
+    //For sorting
+    private float totalWalkingDistance;
+    private int totalTimeInt;
+    private float totalDistanceFloat;
+
+    private String error;
 
     public int getID() {
         return ID;
@@ -93,14 +97,6 @@ public class NavigateTransitCard extends Card {
         this.totalDistance = totalDistance;
     }
 
-    public String getStartingStation() {
-        return startingStation;
-    }
-
-    public void setStartingStation(String startingStation) {
-        this.startingStation = startingStation;
-    }
-
     public List<List<Object>> getTimeTaken() {
         return timeTaken;
     }
@@ -125,53 +121,29 @@ public class NavigateTransitCard extends Card {
         this.inBetweenStops = inBetweenStops;
     }
 
-    /*public String getTransferStation() {
-        return transferStation;
+    public List<String> getPolyLines() {
+        return polyLines;
     }
 
-    public void setTransferStation(String transferStation) {
-        this.transferStation = transferStation;
+    public void setPolyLines(List<String> polyLines) {
+        this.polyLines = polyLines;
     }
 
-    public String getEndingStation() {
-        return endingStation;
+    public String getCondition() {
+        return condition;
     }
 
-    public void setEndingStation(String endingStation) {
-        this.endingStation = endingStation;
-    }*/
-
-    public int getImageViewStartingStation() {
-        return imageViewStartingStation;
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
-    public void setImageViewStartingStation(int imageViewStartingStation) {
-        this.imageViewStartingStation = imageViewStartingStation;
+    public String getDepartureStationCode() {
+        return departureStationCode;
     }
 
-    public int getImageViewStartingStationColor() {
-        return imageViewStartingStationColor;
+    public void setDepartureStationCode(String departureStationCode) {
+        this.departureStationCode = departureStationCode;
     }
-
-    public void setImageViewStartingStationColor(int imageViewStartingStationColor) {
-        this.imageViewStartingStationColor = imageViewStartingStationColor;
-    }
-
-    public String getStartingStationTimeTaken() {
-        return startingStationTimeTaken;
-    }
-
-    public void setStartingStationTimeTaken(String startingStationTimeTaken) {
-        this.startingStationTimeTaken = startingStationTimeTaken;
-    }
-
-    /*public List<String> getTransitStations() {
-        return transitStations;
-    }
-
-    public void setTransitStations(List<String> transitStations) {
-        this.transitStations = transitStations;
-    }*/
 
     public Map<String, List<Object>> getTransitStations() {
         return transitStations;
@@ -185,6 +157,30 @@ public class NavigateTransitCard extends Card {
 
     public void setFavorite(boolean favorite) { isFavorite = favorite; }
 
+    public float getTotalWalkingDistance() {
+        return totalWalkingDistance;
+    }
+
+    public void setTotalWalkingDistance(float totalWalkingDistance) {
+        this.totalWalkingDistance = totalWalkingDistance;
+    }
+
+    public int getTotalTimeInt() {
+        return totalTimeInt;
+    }
+
+    public void setTotalTimeInt(int totalTimeInt) {
+        this.totalTimeInt = totalTimeInt;
+    }
+
+    public float getTotalDistanceFloat() {
+        return totalDistanceFloat;
+    }
+
+    public void setTotalDistanceFloat(float totalDistanceFloat) {
+        this.totalDistanceFloat = totalDistanceFloat;
+    }
+
     public String getError() {
         return error;
     }
@@ -193,12 +189,28 @@ public class NavigateTransitCard extends Card {
         this.error = error;
     }
 
-    public void setCondition(String condition) {
-        this.condition = condition;
+    public String getStartPlaceId() {
+        return placeidStart;
     }
 
-    public String getCondition() {
-        return condition;
+    public void setStartPlaceId(String placeidStart) {
+        this.placeidStart = placeidStart;
+    }
+
+    public String geEndPlaceId() {
+        return placeidEnd;
+    }
+
+    public void setEndPlaceId(String placeidEnd) {
+        this.placeidEnd = placeidEnd;
+    }
+
+    public String getRouteID() {
+        return routeID;
+    }
+
+    public void setRouteID(String routeID) {
+        this.routeID = routeID;
     }
 
     /**
@@ -210,331 +222,693 @@ public class NavigateTransitCard extends Card {
      * @return card NavigateTransitCard
      */
     public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
-        AsyncTask asyncTask = new AsyncTask() {
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-            }
+        NavigateTransitCard card = new NavigateTransitCard();
+        card.setType(Card.NAVIGATE_TRANSIT_CARD);
+        if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
+            card.setID(googleRoutesData.getID());
+            card.setTotalDistance(googleRoutesData.getTotalDistance());
+            card.setTotalTime(googleRoutesData.getTotalDuration());
+            card.setStartPlaceId(googleRoutesData.getStartPlaceId());
+            card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+            String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
+            card.setRouteID(routeID);
+            Log.d(TAG, "getRouteData: setRouteID: "+routeID);
+           
+            //For sorting
+            card.setTotalDistanceFloat(convertDistanceToKm(googleRoutesData.getTotalDistance()));
+            card.setTotalTimeInt(convertTimeToMinutes(googleRoutesData.getTotalDuration()));
 
-            @Override
-            protected void onPostExecute(Object o) {
-                super.onPostExecute(o);
-            }
-
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                NavigateTransitCard card = new NavigateTransitCard();
-                card.setType(Card.NAVIGATE_TRANSIT_CARD);
-                if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
-                    card.setID(googleRoutesData.getID());
-
-                    String translatedDistance = "";
-
-                    if(googleRoutesData.getTotalDistance().contains("km")) {
-                        translatedDistance = googleRoutesData.getTotalDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
+            //in Steps
+            List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+            if (routeSteps != null) {
+                Map<String,List<Object>> transitStations = new LinkedHashMap<>();
+                List<List<Object>> timeTakenList = new ArrayList<>();
+                List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
+                List<String> listOfPolyLines = new ArrayList<>();
+                float totalWalkingDistance = 0;
+                //find largest duration of each step for weights in breakdownBar
+                int largestDuration = 0;
+                for (int i = 0; i < routeSteps.size(); i++) {
+                    Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
+                    String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
+                    int duration = Integer.parseInt(intValue);
+                    if (largestDuration <= duration){
+                        largestDuration = duration;
                     }
-                    else if(googleRoutesData.getTotalDistance().contains("m")) {
-                        translatedDistance = googleRoutesData.getTotalDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
-                    }
+                }
 
-                    card.setTotalDistance(translatedDistance);
+                for (int i = 0; i < routeSteps.size(); i++) {
+                    List<Object> timeTakenEachStep = new ArrayList<>();
+                    //listOfPolyLines.add(routeSteps.get(i).getPolyline());
+                    String travelMode = routeSteps.get(i).getTravelMode();
+                    String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
+                    float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
+                    Log.i(TAG,"largestDuration= "+largestDuration);
+                    Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
+                    timeTakenEachStep.add(routeSteps.get(i).getDuration());
+                    timeTakenEachStep.add(timeTakenWeight);
+                    switch (travelMode){
+                        case "WALKING":
+                            timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
+                            List<Object> walkingDetails = new ArrayList<>();
+                            int imageViewWalking = R.drawable.ic_baseline_directions_walk_24px;
+                            walkingDetails.add(imageViewWalking);
+                            walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
+                            walkingDetails.add(null);
 
-                    String translatedDuration = "";
-                    String hourTranslate = "";
-
-                    if(googleRoutesData.getTotalDuration().contains("0 mins")) {
-                        googleRoutesData.setTotalDuration(googleRoutesData.getTotalDuration().replace("0 mins", ""));
-                    }
-
-                    if(!(googleRoutesData.getTotalDuration().contains("hour")) && googleRoutesData.getTotalDuration().contains("mins")) {
-                        translatedDuration = googleRoutesData.getTotalDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
-                    }
-                    else if(googleRoutesData.getTotalDuration().contains("hour") && googleRoutesData.getTotalDuration().contains("mins")) {
-                        hourTranslate = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
-                        translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
-                    }
-                    else if(googleRoutesData.getTotalDuration().contains("hours") && googleRoutesData.getTotalDuration().contains("mins")) {
-                        hourTranslate = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
-                        translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
-                    }
-
-                    card.setTotalTime(translatedDuration);
-                    card.setCondition(trafCon);
-
-                    //in Steps
-                    List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-                    if (routeSteps != null) {
-                        Map<String,List<Object>> transitStations = new LinkedHashMap<>();
-                        List<List<Object>> timeTakenList = new ArrayList<>();
-                        List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
-
-                        //find largest duration of each step for weights in breakdownBar
-                        int largestDuration = 0;
-                        for (int i = 0; i < routeSteps.size(); i++) {
-                            Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
-                            String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                            int duration = Integer.parseInt(intValue);
-                            if (largestDuration <= duration){
-                                largestDuration = duration;
+                            //get detailed walking steps
+                            List<String> walkingDetailedStepsChildren = new ArrayList<>();
+                            for (int j = 0; j < routeSteps.get(i).getDetailedSteps().size(); j++){
+                                walkingDetailedStepsChildren.add(routeSteps.get(i).getDetailedSteps().get(j).getHtmlInstructions());
                             }
-                        }
+                            for (int j = 3; j < 5; j++) {
+                                walkingDetails.add(j,null);
+                            }
+                            walkingDetails.add(5,routeSteps.get(i).getDuration());
+                            walkingDetails.add(6,walkingDetailedStepsChildren);
+                            transitStations.put(routeSteps.get(i).getDistance(),walkingDetails);
 
-                        for (int i = 0; i < routeSteps.size(); i++) {
-                            List<Object> timeTakenEachStep = new ArrayList<>();
-                            String travelMode = routeSteps.get(i).getTravelMode();
-                            String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
-                            float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
-                            Log.i(TAG,"largestDuration= "+largestDuration);
-                            Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
-                            Log.d("Byebye", routeSteps.get(i).getDuration());
-                            timeTakenEachStep.add(routeSteps.get(i).getDuration());
-                            timeTakenEachStep.add(timeTakenWeight);
-                            switch (travelMode){
-                                case "WALKING":
-                                    timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
-                                    List<Object> walkingDetails = new ArrayList<>();
-                                    int imageViewWalking = R.drawable.ic_baseline_directions_walk_24px;
-                                    walkingDetails.add(imageViewWalking);
-                                    walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
+                            //for sorting by walking distance
+                            float walkingDistance = convertDistanceToKm(routeSteps.get(i).getDistance());
+                            Log.i(TAG, "walkingDistance"+ walkingDistance);
+                            totalWalkingDistance += walkingDistance;
+                            Log.i(TAG, "totalWalkingDistance"+ totalWalkingDistance);
+                            break;
 
+                        case "TRANSIT":
+                            //train, lrt and bus
+                            String trainLine = routeSteps.get(i).getTrainLine();
+                            String lineName;
+                            int imageViewTransit;
+                            int imageViewColor;
+                            if (trainLine != null) {
+                                listOfTransitModeAndDistances.add(new TransitModeDistances("Subway", trainLine, routeSteps.get(i).getDistance()));
+                                //if train
+                                imageViewTransit = R.drawable.ic_directions_train_black_24dp;
+                                switch (trainLine) {
+                                    case "Downtown Line":
+                                        imageViewColor = NavigateTransitCard.DTL_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.DTL_COLOR);
+                                        lineName = NavigateTransitCard.DOWNTOWN_LINE;
+                                        break;
+                                    case "North East Line":
+                                        imageViewColor = NavigateTransitCard.NEL_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.NEL_COLOR);
+                                        lineName = NavigateTransitCard.NORTH_EAST_LINE;
+                                        break;
+                                    case "East West Line":
+                                        imageViewColor = NavigateTransitCard.EWL_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.EWL_COLOR);
+                                        lineName = NavigateTransitCard.EAST_WEST_LINE;
+                                        break;
+                                    case "North South Line":
+                                        imageViewColor = NavigateTransitCard.NSL_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.NSL_COLOR);
+                                        lineName = NavigateTransitCard.NORTH_SOUTH_LINE;
+                                        break;
+                                    case "Circle Line":
+                                        imageViewColor = NavigateTransitCard.CCL_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.CCL_COLOR);
+                                        lineName = NavigateTransitCard.CIRCLE_LINE;
+                                        break;
+                                    default:
+                                        //if lrt
+                                        imageViewColor = NavigateTransitCard.LRT_COLOR;
+                                        timeTakenEachStep.add(NavigateTransitCard.LRT_COLOR);
+                                        lineName = NavigateTransitCard.LRT_LINE;
+                                        break;
+                                }
+                            }else{
+                                //if bus
+                                lineName = routeSteps.get(i).getBusNum();
+                                imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
+                                imageViewColor = NavigateTransitCard.BUS_COLOR;
+                                timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
+                            }
+                            if (!transitStations.containsKey(routeSteps.get(i).getDepartureStop())) {
+                                //sets transport type image, color and line name/bus num for each part of the journey
+                                List<Object> stationDetails = new ArrayList<>();
+                                stationDetails.add(imageViewTransit);
+                                stationDetails.add(imageViewColor);
+                                stationDetails.add(lineName); //line name is bus num
+                                stationDetails.add(routeSteps.get(i).getNumStops());
 
-                                    String translatedWalkingDistance = "";
-                                    if(routeSteps.get(i).getDistance().contains("km")) {
-                                        translatedWalkingDistance = routeSteps.get(i).getDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
-                                    }
+                                //get in between bus stops
+                                List<String> busStopNames = new ArrayList<>();
+                                List<String> trainStationNames = new ArrayList<>();
+                                if (imageViewTransit == R.drawable.ic_directions_bus_black_24dp) {
+                                    Log.i(TAG,"is this a bus?");
 
-                                    else if(routeSteps.get(i).getDistance().contains("m")) {
-                                        translatedWalkingDistance = routeSteps.get(i).getDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
-                                    }
-
-                                    transitStations.put(translatedWalkingDistance,walkingDetails);
-                                    break;
-
-                                case "TRANSIT":
-                                    //train, lrt and bus
-                                    String trainLine = routeSteps.get(i).getTrainLine();
-                                    String lineName = null;
-                                    card.setNumStops(String.valueOf(routeSteps.get(i).getNumStops()));
-                                    int imageViewTransit;
-                                    int imageViewColor;
-                                    if (trainLine != null) {
-                                        listOfTransitModeAndDistances.add(new TransitModeDistances("Subway", trainLine, routeSteps.get(i).getDistance()));
-                                        //if train
-                                        imageViewTransit = R.drawable.ic_directions_train_black_24dp;
-                                        switch (trainLine) {
-                                            case "Downtown Line":
-                                                imageViewColor = NavigateTransitCard.DTL_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.DTL_COLOR);
-                                                lineName = NavigateTransitCard.DOWNTOWN_LINE;
-                                                break;
-                                            case "North East Line":
-                                                imageViewColor = NavigateTransitCard.NEL_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.NEL_COLOR);
-                                                lineName = NavigateTransitCard.NORTH_EAST_LINE;
-                                                break;
-                                            case "East West Line":
-                                                imageViewColor = NavigateTransitCard.EWL_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.EWL_COLOR);
-                                                lineName = NavigateTransitCard.EAST_WEST_LINE;
-                                                break;
-                                            case "North South Line":
-                                                imageViewColor = NavigateTransitCard.NSL_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.NSL_COLOR);
-                                                lineName = NavigateTransitCard.NORTH_SOUTH_LINE;
-                                                break;
-                                            case "Circle Line":
-                                                imageViewColor = NavigateTransitCard.CCL_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.CCL_COLOR);
-                                                lineName = NavigateTransitCard.CIRCLE_LINE;
-                                                break;
-                                            default:
-                                                //if lrt
-                                                imageViewColor = NavigateTransitCard.LRT_COLOR;
-                                                timeTakenEachStep.add(NavigateTransitCard.LRT_COLOR);
-                                                lineName = NavigateTransitCard.LRT_LINE;
-                                                break;
+                                    //bus stop code: get departure stop's code
+                                    Map<String, String> allBusStopsByIdMap = MainActivity.allBusByID; //bus stop IDs
+                                    List<String> departureBusStopCodeList = new ArrayList<>(); //names are not unique
+                                    List<String> arrivalBusStopCodeList = new ArrayList<>();
+                                    String departureBusStopCode = null, arrivalBusStopCode = null;
+                                    for (Map.Entry<String, String> entry : allBusStopsByIdMap.entrySet()) {
+                                        String busStopIDCode = entry.getKey();
+                                        //Log.i(TAG,"busStopIDCode "+busStopIDCode);
+                                        String busStopName = entry.getValue();
+                                        //Log.i(TAG,"busStopName "+busStopName);
+                                        if (routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
+                                            //departureBusStopCode = busStopIDCode;
+                                            departureBusStopCodeList.add(busStopIDCode);
+                                            Log.i(TAG,"departure code list "+ departureBusStopCodeList);
                                         }
-                                    }else{
-                                        //if bus
-                                        lineName = routeSteps.get(i).getBusNum();
-                                        listOfTransitModeAndDistances.add(new TransitModeDistances("Bus", lineName, routeSteps.get(i).getDistance()));
-                                        imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
-                                        imageViewColor = NavigateTransitCard.BUS_COLOR;
-                                        timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
+                                        if (routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
+                                            //arrivalBusStopCode = busStopIDCode;
+                                            arrivalBusStopCodeList.add(busStopIDCode);
+                                            Log.i(TAG,"arrival code list"+ arrivalBusStopCodeList);
+                                        }
                                     }
-                                    if (!transitStations.containsKey(routeSteps.get(i).getDepartureStop())) {
-                                        //sets transport type image, color and line name/bus num for each part of the journey
-                                        List<Object> stationDetails = new ArrayList<>();
-                                        stationDetails.add(imageViewTransit);
-                                        stationDetails.add(imageViewColor);
-                                        stationDetails.add(lineName); //line name is bus num
-                                        //get in between bus stops
-                                        List<String> busStopNames = new ArrayList<>();
-                                        if (imageViewColor == NavigateTransitCard.BUS_COLOR) {
-                                            Log.i(TAG,"is this a bus?");
-                                            //get departure stop's code
-                                            //go into linkedlist to get the next X stops
-                                            // then get bus stop name
-                                            //MainActivity mainActivity = new MainActivity();
-                                            Map<String, String> allBusByIdMap = MainActivity.allBusByID;
-//                                            Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
-                                            String departureBusStopCode = "";
-//                                            for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
-//                                        Log.i(TAG,"allBusByIdMap.entrySet()");
-                                            if(allBusByIdMap.containsKey(routeSteps.get(i).getDepartureStop())){
-//                                                String busStopIDCode = entry.getKey();
-                                                Log.i(TAG,"c "+routeSteps.get(i).getDepartureStop());
-//                                                String busStopName = entry.getValue();
-                                                String busStopName = allBusByIdMap.get(routeSteps.get(i).getDepartureStop());
-                                                if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
-//                                                    departureBusStopCode = busStopIDCode;
-                                                    departureBusStopCode = routeSteps.get(i).getDepartureStop();
-                                                    Log.i(TAG,"DEPARTURE CODE "+ departureBusStopCode);
-                                                }
-                                            }
 
-                                            List<String> busStopCodes = new ArrayList<>();
-                                            JSONLTABusRoute busRoute = new JSONLTABusRoute();
-                                            Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
-                                            for (int j = 0; j < busMap.size(); j++) {
-                                                Log.i(TAG,"this is busMap loop" );
-                                                if (busMap.get(lineName) != null) {
-                                                    //if bus route exists
-                                                    LinkedList<Value> busValue = busMap.get(lineName);
-                                                    for (int k = 0; k < busValue.size(); k++) {
-                                                        Log.i(TAG,"this is busMap loop + busValueSize" );
-                                                        if (busValue.get(k).getBusStopCode().equals(departureBusStopCode)){
-                                                            //if departure stop is found, save the next X num of stops
-                                                            for (int l = 0; l < Integer.parseInt(card.getNumStops()); l++){
-                                                                busStopCodes.add(busValue.get(k+l).getBusStopCode());
-                                                                Log.i(TAG,"busStopCodes:"+busStopCodes);
+//<<<<<<< HEAD 
+                    // String translatedDuration = "";
+                    // String hourTranslate = "";
+
+                    // if(googleRoutesData.getTotalDuration().contains("0 mins")) {
+                    //     googleRoutesData.setTotalDuration(googleRoutesData.getTotalDuration().replace("0 mins", ""));
+                    // }
+
+                    // if(!(googleRoutesData.getTotalDuration().contains("hour")) && googleRoutesData.getTotalDuration().contains("mins")) {
+                    //     translatedDuration = googleRoutesData.getTotalDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+                    // }
+                    // else if(googleRoutesData.getTotalDuration().contains("hour") && googleRoutesData.getTotalDuration().contains("mins")) {
+                    //     hourTranslate = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
+                    //     translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+                    // }
+                    // else if(googleRoutesData.getTotalDuration().contains("hours") && googleRoutesData.getTotalDuration().contains("mins")) {
+                    //     hourTranslate = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
+                    //     translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+                    // }
+
+                    // card.setTotalTime(translatedDuration);
+                    // card.setCondition(trafCon);
+
+                    // //in Steps
+                    // List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
+                    // if (routeSteps != null) {
+                    //     Map<String,List<Object>> transitStations = new LinkedHashMap<>();
+                    //     List<List<Object>> timeTakenList = new ArrayList<>();
+                    //     List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
+
+                    //     //find largest duration of each step for weights in breakdownBar
+                    //     int largestDuration = 0;
+                    //     for (int i = 0; i < routeSteps.size(); i++) {
+                    //         Log.i(TAG,"DURATION: "+routeSteps.get(i).getDuration());
+                    //         String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
+                    //         int duration = Integer.parseInt(intValue);
+                    //         if (largestDuration <= duration){
+                    //             largestDuration = duration;
+                    //         }
+                    //     }
+
+                    //     for (int i = 0; i < routeSteps.size(); i++) {
+                    //         List<Object> timeTakenEachStep = new ArrayList<>();
+                    //         String travelMode = routeSteps.get(i).getTravelMode();
+                    //         String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
+                    //         float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
+                    //         Log.i(TAG,"largestDuration= "+largestDuration);
+                    //         Log.i(TAG,"timeTakenWeight= "+timeTakenWeight);
+                    //         Log.d("Byebye", routeSteps.get(i).getDuration());
+                    //         timeTakenEachStep.add(routeSteps.get(i).getDuration());
+                    //         timeTakenEachStep.add(timeTakenWeight);
+                    //         switch (travelMode){
+                    //             case "WALKING":
+                    //                 timeTakenEachStep.add(NavigateTransitCard.WALKING_COLOR);
+                    //                 List<Object> walkingDetails = new ArrayList<>();
+                    //                 int imageViewWalking = R.drawable.ic_baseline_directions_walk_24px;
+                    //                 walkingDetails.add(imageViewWalking);
+                    //                 walkingDetails.add(NavigateTransitCard.WALKING_COLOR);
+
+
+                    //                 String translatedWalkingDistance = "";
+                    //                 if(routeSteps.get(i).getDistance().contains("km")) {
+                    //                     translatedWalkingDistance = routeSteps.get(i).getDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
+                    //                 }
+
+                    //                 else if(routeSteps.get(i).getDistance().contains("m")) {
+                    //                     translatedWalkingDistance = routeSteps.get(i).getDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
+//=======
+                                    //bus route
+                                    JSONLTABusRoute busRoute = new JSONLTABusRoute();
+                                    Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
+                                    List<String> inBetweenBusStopCodes = new ArrayList<>();
+                                    OUTER_LOOP:
+                                    for (Map.Entry<String, LinkedList<Value>> busMapEntry : busMap.entrySet()) {
+                                        String busServiceNumber = busMapEntry.getKey();
+                                        LinkedList<Value> busMapValue = busMapEntry.getValue();
+                                        if (busServiceNumber.equalsIgnoreCase(lineName)) {
+                                            //if found the correct bus service no.
+                                            Log.i(TAG,"found the correct bus num!");
+                                            Log.i(TAG,busMapValue.toString());
+
+                                            for (int j = 0; j < busMapValue.size(); j++) {
+                                                //loop through the bus service's bus stops (going through the bus route)
+                                                for (String potentialArrivalBusStopCode : arrivalBusStopCodeList) {
+                                                    Log.i(TAG, "arrival codes: "
+                                                            + " " + potentialArrivalBusStopCode);
+                                                    if (busMapValue.get(j).getBusStopCode()
+                                                            .equals(potentialArrivalBusStopCode)) {
+                                                        Log.i(TAG, "ONLY NEED ARRIVAL");
+                                                        int arrivalBusDirection =
+                                                                busMapValue.get(j).getDirection();
+                                                        if ((j - routeSteps.get(i).getNumStops()) > 0
+                                                                && busMapValue.get(j - routeSteps.get(i)
+                                                                .getNumStops()) != null
+                                                                && busMapValue.get(j - routeSteps.get(i).getNumStops())
+                                                                .getDirection() == arrivalBusDirection) {
+                                                            for (int k = (routeSteps.get(i).getNumStops() - 1); k > 0; k--) {
+                                                                inBetweenBusStopCodes.add
+                                                                        (busMapValue.get(j - k).getBusStopCode());
+                                                                Log.i(TAG, "inBetweenBusStopCodes"
+                                                                        + inBetweenBusStopCodes);
                                                             }
+                                                            break OUTER_LOOP;
+                                                        }
+
+                                                    }
+                                                }
+                                                for (String potentialDepartureBusStopCode : departureBusStopCodeList) {
+                                                    Log.i(TAG,"no arrival");
+                                                    //only departureBusStopCode found
+                                                    if (busMapValue.get(j).getBusStopCode()
+                                                            .equals(potentialDepartureBusStopCode)){
+                                                        Log.i(TAG, "ONLY NEED DEPARTURE");
+                                                        int departureBusDirection = busMapValue.get(j).getDirection();
+                                                        if ((j + routeSteps.get(i).getNumStops()) < busMapValue.size()
+                                                                && busMapValue.get(j + routeSteps.get(i).getNumStops()) != null
+                                                                && busMapValue.get(j + routeSteps.get(i).getNumStops())
+                                                                .getDirection() == departureBusDirection )
+                                                        {
+                                                            //if arrival stop is not null
+                                                            // and direction of stops match
+                                                            for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
+                                                                inBetweenBusStopCodes.add(busMapValue
+                                                                        .get(j + k).getBusStopCode());
+                                                                Log.i(TAG, "inBetweenBusStopCodes"
+                                                                        + inBetweenBusStopCodes);
+                                                            }
+                                                            break OUTER_LOOP;
                                                         }
                                                     }
                                                 }
                                             }
-                                            for (int k = 0; k < busStopCodes.size(); k++){
-                                                Log.i(TAG,"busStopCodes k loop");
-                                                //Find names of all in busStopCodes
-                                                // Key: Bus stop ID Value: Bus stop name
-                                                //key: busStopCodes.get(l);
-                                                String busStopName = allBusByIdMap.get(busStopCodes.get(k));
-                                                busStopNames.add(busStopName);
-                                                Log.i(TAG,"Bus stop name (add 1): "+busStopName);
+                                        }
+                                    }
+                                    for (int j = 0; j < inBetweenBusStopCodes.size(); j++) {
+                                        //Find names of all in busStopCodes
+                                        // Key: Bus stop ID Value: Bus stop name
+                                        String busStopName = allBusStopsByIdMap.get(inBetweenBusStopCodes.get(j));
+                                        busStopNames.add(busStopName);
+                                        Log.i(TAG, "Bus stop name (add 1): " + busStopName);
+                                    }
+                                }else{
+                                    //train stations
+
+                                    //get all stations in trainLine
+                                    String queryAllStationsInLine;
+                                    switch (trainLine){
+                                        case "Circle Line":
+                                            queryAllStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "环线";
+                                            break;
+                                        case "Circle Line Extension":
+                                            queryAllStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "环线延长线";
+                                            break;
+                                        default:
+                                            queryAllStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + trainLine;
+                                            break;
+//>>>>>>> jerry
+                                    }
+                                    List<TrainStation> allTrainStationsInLine = lookUpTrainStations(queryAllStationsInLine);
+                                    if (allTrainStationsInLine != null) {
+                                        for (TrainStation trainStation : allTrainStationsInLine) {
+                                            System.out.println("original"+trainStation.toString()+"\n");
+                                        }
+
+                                        Collections.sort(allTrainStationsInLine); //sort by ascending station num
+
+                                        //add in stations in extension lines
+                                        if (trainLine.equals("Circle Line")){
+                                            String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "环线延长线";
+                                            List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(1));
+                                                allTrainStationsInLine.add(0, allTrainStationsExtension.get(0));
+                                            }
+                                        }else if (trainLine.equals("East West Line")){
+                                            String queryExtension = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
+                                                    + "Changi Airport Branch Line";
+                                            List<TrainStation> allTrainStationsExtension = lookUpTrainStations(queryExtension);
+                                            if (allTrainStationsExtension != null) {
+                                                for (TrainStation trainStationExtension : allTrainStationsExtension) {
+                                                    allTrainStationsInLine.add(0, trainStationExtension);
+                                                }
                                             }
                                         }
-                                        //key is bus num, value: linkedlist, get bus stop number
-                                        //bus stop number get bus stop name from hashmap allBusById
-                                        stationDetails.add(routeSteps.get(i).getArrivalStop());
-                                        stationDetails.add(routeSteps.get(i).getDuration());
-                                        if (!busStopNames.isEmpty()){
-                                            stationDetails.add(busStopNames);
-                                            Log.i(TAG,"BUS STOP NAMES: "+busStopNames);
-                                        }
-                                        transitStations.put(routeSteps.get(i).getDepartureStop(),stationDetails);
-                                    }
-                                    break;
-                            }
-                            timeTakenList.add(timeTakenEachStep);
-                        }
-                        //fare calculation
-                        double transitDistance = 0.0;
-                        for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
 
-                            transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
-                        }
-
-                        FareDetails fareDetails = new FareDetails();
-
-                        fareDetails.populateStudentFareDistance();
-                        fareDetails.populateStudentFaresMap();
-
-                        fareDetails.populateAdultFareDistance();
-                        fareDetails.populateAdultFaresMap();
-
-                        fareDetails.populateSeniorFareDistance();
-                        fareDetails.populateSeniorFaresMap();
-
-                        String price = "";
-
-                        if(transitDistance > 0.0) {
-
-                            if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.student))) {
-
-                                for(int i = 0; i < fareDetails.getStudentFareDistance().size(); i++) {
-
-                                    if(i == 0) {
-                                        if(transitDistance <= fareDetails.getStudentFareDistance().get(0)) {
-                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(0)).getBusMrt();
+                                        for(TrainStation trainStation: allTrainStationsInLine){
+                                            System.out.println("sortedStation: "+trainStation.toString()+"\n");
                                         }
                                     }
-                                    else {
-                                        if(transitDistance > fareDetails.getStudentFareDistance().get(i-1) && transitDistance <= fareDetails.getStudentFareDistance().get(i)) {
-                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+//<<<<<<< HEAD
+//                                     if (!transitStations.containsKey(routeSteps.get(i).getDepartureStop())) {
+//                                         //sets transport type image, color and line name/bus num for each part of the journey
+//                                         List<Object> stationDetails = new ArrayList<>();
+//                                         stationDetails.add(imageViewTransit);
+//                                         stationDetails.add(imageViewColor);
+//                                         stationDetails.add(lineName); //line name is bus num
+//                                         //get in between bus stops
+//                                         List<String> busStopNames = new ArrayList<>();
+//                                         if (imageViewColor == NavigateTransitCard.BUS_COLOR) {
+//                                             Log.i(TAG,"is this a bus?");
+//                                             //get departure stop's code
+//                                             //go into linkedlist to get the next X stops
+//                                             // then get bus stop name
+//                                             //MainActivity mainActivity = new MainActivity();
+//                                             Map<String, String> allBusByIdMap = MainActivity.allBusByID;
+// //                                            Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
+//                                             String departureBusStopCode = "";
+// //                                            for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
+// //                                        Log.i(TAG,"allBusByIdMap.entrySet()");
+//                                             if(allBusByIdMap.containsKey(routeSteps.get(i).getDepartureStop())){
+// //                                                String busStopIDCode = entry.getKey();
+//                                                 Log.i(TAG,"c "+routeSteps.get(i).getDepartureStop());
+// //                                                String busStopName = entry.getValue();
+//                                                 String busStopName = allBusByIdMap.get(routeSteps.get(i).getDepartureStop());
+//                                                 if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
+// //                                                    departureBusStopCode = busStopIDCode;
+//                                                     departureBusStopCode = routeSteps.get(i).getDepartureStop();
+//                                                     Log.i(TAG,"DEPARTURE CODE "+ departureBusStopCode);
+//                                                 }
+//=======
+
+                                    if(allTrainStationsInLine != null) {
+                                        TrainStation departureTrainStation = null, arrivalTrainStation = null;
+                                        String departureStation = cleanUpStationName(routeSteps.get(i).getDepartureStop());
+                                        String arrivalStation = cleanUpStationName(routeSteps.get(i).getArrivalStop());
+
+                                        //get departure and arrival stations
+                                        for (TrainStation trainStationInList : allTrainStationsInLine) {
+                                            if (trainStationInList.getStationName().equalsIgnoreCase(
+                                                    departureStation)){
+                                                departureTrainStation = trainStationInList;
+                                                Log.i(TAG, "found departure train station");
+                                            }
+                                            if (trainStationInList.getStationName().equalsIgnoreCase(
+                                                    arrivalStation)){
+                                                arrivalTrainStation = trainStationInList;
+                                                Log.i(TAG, "found arrival train station");
+//>>>>>>> jerry
+                                            }
+                                            //TODO LRT loops
+                                            //TODO Ten Mile Junction(BP14) is in between BP5 and BP6
                                         }
-                                        else if(transitDistance > fareDetails.getStudentFareDistance().get(fareDetails.getStudentFareDistance().size() - 1)){
-                                            price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                        if (departureTrainStation != null && arrivalTrainStation != null ){
+                                            //if both stations found
+                                            for (int j = 0; j < allTrainStationsInLine.size(); j++) {
+                                                if (allTrainStationsInLine.get(j).getStationCode()
+                                                        .equals(departureTrainStation.getStationCode())){
+                                                    //j is position of departure train station
+                                                    if (departureTrainStation.getStationNum()
+                                                            < arrivalTrainStation.getStationNum()) {
+                                                        //if departure comes before arrival in list
+                                                        int numStops = routeSteps.get(i).getNumStops();
+                                                        for (int k = 1; k < numStops; k++) {
+                                                            //add until it reaches end of num of stops
+                                                            if ((departureTrainStation.getStationCode().equals("CE1") ||
+                                                                    departureTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j+k).getStationCode().equals("CC1")
+                                                                    ){
+                                                                //extension line stops placed after stations in original line
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
+                                                                numStops+=3;
+                                                            }
+                                                            trainStationNames.add(allTrainStationsInLine
+                                                                    .get(j + k).getStationName());
+                                                        }
+                                                    }else{
+                                                        //if departure comes after arrival in list
+                                                        for (int k = 1; k < routeSteps.get(i).getNumStops(); k++) {
+                                                            //add until it reaches end of num of stops
+                                                            if((arrivalTrainStation.getStationCode().equals("CG1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CG2"))
+                                                                    && departureTrainStation.getStationCode().equals("EW4")) {
+                                                                //extension line stops placed before stations in original line
+                                                                Log.i(TAG,"EXTENSION LINE EWL");
+                                                                k+=3;
+                                                            }
+
+                                                            if ((arrivalTrainStation.getStationCode().equals("CE1") ||
+                                                                    arrivalTrainStation.getStationCode().equals("CE2")) &&
+                                                                    allTrainStationsInLine.get(j-k).getStationCode().equals("CC3")){
+                                                                Log.i(TAG,"EXTENSION LINE CCL");
+                                                                k+=3;
+                                                            }
+                                                            trainStationNames.add(allTrainStationsInLine
+                                                                    .get(j - k).getStationName());
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
-
                                 }
-                            }
-                            else if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.adult))) {
 
-                                for(int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
-
-                                    if(i == 0) {
-                                        if(transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
-                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
-                                        }
-                                    }
-                                    else {
-                                        if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
-                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
-                                        }
-                                        else if(transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)){
-                                            price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
-                                        }
-                                    }
+                                stationDetails.add(routeSteps.get(i).getArrivalStop());
+                                stationDetails.add(routeSteps.get(i).getDuration());
+                                if (!busStopNames.isEmpty()){
+                                    stationDetails.add(busStopNames);
+                                    Log.i(TAG,"BUS STOP NAMES: "+busStopNames);
+                                }else{
+                                    stationDetails.add(trainStationNames);
+                                    Log.i(TAG,"TRAIN STATION NAMES: "+trainStationNames);
                                 }
+                                transitStations.put(routeSteps.get(i).getDepartureStop(),stationDetails);
                             }
-                            else if(fareTypes.equals(MainActivity.context.getResources().getString(R.string.seniorcitizens))) {
-
-                                for(int i = 0; i < fareDetails.getSeniorFareDistance().size(); i++) {
-
-                                    if(i == 0) {
-                                        if(transitDistance <= fareDetails.getSeniorFareDistance().get(0)) {
-                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(0)).getBusMrt();
-                                        }
-                                    }
-                                    else {
-                                        if(transitDistance > fareDetails.getSeniorFareDistance().get(i-1) && transitDistance <= fareDetails.getSeniorFareDistance().get(i)) {
-                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
-                                        }
-                                        else if(transitDistance > fareDetails.getSeniorFareDistance().get(fareDetails.getSeniorFareDistance().size() - 1)){
-                                            price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
-
-                        card.setCost(price);
-                        card.setTimeTaken(timeTakenList);
-                        card.setTransitStations(transitStations);
+                            break;
                     }
-                }else{
-                    card.setError(googleRoutesData.getError());
+                    timeTakenList.add(timeTakenEachStep);
                 }
-                return card;
+                //fare calculation
+                double transitDistance = 0.0;
+                for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
+
+                    transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
+                }
+
+                FareDetails fareDetails = new FareDetails();
+
+                String price = "";
+
+                if(transitDistance > 0.0) {
+                    switch (fareTypes) {
+                        case "Student":
+                            for (int i = 0; i < fareDetails.getStudentFareDistance().size(); i++) {
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getStudentFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getStudentFareDistance().get(i - 1) && transitDistance <= fareDetails.getStudentFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getStudentFareDistance().get(fareDetails.getStudentFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getStudentFaresMap().get(fareDetails.getStudentFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+
+                            }
+                            break;
+                        case "Adult":
+                            for (int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+                            }
+                            break;
+                        case "Senior Citizens":
+                            for (int i = 0; i < fareDetails.getSeniorFareDistance().size(); i++) {
+
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getSeniorFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getSeniorFareDistance().get(i - 1) && transitDistance <= fareDetails.getSeniorFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getSeniorFareDistance().get(fareDetails.getSeniorFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getSeniorFaresMap().get(fareDetails.getSeniorFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+
+                            }
+                            break;
+                        default: // ADULT
+                            for (int i = 0; i < fareDetails.getAdultFareDistance().size(); i++) {
+
+                                if (i == 0) {
+                                    if (transitDistance <= fareDetails.getAdultFareDistance().get(0)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(0)).getBusMrt();
+                                    }
+                                } else {
+                                    if (transitDistance > fareDetails.getAdultFareDistance().get(i - 1) && transitDistance <= fareDetails.getAdultFareDistance().get(i)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    } else if (transitDistance > fareDetails.getAdultFareDistance().get(fareDetails.getAdultFareDistance().size() - 1)) {
+                                        price = "$" + fareDetails.getAdultFaresMap().get(fareDetails.getAdultFareDistance().get(i)).getBusMrt();
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+                card.setPolyLines(listOfPolyLines);
+                card.setTotalWalkingDistance(totalWalkingDistance);
+                Log.i(TAG,listOfPolyLines.toString());
+                card.setCost(price);
+                card.setTimeTaken(timeTakenList);
+                card.setTransitStations(transitStations);
+                card.setCondition(trafCon);
             }
-        };
+        }else{
+            card.setError(googleRoutesData.getError());
+        }
+        return card;
+    }
+
+    private static String cleanUpStationName(String stationName){
+        switch(stationName){
+            case "One North Station":
+                stationName = stationName.replace(" Station","");
+                stationName = stationName.replace(" ","-");
+                break;
+            case "Redhill (EW18)":
+                stationName = stationName.replace(" (EW18)","");
+                break;
+        }
+        stationName = stationName.replaceAll(" MRT Station.*$","");
+        Log.i(TAG, "stationNameRegex "+stationName);
+
+        return stationName;
+    }
+
+    private static List<TrainStation> lookUpTrainStations(String query){
+        List<String> trainStationsQuery = new ArrayList<>();
+        trainStationsQuery.add(query);
+        Log.i(TAG,"lookUpTrainStations: "+trainStationsQuery.toString());
+        JSONTrainStationParser trainStationParser = new JSONTrainStationParser(trainStationsQuery);
+        List<TrainStation> result; //result from parser
+        List<TrainStation> trainStations = new ArrayList<>();
         try {
-            return (NavigateTransitCard)asyncTask.execute().get();
-        } catch (InterruptedException | ExecutionException e) {
+            result = trainStationParser.execute().get();
+            Log.d(TAG, query);
+            if (result.size() <= 0) {
+                Log.d(TAG, "trainStation: Data.gov returned no data");
+                return null;
+            }else{
+                //got result
+                return result;
+            }
+        }catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    //Comparator for sorting the list by total distance
+    public static Comparator<NavigateTransitCard> distanceComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            //Float c1TotalDistance = convertDistanceToKm(c1.getTotalDistance());
+            //Float c2TotalDistance = convertDistanceToKm(c2.getTotalDistance());
+            Float c1TotalDistance = c1.getTotalDistanceFloat();
+            Float c2TotalDistance = c2.getTotalDistanceFloat();
+            //ascending order
+            //return c1TotalDistance.compareTo(c2TotalDistance);
+
+            return Float.compare(c1TotalDistance,c2TotalDistance);
+        }
+    };
+
+    //Comparator for sorting the list by total time
+    public static Comparator<NavigateTransitCard> timeComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            int c1TotalTime = c1.getTotalTimeInt();
+            int c2TotalTime = c2.getTotalTimeInt();
+            //ascending order
+            return Integer.compare(c1TotalTime,c2TotalTime);
+        }
+    };
+
+    //Comparator for sorting the list by total walking distance
+    public static Comparator<NavigateTransitCard> walkingDistanceComparator = new Comparator<NavigateTransitCard>() {
+
+        public int compare(NavigateTransitCard c1, NavigateTransitCard c2) {
+            //need new walking only distance
+            float c1TotalWalkingDistance = c1.getTotalWalkingDistance();
+            float c2TotalWalkingDistance = c2.getTotalWalkingDistance();
+            //ascending order
+            return Float.compare(c1TotalWalkingDistance,c2TotalWalkingDistance);
+        }
+    };
+
+    private static Float convertDistanceToKm(String distanceString){
+        float distanceInKm;
+        if (distanceString.contains(" m")){
+            //convert m to km
+            Float walkingDistanceInMetres = Float.parseFloat(distanceString.replaceAll("[^0-9]",""));
+            distanceInKm = walkingDistanceInMetres / 1000;
+        }else{
+            //already in kilometres
+            //removes anything that is not a . or number
+            distanceInKm = Float.parseFloat(distanceString.replaceAll("[^.0-9]",""));
+        }
+
+        Log.i(TAG, "distanceInKm"+ distanceInKm);
+        return distanceInKm;
+    }
+
+    private static int convertTimeToMinutes(String timeString){
+        int totalTimeInMinutes, timeFromHoursAndMinutes = 0;
+        if (timeString.contains(" hour")){
+            int timeFromMinutes = 0;
+
+            //convert hour to minutes
+            int hours = Integer.parseInt(timeString.replaceAll(" hour.*$",""));
+            int timeFromHours = hours * 60;
+
+            if (timeString.contains(" min")){
+                Log.i(TAG,"originalTime " + timeString);
+                //if time also contains min, get the minutes
+                String removeHours = timeString.replaceFirst(".*hours ","");
+                String removeHour = removeHours.replaceFirst(".*hour ","");
+                Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
+                String removeMins = removeHour.replaceAll(" mins.*$","");
+                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+                timeFromMinutes = minutes;
+            }
+            totalTimeInMinutes = timeFromHours + timeFromMinutes;
+        }else {
+            //already in min
+            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(" min.*$", ""));
+        }
+
+        //totalTimeInMinutes = timeFromHoursAndMinutes +  timeFromMinutes;
+
+        Log.i(TAG, "totalTimeInMinutes"+ totalTimeInMinutes);
+        return totalTimeInMinutes;
     }
 }

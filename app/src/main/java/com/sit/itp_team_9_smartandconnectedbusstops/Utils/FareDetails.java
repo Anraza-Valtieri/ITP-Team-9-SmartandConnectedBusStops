@@ -39,6 +39,15 @@ public class FareDetails {
         return SeniorFareDetails;
     }
 
+    public FareDetails() {
+        populateStudentFareDistance();
+        populateStudentFaresMap();
+        populateAdultFareDistance();
+        populateAdultFaresMap();
+        populateSeniorFareDistance();
+        populateSeniorFaresMap();
+    }
+
     public void populateStudentFareDistance() {
         StudentFareDistance.add(3.2);
         StudentFareDistance.add(4.2);
