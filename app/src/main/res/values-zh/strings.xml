@@ -5,8 +5,8 @@
     <string name="about">关于</string>
     <string name="current_weather">目前的天气</string>
     <string name="directions">导航</string>
-    <string name="nearby">附近</string>
-    <string name="favorites">偏爱</string>
+    <string name="nearby">抵达</string>
+    <string name="favorites">收藏</string>
     <string name="no_bus_service_available_at_this_time">巴士服务已终止</string>
     <string name="stops">站</string>
     <string name="transit_error">您所收索的，我们无法提供任何路线</string>

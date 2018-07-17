@@ -2034,13 +2034,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected Object doInBackground(Object[] objects) {
                 if(mCurrentLocation != null) {
-                    ArrayList<Card> sortedList = new ArrayList<>();
-                    sortedList.addAll(favCardList);
-                    sortedList.addAll(favCardList1);
-                    return sortCardsByLocation(sortedList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                    sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                    return sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+//                    ArrayList<Card> sortedList = new ArrayList<>();
+//                    sortedList.addAll(favCardList);
+//                    sortedList.addAll(favCardList1);
+//                    return sortCardsByLocation(sortedList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+//                    sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    return sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
                 }
                 else
@@ -2051,13 +2051,15 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
 //                favCardList1.addAll(favCardList);
-//                ArrayList<Card> sortedList = new ArrayList<>();
-//                sortedList.add(favCardList1.get(0));
-//                favCardList1.remove(0)
-//                sortedList.addAll(favCardList);
-//                sortedList.addAll(favCardList1);
-                ArrayList<Card> card = (ArrayList<Card>) o;
-                updateAdapterList(card);
+                ArrayList<Card> sortedList = new ArrayList<>();
+                if(favCardList1.size()>0) {
+                    sortedList.add(favCardList1.get(0));
+                    favCardList1.remove(0);
+                }
+                sortedList.addAll(favCardList);
+                sortedList.addAll(favCardList1);
+//                ArrayList<Card> card = (ArrayList<Card>) o;
+                updateAdapterList(sortedList);
             }
         };
         asyncTask.execute();
@@ -2291,7 +2293,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     Log.d("LookUpTrafficDuration", train);
-                    Log.d("LookUpTrafficDuration", mrtLine);
+                    //Log.d("LookUpTrafficDuration", mrtLine);
                     String keyTwitter = "[" + mrtLine + "]";
                     Log.d("MRTLINE", keyTwitter);
                     for(String s : twitterList){

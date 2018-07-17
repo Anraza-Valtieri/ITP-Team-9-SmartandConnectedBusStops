@@ -27,7 +27,7 @@
                 android:title="About App" />
             <item
                 android:id="@+id/nav_datasources"
-                android:icon="@drawable/ic_data_sources_black_24dp"
+                android:icon="@drawable/ic_wifi_tethering_black_24dp"
                 android:title="Data Sources" />
             <item
                 android:id="@+id/nav_feedback"

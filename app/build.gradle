@@ -16,7 +16,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName '1.2'
+        versionName '1.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         versionNameSuffix 'Beta'
@@ -69,6 +69,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:17.0.2'
     implementation 'com.google.firebase:firebase-core:16.0.1'
     implementation 'com.google.firebase:firebase-messaging:17.1.0'
+    implementation 'com.google.firebase:firebase-perf:16.0.0'
     //noinspection GradleDynamicVersion
     implementation 'com.google.maps.android:android-maps-utils:0.5+'
     implementation 'com.firebaseui:firebase-ui:4.0.0'
@@ -91,3 +92,4 @@ dependencies {
 
 }
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.firebase-perf'
