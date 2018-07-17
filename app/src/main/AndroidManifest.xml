@@ -57,8 +57,7 @@
             android:value="false" />
 
         <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
+            android:name=".GetStartedActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -66,7 +65,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
@@ -95,34 +99,34 @@
         <activity android:name=".SearchResultsActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait">
-        <intent-filter>
-            <action android:name="android.intent.action.SEARCH" />
-        </intent-filter>
-    </activity>
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+        </activity>
 
-    <!-- Define your service, make sure to add the permision! -->
-    <service
-        android:name=".Services.NetworkSchedulerService"
-        android:exported="true"
-        android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <!-- Define your service, make sure to add the permision! -->
+        <service
+            android:name=".Services.NetworkSchedulerService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
 
-    <service
-        android:name=".TTFirebaseMessagingService">
-        <intent-filter>
-            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-        </intent-filter>
-    </service>
+        <service
+            android:name=".TTFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
 
-    <service android:name="com.google.android.gms.measurement.AppMeasurementService"
-        android:enabled="true"
-        android:exported="false"/>
+        <service android:name="com.google.android.gms.measurement.AppMeasurementService"
+            android:enabled="true"
+            android:exported="false"/>
 
-    <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
-        android:enabled="true">
-        <intent-filter>
-            <action android:name="com.google.android.gms.measurement.UPLOAD" />
-        </intent-filter>
-    </receiver>
+        <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.measurement.UPLOAD" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
