@@ -66,7 +66,7 @@ public class GetStartedActivity extends AppCompatActivity {
                         mSlideViewPager.setCurrentItem(mCurrentPage + 1);
                     }
                     else if(mCurrentPage == 9) {
-
+                        prefs.edit().putBoolean("firstrun", false).commit();
                         Intent i = new Intent(GetStartedActivity.this, MainActivity.class);
                         startActivity(i);
                         finish();
@@ -82,7 +82,7 @@ public class GetStartedActivity extends AppCompatActivity {
                     mSlideViewPager.setCurrentItem(mCurrentPage - 1);
                 }
             });
-            prefs.edit().putBoolean("firstrun", false).commit();
+
         }
         else {
             Intent i = new Intent(GetStartedActivity.this, MainActivity.class);
