@@ -742,26 +742,26 @@ public class MainActivity extends AppCompatActivity
                 sortBySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                        ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
-                        navigateCardList = (ArrayList<? extends Card>) transitCardList;
-                        List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
-                        switch (sortBySpinner.getSelectedItem().toString()) {
-                            case "Least time":
-                                Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
-                            case "Least distance":
-                                Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
-                                //transitCardList = (ArrayList<? super Card>) castToNavigate;
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
-                            case "Least walking":
-                                Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
+                            switch (sortBySpinner.getSelectedItem().toString()) {
+                                case "Least time":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least distance":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
+                                    //transitCardList = (ArrayList<? super Card>) castToNavigate;
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                                case "Least walking":
+                                    Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
+                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
+                                    break;
+                            }
                         }
-                    }
 
                     @Override
                     public void onNothingSelected(AdapterView<?> adapterView) {
@@ -837,7 +837,7 @@ public class MainActivity extends AppCompatActivity
                 });
 
                 searchButton.setOnClickListener(v -> {
-                    Log.i(TAG,"onClickListener!");
+                Log.i(TAG,"onClickListener!");
                     if (!startingPointTextView.getText().toString().isEmpty() && !destinationTextView.getText().toString().isEmpty()) {
                         Log.i(TAG,"lookUpRoutes!");
                         String mode = "";
@@ -849,7 +849,7 @@ public class MainActivity extends AppCompatActivity
                             mode = "walking";
                             optionMode = false;
                         }
-                        query = "https://maps.googleapis.com/maps/api/directions/json?origin="
+                         query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
                                 + destinationTextView.getText().toString()
                                 + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
@@ -1028,38 +1028,38 @@ public class MainActivity extends AppCompatActivity
         LocationSettingsRequest mLocationSettingsRequest = builder.build();
         if (mLocationPermissionGranted) {
             mSettingsClient
-                    .checkLocationSettings(mLocationSettingsRequest)
-                    .addOnSuccessListener(this, locationSettingsResponse -> {
-                        Log.i(TAG, "All location settings are satisfied.");
-                        //noinspection MissingPermission
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
+                .checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, locationSettingsResponse -> {
+                    Log.i(TAG, "All location settings are satisfied.");
+                    //noinspection MissingPermission
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                            mLocationCallback, Looper.myLooper());
 
-                    })
-                    .addOnFailureListener(this, e -> {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
+                })
+                .addOnFailureListener(this, e -> {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    switch (statusCode) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                    "location settings ");
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the
+                                // result in onActivityResult().
+                                ResolvableApiException rae = (ResolvableApiException) e;
+                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException sie) {
+                                Log.i(TAG, "PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            String errorMessage = "Location settings are inadequate, and cannot be " +
+                                    "fixed here. Fix in Settings.";
+                            Log.e(TAG, errorMessage);
 
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                        }
+                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    }
 
-                    });
+                });
         }
     }
 
@@ -1147,6 +1147,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         /*getMenuInflater().inflate(R.menu.main, menu);
+
         // Associate searchable configuration with the SearchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
@@ -1278,7 +1279,7 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             default:
-                break;
+                    break;
         }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -1984,42 +1985,42 @@ public class MainActivity extends AppCompatActivity
             }
         }
         for(int i=0; i< favRouteString.size(); i++) {// Nav cards
-            Log.d(TAG, "prepareFavoriteCards: Nav Cards");
-            Log.d(TAG, " ---------------- ROUTE FAV CARD " + favRouteString.size());
-            String id = favRouteString.get(i);
-            String[] deconcat = id.split("/");
-            String startPlaceId = deconcat[0];
-            String endPlaceId = deconcat[1];
-            String routeid = deconcat[2];
-            String fareType = deconcat[3];
-            String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
-                    + startPlaceId + "&destination=place_id:"
-                    + endPlaceId
-                    + "&mode=transit"
-                    + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
-            List<String> directionsQuery = new ArrayList<>();
-            directionsQuery.add(query);
-            Log.i(TAG, directionsQuery.toString());
-            JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
-            List<GoogleRoutesData> result;
-            try {
-                result = directionsParser.execute().get();
-                if (result.size() <= 0) {
-                    return;
-                }
-                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
-                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                    card1.setFavorite(true);
-                else
-                    card1.setFavorite(false);
+                Log.d(TAG, "prepareFavoriteCards: Nav Cards");
+                Log.d(TAG, " ---------------- ROUTE FAV CARD " + favRouteString.size());
+                String id = favRouteString.get(i);
+                String[] deconcat = id.split("/");
+                String startPlaceId = deconcat[0];
+                String endPlaceId = deconcat[1];
+                String routeid = deconcat[2];
+                String fareType = deconcat[3];
+                String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
+                        + startPlaceId + "&destination=place_id:"
+                        + endPlaceId
+                        + "&mode=transit"
+                        + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
+                List<String> directionsQuery = new ArrayList<>();
+                directionsQuery.add(query);
+                Log.i(TAG, directionsQuery.toString());
+                JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
+                List<GoogleRoutesData> result;
+                try {
+                    result = directionsParser.execute().get();
+                    if (result.size() <= 0) {
+                        return;
+                    }
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
+                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                        card1.setFavorite(true);
+                    else
+                        card1.setFavorite(false);
 
-                card1.setLatLng(new LatLng(result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLat(),
-                        result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLng()));
-                favCardList1.add(card1);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                    card1.setLatLng(new LatLng(result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLat(),
+                            result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLng()));
+                    favCardList1.add(card1);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
-        }
 
         @SuppressLint("StaticFieldLeak")
         AsyncTask asyncTask = new AsyncTask() {
@@ -2033,13 +2034,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected Object doInBackground(Object[] objects) {
                 if(mCurrentLocation != null) {
-                    ArrayList<Card> sortedList = new ArrayList<>();
-                    sortedList.addAll(favCardList);
-                    sortedList.addAll(favCardList1);
-                    return sortCardsByLocation(sortedList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                    sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-//                    return sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+//                    ArrayList<Card> sortedList = new ArrayList<>();
+//                    sortedList.addAll(favCardList);
+//                    sortedList.addAll(favCardList1);
+//                    return sortCardsByLocation(sortedList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+//                    sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    return sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
                 }
                 else
@@ -2050,20 +2051,22 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
 //                favCardList1.addAll(favCardList);
-//                ArrayList<Card> sortedList = new ArrayList<>();
-//                sortedList.add(favCardList1.get(0));
-//                favCardList1.remove(0)
-//                sortedList.addAll(favCardList);
-//                sortedList.addAll(favCardList1);
-                ArrayList<Card> card = (ArrayList<Card>) o;
-                updateAdapterList(card);
+                ArrayList<Card> sortedList = new ArrayList<>();
+                if(favCardList1.size()>0) {
+                    sortedList.add(favCardList1.get(0));
+                    favCardList1.remove(0);
+                }
+                sortedList.addAll(favCardList);
+                sortedList.addAll(favCardList1);
+//                ArrayList<Card> card = (ArrayList<Card>) o;
+                updateAdapterList(sortedList);
             }
         };
         asyncTask.execute();
 
 //        updateAdapterList(favCardList);
     }
-
+          
     private void lookUpRoutes(String query, String fareTypes, String spinnerSelectedItem){
         transitCardList.clear();
         walkingCardList.clear();
@@ -2288,7 +2291,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     Log.d("LookUpTrafficDuration", train);
-                    Log.d("LookUpTrafficDuration", mrtLine);
+                    //Log.d("LookUpTrafficDuration", mrtLine);
                     String keyTwitter = "[" + mrtLine + "]";
                     Log.d("MRTLINE", keyTwitter);
                     for(String s : twitterList){

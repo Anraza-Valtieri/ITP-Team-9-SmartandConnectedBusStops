@@ -42,7 +42,9 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -197,7 +199,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             case NAVIGATE_TRANSIT_CARD:
                 NavigateTransitCard transitCard = (NavigateTransitCard) mCard.get(position);
                 transitCard.setType(NavigateTransitCard.NAVIGATE_TRANSIT_CARD);
-                holder.setItem(transitCard);
+                if(mCard.get(position).isNeedsUpdate())
+                    holder.setItem(transitCard);
 
                 final View cardTransit = holder.itemView.findViewById(R.id.transitcard);
                 ImageButton favTransit = cardTransit.findViewById(R.id.favoritebtnTransit);
@@ -317,19 +320,21 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         @Override
         public void run() {
             if (mCard != null && mCard.size() > 0) {
-                Card card = mCard.get(0);
-                if (card.getType() == card.BUS_STOP_CARD) {
-                    List<BusStopCards> busStopCards = new ArrayList<>();
-                    for (int i = 0; i < mCard.size(); i++) {
+                List<BusStopCards> busStopCards = new ArrayList<>();
+                for (int i = 0; i < mCard.size(); i++) {
 //                        Log.d(TAG, "run: Adding Buscard!");
+                    if (mCard.get(i).getType() == Card.BUS_STOP_CARD) {
                         ((BusStopCards) mCard.get(i)).setMajorUpdate(true);
+                        mCard.get(i).setNeedsUpdate(false);
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
-                    updateCardData(busStopCards);
-                    notifyItemRangeChanged(0, mCard.size());
-                    //updateCardData(mCard);
-                    doAutoRefresh();
+                    else
+                        mCard.get(i).setNeedsUpdate(false);
                 }
+                updateCardData(busStopCards);
+                notifyItemRangeChanged(0, mCard.size());
+                //updateCardData(mCard);
+                doAutoRefresh();
             }
         }
     };
@@ -515,7 +520,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         LinearLayout options_layout = itemView.findViewById(R.id.busdetailLayout);
                         options_layout.setOrientation(LinearLayout.VERTICAL);
                         options_layout.removeAllViewsInLayout();
-
                         for (String busNo : cards.getSortedKeys()) {
 //            for (Map.Entry<String, List<String>> entry : timings.entrySet()) {
                             List<String> value = timings.get(busNo);
@@ -752,7 +756,43 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
 
                         breakdown_bar_layout.removeAllViewsInLayout();
-                        for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
+                        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+                            @Override
+                            protected Object doInBackground(Object[] objects) {
+                                LinkedList<View> listToAdd = new LinkedList<>();
+                                for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
+                                    String breakdownBarPartActualTime = (String) cardsTransit.getTimeTaken().get(i).get(0);
+                                    float breakdownBarPartWeight = (Float) cardsTransit.getTimeTaken().get(i).get(1);
+                                    int breakdownBarPartColor = (Integer) cardsTransit.getTimeTaken().get(i).get(2);
+
+                                    LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                                    assert inflater2 != null;
+                                    View to_add_breakdown = inflater2.inflate(R.layout.navigate_transit_card_breakdown_bar, (ViewGroup) itemView.getRootView(), false);
+                                    View breakdownBarPart = to_add_breakdown.findViewById(R.id.breakdownBar);
+                                    TextView breakdownBarPartTime = to_add_breakdown.findViewById(R.id.textViewTime);
+
+                                    Log.i(TAG, "breakdownBarPartWeight: " + breakdownBarPartWeight);
+                                    breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
+                                    breakdownBarPartTime.setText(breakdownBarPartActualTime);
+                                    to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
+//                                    breakdown_bar_layout.addView(to_add_breakdown);
+//                                    return to_add_breakdown;
+                                    listToAdd.add(to_add_breakdown);
+                                }
+                                return listToAdd;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Object o) {
+                                super.onPostExecute(o);
+                                LinkedList<View> linkedList = (LinkedList<View>) o;
+                                for(View view: linkedList) {
+                                    breakdown_bar_layout.addView(view);
+                                }
+                            }
+                        };
+                        asyncTask.execute();
+                        /*for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
                             String breakdownBarPartActualTime = (String) cardsTransit.getTimeTaken().get(i).get(0);
                             float breakdownBarPartWeight = (Float) cardsTransit.getTimeTaken().get(i).get(1);
                             int breakdownBarPartColor = (Integer) cardsTransit.getTimeTaken().get(i).get(2);
@@ -768,7 +808,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             breakdownBarPartTime.setText(breakdownBarPartActualTime);
                             to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
                             breakdown_bar_layout.addView(to_add_breakdown);
-                        }
+                        }*/
                     }else{
                         //No routes available
                         this.totalDistance.setPadding(300,0,300,0);
