@@ -87,10 +87,7 @@ dependencies {
     }
     implementation 'org.apache.httpcomponents:httpcore:4.4.1'
     implementation 'commons-io:commons-io:2.4'
-<<<<<<< HEAD
-=======
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.4'
->>>>>>> jerry
-}
 
+}
 apply plugin: 'com.google.gms.google-services'
