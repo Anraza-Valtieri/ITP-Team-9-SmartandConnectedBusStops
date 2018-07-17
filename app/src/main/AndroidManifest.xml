@@ -113,6 +113,17 @@
         </intent-filter>
     </service>
 
+    <service android:name="com.google.android.gms.measurement.AppMeasurementService"
+        android:enabled="true"
+        android:exported="false"/>
+
+    <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+        android:enabled="true">
+        <intent-filter>
+            <action android:name="com.google.android.gms.measurement.UPLOAD" />
+        </intent-filter>
+    </receiver>
+
     </application>
 
 </manifest>

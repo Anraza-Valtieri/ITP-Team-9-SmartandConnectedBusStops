@@ -2052,8 +2052,10 @@ public class MainActivity extends AppCompatActivity
                 super.onPostExecute(o);
 //                favCardList1.addAll(favCardList);
                 ArrayList<Card> sortedList = new ArrayList<>();
-                sortedList.add(favCardList1.get(0));
-                favCardList1.remove(0);
+                if(favCardList1.size()>0) {
+                    sortedList.add(favCardList1.get(0));
+                    favCardList1.remove(0);
+                }
                 sortedList.addAll(favCardList);
                 sortedList.addAll(favCardList1);
 //                ArrayList<Card> card = (ArrayList<Card>) o;

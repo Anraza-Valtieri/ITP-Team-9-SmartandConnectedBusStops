@@ -14,9 +14,9 @@ android {
     defaultConfig {
         applicationId "com.sit.itp_team_9_smartandconnectedbusstops"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 27
         versionCode 1
-        versionName '1.2'
+        versionName '1.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         versionNameSuffix 'Beta'
@@ -26,8 +26,6 @@ android {
             shrinkResources false
             minifyEnabled false
             useProguard true
-            aaptOptions.cruncherEnabled = false
-            aaptOptions.useNewCruncher = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
             proguardFiles fileTree('proguard').asList().toArray()
