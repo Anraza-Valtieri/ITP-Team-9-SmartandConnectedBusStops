@@ -206,16 +206,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 ImageButton favTransit = cardTransit.findViewById(R.id.favoritebtnTransit);
 
                 favTransit.setOnClickListener(v -> {
-                    if (transitCard.isFavorite()) {
-                        transitCard.setFavorite(false);
-                        favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
-                        favRoute.remove(transitCard.getRouteID());
-                    } else {
-                        transitCard.setFavorite(true);
-                        favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
-                        favRoute.add(transitCard.getRouteID());
+                    if (transitCard.getRouteID()!=null) {
+                        if (transitCard.isFavorite()) {
+                            transitCard.setFavorite(false);
+                            favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                            Log.d(TAG, "onBindViewHolder: favTransit:" + transitCard.getRouteID());
+                            favRoute.remove(transitCard.getRouteID());
+                        } else {
+                            transitCard.setFavorite(true);
+                            favTransit.setImageResource(R.drawable.ic_favorite_red);
+                            Log.d(TAG, "onBindViewHolder: favTransit:" + transitCard.getRouteID());
+                            favRoute.add(transitCard.getRouteID());
+                        }
                     }
 
                     if (mOnFavoriteClickListener != null) {
@@ -624,6 +626,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
+                        Log.d("COST", cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
                         if(cardsTransit.getCondition()=="Slight delay"){
                            this.condition.setTextColor(Color.RED);
