@@ -747,16 +747,16 @@ public class MainActivity extends AppCompatActivity
                             List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
                             switch (sortBySpinner.getSelectedItem().toString()) {
-                                case "Least time":
+                                case "Shortest Time":
                                     Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                                     updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                     break;
-                                case "Least distance":
+                                case "Shortest Distance":
                                     Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                                     //transitCardList = (ArrayList<? super Card>) castToNavigate;
                                     updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                     break;
-                                case "Least walking":
+                                case "Least Walking":
                                     Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                     updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                     break;
@@ -2146,6 +2146,7 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
                         }
+
                         else {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
 
@@ -2159,21 +2160,22 @@ public class MainActivity extends AppCompatActivity
                             else
                                 card1.setFavorite(false);
                         }
+
                         ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
                         navigateCardList = (ArrayList<? extends Card>) transitCardList;
                         List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
                         switch (spinnerSelectedItem) {
-                            case "Least time":
+                            case "Shortest Time":
                                 Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                 break;
-                            case "Least distance":
+                            case "Shortest Distance":
                                 Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                                 //transitCardList = (ArrayList<? super Card>) castToNavigate;
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                 break;
-                            case "Least walking":
+                            case "Least Walking":
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                                 break;

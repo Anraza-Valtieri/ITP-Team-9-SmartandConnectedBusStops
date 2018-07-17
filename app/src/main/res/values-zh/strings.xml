@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">TransitThere</string>
-
     <string name="language">语言</string>
     <string name="about">关于</string>
     <string name="current_weather">目前的天气</string>
