@@ -2109,7 +2109,6 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(walkingCardList);
 
                 } else {
-                    //NORMAL ROUTES
                     int suggest = 0;
                     for (int i = 0; i < result.size(); i++) {
                         if (getDistanceMatrix(result.get(i))) {
@@ -2135,10 +2134,8 @@ public class MainActivity extends AppCompatActivity
                         }
                         else if (!getDistanceMatrix(result.get(i))) {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
-
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2149,10 +2146,8 @@ public class MainActivity extends AppCompatActivity
 
                         else {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2242,9 +2237,9 @@ public class MainActivity extends AppCompatActivity
             for(int i=0; i< result.size(); i++) {
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
-                    if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
+                    if (getMatrix(result1.get(0))) { //no congestion
                         pass = true;
-                    } else { // dont display
+                    } else {
                         pass = false;
                     }
                 }
