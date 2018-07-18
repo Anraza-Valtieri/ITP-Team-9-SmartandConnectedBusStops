@@ -414,7 +414,7 @@ public class MainActivity extends AppCompatActivity
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-//        db.disableNetwork();
+        db.disableNetwork();
 
         userData = new UserData();
 
@@ -527,6 +527,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onRestart() {
         super.onRestart();
+        /*if (adapter != null)
+            adapter.resumeHandlers();
+        // Resuming location updates depending on button state and
+        // allowed permissions
+        if (mLocationPermissionGranted) {
+            getDeviceLocation();
+        }*/
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         if (adapter != null)
             adapter.resumeHandlers();
         // Resuming location updates depending on button state and
@@ -1115,7 +1127,7 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result.size() > 0)
+                    if(result != null && result.size() > 0)
                         startingPointTextView.setText(result.get(0));
                     else
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
@@ -1126,7 +1138,7 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result.size() > 0)
+                    if(result != null && result.size() > 0)
                         destinationTextView.setText(result.get(0));
                     else
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
