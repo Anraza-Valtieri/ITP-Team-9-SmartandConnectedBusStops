@@ -1115,7 +1115,10 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    startingPointTextView.setText(result.get(0));
+                    if(result.size() > 0)
+                        startingPointTextView.setText(result.get(0));
+                    else
+                        Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                 }
                 break;
 
@@ -1123,7 +1126,10 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    destinationTextView.setText(result.get(0));
+                    if(result.size() > 0)
+                        destinationTextView.setText(result.get(0));
+                    else
+                        Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                 }
                 break;
         }
@@ -1591,7 +1597,7 @@ public class MainActivity extends AppCompatActivity
      * DO NOT create more busstopcard objects
      */
     private void FillBusData(){
-        ProgressDialog dialog = new ProgressDialog(this);
+
         /*
         Create Map markers!
          */
@@ -1602,18 +1608,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                dialog.setMessage("Loading..");
-                dialog.setIndeterminate(false);
-                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                dialog.setCancelable(false);
-                dialog.show();
+
             }
 
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 LinkIDtoName();
-                dialog.dismiss();
             }
 
             @Override
