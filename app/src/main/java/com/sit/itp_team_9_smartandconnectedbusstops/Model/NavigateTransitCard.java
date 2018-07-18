@@ -52,7 +52,7 @@ public class NavigateTransitCard extends Card {
     private String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
-    private List<String> polyLines;
+    private List<LatLng> polyLines;
     private String condition;
     private boolean isFavorite;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
@@ -126,11 +126,11 @@ public class NavigateTransitCard extends Card {
         this.inBetweenStops = inBetweenStops;
     }
 
-    public List<String> getPolyLines() {
+    public List<LatLng> getPolyLines() {
         return polyLines;
     }
 
-    public void setPolyLines(List<String> polyLines) {
+    public void setPolyLines(List<LatLng> polyLines) {
         this.polyLines = polyLines;
     }
 
@@ -258,7 +258,7 @@ public class NavigateTransitCard extends Card {
                 Map<String,List<Object>> transitStations = new LinkedHashMap<>();
                 List<List<Object>> timeTakenList = new ArrayList<>();
                 List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
-                List<String> listOfPolyLines = new ArrayList<>();
+                List<LatLng> listOfPolyLines = new ArrayList<>();
                 float totalWalkingDistance = 0;
                 //find largest duration of each step for weights in breakdownBar
                 int largestDuration = 0;
@@ -273,7 +273,7 @@ public class NavigateTransitCard extends Card {
 
                 for (int i = 0; i < routeSteps.size(); i++) {
                     List<Object> timeTakenEachStep = new ArrayList<>();
-                    //listOfPolyLines.add(routeSteps.get(i).getPolyline());
+                    listOfPolyLines.add(routeSteps.get(i).getPolyline());
                     String travelMode = routeSteps.get(i).getTravelMode();
                     String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                     float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;

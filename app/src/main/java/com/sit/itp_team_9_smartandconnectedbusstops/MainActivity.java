@@ -102,6 +102,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -1451,6 +1453,33 @@ public class MainActivity extends AppCompatActivity
         Gson gson = new Gson();
         busRoute =  gson.fromJson( Utils.loadBUSRouteJSONFromAsset(getApplicationContext()), JSONLTABusRoute.class );
         busRoute.createMap();
+
+        //TODO add polylines here if transitCardList not empty
+        /*if (!transitCardList.isEmpty()) {
+            Log.i(TAG, "(ON MAP READY) transit: ");
+            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+            for (NavigateTransitCard transitCard : castToNavigate) {
+                List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
+                Log.i(TAG, "(ON MAP READY) points: "+String.valueOf(points));
+                for (int j = 0; j < points.size() - 1; j++) {
+                    LatLng src = points.get(j);
+                    LatLng dest = points.get(j + 1);
+
+                    // mMap is the Map Object
+                    Polyline line = mMap.addPolyline(
+                            new PolylineOptions()
+                                    .clickable(true)
+                                    .add(
+                                    new LatLng(src.latitude, src.longitude),
+                                    new LatLng(dest.latitude, dest.longitude)
+                            ).width(10).color(Color.BLUE).geodesic(true)
+                    );
+                }
+            }
+        }*/
     }
     @Override
     public void onCameraMove() {
@@ -2190,6 +2219,13 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);
+                        // Build the map.
+                        /*SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                                .findFragmentById(R.id.mapView);
+
+                        //        View mapView = mapFragment.getView();
+                        mapFragment.getMapAsync(MainActivity.this);
+                        scheduleJob();*/
                     }
                     //updateAdapterList(transitCardList);
                 }
