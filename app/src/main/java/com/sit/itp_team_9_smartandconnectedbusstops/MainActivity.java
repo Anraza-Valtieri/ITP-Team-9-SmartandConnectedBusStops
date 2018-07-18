@@ -2110,54 +2110,33 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(walkingCardList);
 
                 } else {
-                    //SUGGESTED route
-                    suggestedList.clear();
-                    for(int i=0; i< result.size(); i++) {
-                        if(getDistanceMatrix(result.get(i))){
-                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
-                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
-                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
-                            Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
-                        }
-                    }
-                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *");
-                    card.setType(card.NAVIGATE_TRANSIT_CARD);
-                    card.setNeedsUpdate(true);
-                    transitCardList.add(card);
-                    suggestedList.add(card.getRouteID());
-                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card.getRouteID()))
-                        card.setFavorite(true);
-                    else
-                        card.setFavorite(false);
-
-                    //NORMAL ROUTES
+                    int suggest = 0;
                     for (int i = 0; i < result.size(); i++) {
                         if (getDistanceMatrix(result.get(i))) {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                            if(suggestedList.contains(card1.getRouteID())) {
-                                Log.d("STATUS OF LIST","is suggested");
-                            }
-                            else {
+                            suggest +=1;
+                            if (suggest == 1){
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
                                 card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card1);
+                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                    card1.setFavorite(true);
+                                else
+                                    card1.setFavorite(false);
                             }
-                            Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
-                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                                card1.setFavorite(true);
-                            else
-                                card1.setFavorite(false);
-
+                            else {
+                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                    card1.setFavorite(true);
+                                else
+                                    card1.setFavorite(false);
+                            }
                         }
                         else if (!getDistanceMatrix(result.get(i))) {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
-                            if(suggestedList.contains(card1.getRouteID())) {
-                                Log.d("STATUS OF LIST","is suggested");
-                            }
-                            else {
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                            }
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2167,14 +2146,9 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         else {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");//<-if change words, change at CardAdapter also for text colour
-                            if(suggestedList.contains(card1.getRouteID())) {
-                                Log.d("STATUS OF LIST","is suggested");
-                            }
-                            else {
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                            }
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                            transitCardList.add(card1);
                             Log.d(TAG, "lookUpRoute: " + card1.toString());
                             Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
                             if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
@@ -2264,9 +2238,9 @@ public class MainActivity extends AppCompatActivity
             for(int i=0; i< result.size(); i++) {
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
-                    if (getMatrix(result1.get(0))) { //no congestion, to display on suggested
+                    if (getMatrix(result1.get(0))) { //no congestion
                         pass = true;
-                    } else { // dont display
+                    } else {
                         pass = false;
                     }
                 }
@@ -2288,6 +2262,9 @@ public class MainActivity extends AppCompatActivity
                             break;
                         case ("Circle Line"):
                             mrtLine = "CCL";
+                            break;
+                        case ("Bukit Panjang LRT"):
+                            mrtLine = "BPLRT";
                             break;
                         default:
                             break;
@@ -2319,6 +2296,11 @@ public class MainActivity extends AppCompatActivity
                         pass = true;
                     }
                 }
+
+                else if (type == "walk"){
+                    pass = true;
+                }
+
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -2360,6 +2342,9 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, startLat.toString() + " " + startLng.toString() + " " + endLat.toString() + " " + endLng.toString());
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
+                }
+                else {
+                    pass =  lookUpTrafficDuration("walk", "", googleRoutesData, "", "");
                 }
             }
         }
