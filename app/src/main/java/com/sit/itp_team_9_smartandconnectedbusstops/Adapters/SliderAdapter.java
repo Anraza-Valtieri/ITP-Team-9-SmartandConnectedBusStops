@@ -57,7 +57,7 @@ public class SliderAdapter extends PagerAdapter{
 //        GlideApp.with(this.context).load("").centerCrop().placeholder(slide_images[position]).into(imageView);
         RequestOptions options = new RequestOptions();
         options.centerCrop();
-        
+
         Glide.with(context).load(slide_images[position]).apply(options).into(imageView);
 //        imageView.setImageResource();
 

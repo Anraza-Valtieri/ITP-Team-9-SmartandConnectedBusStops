@@ -33,8 +33,10 @@ public class AboutActivity extends AppCompatActivity {
             PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
             String version = pInfo.versionName;
             mVersion.setText(version);
-            prefs = getSharedPreferences("com.sit.item_team_9_smartandconnectedbusstops", MODE_PRIVATE);
-            prefs.edit().putBoolean("firstrun", true).commit();
+            if(BuildConfig.DEBUG) {
+                prefs = getSharedPreferences("com.sit.item_team_9_smartandconnectedbusstops", MODE_PRIVATE);
+                prefs.edit().putBoolean("firstrun", true).commit();
+            }
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
