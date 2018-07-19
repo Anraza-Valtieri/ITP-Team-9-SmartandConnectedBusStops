@@ -84,7 +84,11 @@ public class JSONTrainStationParser extends AsyncTask<Void, String, List<TrainSt
                             entry.setStationCode(obj.getString("stn_code"));
                             entry.setLineName(obj.getString("mrt_line_english"));
                             entry.setLineNameChinese(obj.getString("mrt_line_chinese"));
-                            entry.setStationNum(Integer.parseInt(entry.getStationCode().replaceAll("[^0-9]","")));
+                            if (entry.getStationCode().matches(".*\\d+.*")) {
+                                entry.setStationNum(Integer.parseInt(entry.getStationCode().replaceAll("[^0-9]", "")));
+                            }else{
+                                entry.setStationNum(0);
+                            }
                             trainStationList.add(entry);
                         }
                     urlConnection.disconnect();
