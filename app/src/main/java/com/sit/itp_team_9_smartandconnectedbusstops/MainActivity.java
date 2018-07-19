@@ -2055,18 +2055,31 @@ public class MainActivity extends AppCompatActivity
                     if (result.size() <= 0) {
                         return;
                     }
+
                     if (getWeatherData(result.get(Integer.parseInt(routeid)))){
                         umbrellaBring = true;
                     }
-                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "" , umbrellaBring);
-                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                        card1.setFavorite(true);
-                    else
-                        card1.setFavorite(false);
+                    if (getDistanceMatrix(result.get(Integer.parseInt(routeid))) == "bus_congest" || getDistanceMatrix(result.get(Integer.parseInt(routeid)))=="mrt_fault") {
+                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "Slight delay", umbrellaBring);
+                        if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                            card1.setFavorite(true);
+                        else
+                            card1.setFavorite(false);
+                        card1.setLatLng(new LatLng(result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLat(),
+                                result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLng()));
+                        favCardList1.add(card1);
+                    }
+                    else{
+                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "", umbrellaBring);
+                        if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                            card1.setFavorite(true);
+                        else
+                            card1.setFavorite(false);
+                        card1.setLatLng(new LatLng(result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLat(),
+                                result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLng()));
+                        favCardList1.add(card1);
+                    }
 
-                    card1.setLatLng(new LatLng(result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLat(),
-                            result.get(Integer.parseInt(routeid)).getSteps().get(0).getStartLocationLng()));
-                    favCardList1.add(card1);
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
