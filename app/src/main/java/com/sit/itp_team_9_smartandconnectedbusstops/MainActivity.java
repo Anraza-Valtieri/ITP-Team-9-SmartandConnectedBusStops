@@ -2258,8 +2258,7 @@ public class MainActivity extends AppCompatActivity
                         Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
                         sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
                         String temp = sgWeather.getmTempForLatLong();
-                       // String weather = sgWeather.getmWeatherForLatLong();
-                        String weather = "Showers";
+                        String weather = sgWeather.getmWeatherForLatLong();
                         Log.d("WALKing -------------- ", "WEATHER " + weather);
                         if (weather != null) {
                             if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
