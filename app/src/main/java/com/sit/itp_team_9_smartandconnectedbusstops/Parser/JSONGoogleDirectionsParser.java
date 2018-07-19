@@ -215,10 +215,11 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
         }
     }
 
-    private List<LatLng> decodePolyLine(final String poly) {
+    private LatLng decodePolyLine(final String poly) {
         int len = poly.length();
         int index = 0;
-        List<LatLng> decoded = new ArrayList<LatLng>();
+        //List<LatLng> decoded = new ArrayList<LatLng>();
+        LatLng decoded = new LatLng(0,0);
         int lat = 0;
         int lng = 0;
 
@@ -244,9 +245,10 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
             int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
             lng += dlng;
 
-            decoded.add(new LatLng(
-                    lat / 100000d, lng / 100000d
-            ));
+            decoded.equals(new LatLng(
+                            lat / 100000d, lng / 100000d));
+            /*decoded.add(new LatLng(
+                    lat / 100000d, lng / 100000d*/
         }
 
         return decoded;

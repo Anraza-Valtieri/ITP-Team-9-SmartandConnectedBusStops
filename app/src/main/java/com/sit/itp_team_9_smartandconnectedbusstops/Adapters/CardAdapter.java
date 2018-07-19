@@ -291,6 +291,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //            showNoNetworkDialog(mContext);
             return;
         }
+        Log.d(TAG, "updateCardData: Start");
         @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
@@ -315,7 +316,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void resumeHandlers(){
 //        handler2.removeCallbacksAndMessages(null);
 //        handler2.post(runnable2);
-        handler2.postDelayed(runnable2, 1000);
+        handler2.postDelayed(runnable2, 2000);
     }
 
     Runnable runnable2 = new Runnable() {
@@ -506,8 +507,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     fadeIn.setDuration(500);
                     fadeOut.setDuration(500);
                     fadeOut.setStartOffset(500+fadeIn.getStartOffset()+500);
-                    fadeIn.setRepeatCount(1);
-                    fadeOut.setRepeatCount(1);
+                    fadeIn.setRepeatCount(3);
+                    fadeOut.setRepeatCount(2);
                     updating.startAnimation(fadeIn);
                     updating.startAnimation(fadeOut);
 

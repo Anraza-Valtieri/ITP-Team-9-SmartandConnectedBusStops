@@ -102,6 +102,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -414,7 +416,7 @@ public class MainActivity extends AppCompatActivity
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-//        db.disableNetwork();
+        db.disableNetwork();
 
         userData = new UserData();
 
@@ -527,6 +529,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onRestart() {
         super.onRestart();
+        /*if (adapter != null)
+            adapter.resumeHandlers();
+        // Resuming location updates depending on button state and
+        // allowed permissions
+        if (mLocationPermissionGranted) {
+            getDeviceLocation();
+        }*/
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         if (adapter != null)
             adapter.resumeHandlers();
         // Resuming location updates depending on button state and
@@ -1116,7 +1130,10 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    startingPointTextView.setText(result.get(0));
+                    if(result != null && result.size() > 0)
+                        startingPointTextView.setText(result.get(0));
+                    else
+                        Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                 }
                 break;
 
@@ -1124,7 +1141,10 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    destinationTextView.setText(result.get(0));
+                    if(result != null && result.size() > 0)
+                        destinationTextView.setText(result.get(0));
+                    else
+                        Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                 }
                 break;
         }
@@ -1434,6 +1454,33 @@ public class MainActivity extends AppCompatActivity
         Gson gson = new Gson();
         busRoute =  gson.fromJson( Utils.loadBUSRouteJSONFromAsset(getApplicationContext()), JSONLTABusRoute.class );
         busRoute.createMap();
+
+        //TODO add polylines here if transitCardList not empty
+        /*if (!transitCardList.isEmpty()) {
+            Log.i(TAG, "(ON MAP READY) transit: ");
+            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+
+            for (NavigateTransitCard transitCard : castToNavigate) {
+                List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
+                Log.i(TAG, "(ON MAP READY) points: "+String.valueOf(points));
+                for (int j = 0; j < points.size() - 1; j++) {
+                    LatLng src = points.get(j);
+                    LatLng dest = points.get(j + 1);
+
+                    // mMap is the Map Object
+                    Polyline line = mMap.addPolyline(
+                            new PolylineOptions()
+                                    .clickable(true)
+                                    .add(
+                                    new LatLng(src.latitude, src.longitude),
+                                    new LatLng(dest.latitude, dest.longitude)
+                            ).width(10).color(Color.BLUE).geodesic(true)
+                    );
+                }
+            }
+        }*/
     }
     @Override
     public void onCameraMove() {
@@ -1592,7 +1639,7 @@ public class MainActivity extends AppCompatActivity
      * DO NOT create more busstopcard objects
      */
     private void FillBusData(){
-        ProgressDialog dialog = new ProgressDialog(this);
+
         /*
         Create Map markers!
          */
@@ -1603,18 +1650,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                dialog.setMessage("Loading..");
-                dialog.setIndeterminate(false);
-                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                dialog.setCancelable(false);
-                dialog.show();
+
             }
 
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 LinkIDtoName();
-                dialog.dismiss();
             }
 
             @Override
@@ -2178,6 +2220,13 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);
+                        // Build the map.
+                        /*SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                                .findFragmentById(R.id.mapView);
+
+                        //        View mapView = mapFragment.getView();
+                        mapFragment.getMapAsync(MainActivity.this);
+                        scheduleJob();*/
                     }
                     //updateAdapterList(transitCardList);
                 }
