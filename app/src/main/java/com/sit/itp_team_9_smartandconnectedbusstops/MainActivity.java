@@ -391,6 +391,7 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().show();
 
+
         // Status bar :: Transparent
         Window window = this.getWindow();
 
@@ -428,6 +429,9 @@ public class MainActivity extends AppCompatActivity
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
         db.disableNetwork();
+
+        Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
+        startService(startServiceIntent);
 
         userData = new UserData();
 
@@ -577,8 +581,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
-        startService(startServiceIntent);
+
     }
 
     @Override
