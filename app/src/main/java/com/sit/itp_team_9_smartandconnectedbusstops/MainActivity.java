@@ -19,6 +19,7 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Address;
@@ -324,6 +325,8 @@ public class MainActivity extends AppCompatActivity
 
     private boolean umbrellaBring = false;
 
+    public static String sDefSystemLang;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 //        setTheme(R.style.AppTheme_NoActionBar);
@@ -335,6 +338,12 @@ public class MainActivity extends AppCompatActivity
         String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
                 .getString("My_Lang", "en");
         setLocale(language);
+
+
+        sDefSystemLang = this.getResources().getConfiguration().locale.getDisplayName();
+        Log.d(TAG, "onCreate: "+sDefSystemLang);
+        Locale locale = new Locale(sDefSystemLang);
+        Locale.setDefault(locale);
 
         setContentView(R.layout.activity_main);
         context = this;
@@ -576,6 +585,12 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         stopService(new Intent(this, NetworkSchedulerService.class));
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

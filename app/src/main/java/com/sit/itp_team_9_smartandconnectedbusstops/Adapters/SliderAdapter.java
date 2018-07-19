@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
 
 public class SliderAdapter extends PagerAdapter{
@@ -54,7 +55,10 @@ public class SliderAdapter extends PagerAdapter{
         ImageView imageView = view.findViewById(R.id.slide_image);
 
 //        GlideApp.with(this.context).load("").centerCrop().placeholder(slide_images[position]).into(imageView);
-        Glide.with(context).load(slide_images[position]).into(imageView);
+        RequestOptions options = new RequestOptions();
+        options.centerCrop();
+        
+        Glide.with(context).load(slide_images[position]).apply(options).into(imageView);
 //        imageView.setImageResource();
 
         container.addView(view);

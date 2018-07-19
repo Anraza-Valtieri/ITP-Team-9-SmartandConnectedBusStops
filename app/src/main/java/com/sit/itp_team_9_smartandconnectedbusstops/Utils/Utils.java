@@ -157,7 +157,7 @@ public class Utils {
     public static Date formatCardTime(String datetime){
         Date cal = Calendar.getInstance().getTime();
         if(!datetime.equals("")) {
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             try {
                 cal.setTime(sdf.parse(datetime).getTime());// all done
             } catch (ParseException e) {
