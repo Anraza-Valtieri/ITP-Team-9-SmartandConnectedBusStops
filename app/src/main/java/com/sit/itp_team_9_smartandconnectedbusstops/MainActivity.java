@@ -715,6 +715,7 @@ public class MainActivity extends AppCompatActivity
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
             } else if (id == R.id.action_nav) {
+                suggestedList.clear();
                 if(toolbarNavigate.getVisibility() != View.VISIBLE) {
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbarNavigate), 350);
@@ -2109,51 +2110,51 @@ public class MainActivity extends AppCompatActivity
                     updateAdapterList(walkingCardList);
 
                 } else {
-                    int suggest = 0;
-                    for (int i = 0; i < result.size(); i++) {
-                        if (getDistanceMatrix(result.get(i))) {
-                            suggest +=1;
-                            if (suggest == 1){
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "* Suggested Route *");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                                    card1.setFavorite(true);
-                                else
-                                    card1.setFavorite(false);
-                            }
-                            else {
-                                NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                                transitCardList.add(card1);
-                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                                    card1.setFavorite(true);
-                                else
-                                    card1.setFavorite(false);
-                            }
+                    //SUGGESTED route
+                    suggestedList.clear();
+                    for(int i=0; i< result.size(); i++) {
+                        if(getDistanceMatrix(result.get(i))== "mrt_nofault" || getDistanceMatrix(result.get(i))=="bus_free"){
+                            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
+                            navigateCardList = (ArrayList<? extends Card>) transitCardList;
+                            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
+                            Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                         }
-                        else if (!getDistanceMatrix(result.get(i))) {
+                    }
+                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *");
+                    card.setType(card.NAVIGATE_TRANSIT_CARD);
+                    transitCardList.add(card);
+                    suggestedList.add(card.getRouteID());
+                    if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card.getRouteID()))
+                        card.setFavorite(true);
+                    else
+                        card.setFavorite(false);
+                    for (int i = 0; i < result.size(); i++) {
+                        if (getDistanceMatrix(result.get(i)) == "bus_congest" || getDistanceMatrix(result.get(i))=="mrt_fault") {
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
-                            Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
-                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                                card1.setFavorite(true);
-                            else
-                                card1.setFavorite(false);
+                            if(!suggestedList.contains(card1.getRouteID())) {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                                Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                    card1.setFavorite(true);
+                                else
+                                    card1.setFavorite(false);
+                            }
                         }
 
-                        else {
+                        else{
                             NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
-                            card1.setType(card1.NAVIGATE_TRANSIT_CARD);
-                            transitCardList.add(card1);
-                            Log.d(TAG, "lookUpRoute: " + card1.toString());
-                            Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
-                            if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
-                                card1.setFavorite(true);
-                            else
-                                card1.setFavorite(false);
+                            if(!suggestedList.contains(card1.getRouteID())) {
+                                card1.setType(card1.NAVIGATE_TRANSIT_CARD);
+                                transitCardList.add(card1);
+                                Log.d(TAG, "lookUpRoute: " + card1.toString());
+                                Log.d(TAG, "lookUpRoute: " + "getRouteID --------- " + card1.getRouteID());
+                                if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
+                                    card1.setFavorite(true);
+                                else
+                                    card1.setFavorite(false);
+                            }
                         }
 
                         ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
@@ -2216,8 +2217,8 @@ public class MainActivity extends AppCompatActivity
         }
         return umbrella;
     }
-    private boolean lookUpTrafficDuration(String type, String train, GoogleRoutesData routesData, String queryMatrix, String queryDir){
-        boolean pass = false;
+    private String lookUpTrafficDuration(String type, String train, GoogleRoutesData routesData, String queryMatrix, String queryDir){
+        String pass = "";
         List<String> durationQuery = new ArrayList<>();
         durationQuery.add(queryMatrix);
         List<String> directionsQuery = new ArrayList<>();
@@ -2238,9 +2239,9 @@ public class MainActivity extends AppCompatActivity
                 if (type=="bus") {
                     Log.d(TAG, "lookUpTrafficDuration BUS: " + i );
                     if (getMatrix(result1.get(0))) { //no congestion
-                        pass = true;
+                        pass = "bus_free";
                     } else {
-                        pass = false;
+                        pass = "bus_congest";
                     }
                 }
                 else if (type == "mrt"){
@@ -2283,23 +2284,22 @@ public class MainActivity extends AppCompatActivity
                         Log.d("TWITTERSERVICELIST", twitterServiceList.get(0));
                         if (twitterServiceList.get(0).contains("commenced") || twitterServiceList.get(0).contains("CLEARED") || twitterServiceList.get(0).contains("restored") || twitterServiceList.get(0).contains("resumed")) {
                             Log.d("NO FAULT", "NO FAULT");
-                            pass = true;
+                            pass = "mrt_nofault";
                         } else if (twitterServiceList.get(0).contains("Due to") || twitterServiceList.get(0).contains("pls add") || twitterServiceList.get(0).contains("train travel time") || twitterServiceList.get(0).contains("no train service")) {
                             Log.d("GOT FAULT", "GOT FAULT");
-                            pass = false;
+                            pass = "mrt_fault";
                         } else {
-                            pass = false;
+                            pass = "";
                         }
                     }
                     else{
-                        pass = true;
+                        pass = "";
                     }
                 }
 
                 else if (type == "walk"){
-                    pass = true;
+                    pass="walk";
                 }
-
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -2315,12 +2315,13 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
         else {
+            Log.d("GetMatrix()", "--------- delay");
             return false;
         }
     }
-    private boolean getDistanceMatrix(GoogleRoutesData googleRoutesData) {
+    private String getDistanceMatrix(GoogleRoutesData googleRoutesData) {
         List<GoogleRoutesSteps> routeSteps = googleRoutesData.getSteps();
-        boolean pass = false;
+        String pass = "";
         if (routeSteps != null) {
             Log.d(TAG, "routeSteps duration: "+ routeSteps.get(0).getDuration());
             for (int i = 0; i < routeSteps.size(); i++) {
@@ -2342,14 +2343,11 @@ public class MainActivity extends AppCompatActivity
                     String queryMatrix = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + startLat + "," + startLng + "&destinations=" + endLat + "," + endLng + "&departure_time=now&key=AIzaSyATjwuhqNJTXfoG1TvlnJUmb3rlgu32v5s";
                     pass =  lookUpTrafficDuration("bus", "", googleRoutesData, queryMatrix, query);
                 }
-                else {
-                    pass =  lookUpTrafficDuration("walk", "", googleRoutesData, "", "");
-                }
             }
         }
         else{
             Log.d(TAG, "routeSteps EMPTY" );
-            pass = false;
+            pass = "";
         }
         return pass;
     }
