@@ -322,6 +322,8 @@ public class MainActivity extends AppCompatActivity
     TextView psi10;
     TextView uv;
 
+    private boolean umbrellaBring = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 //        setTheme(R.style.AppTheme_NoActionBar);
@@ -2051,7 +2053,10 @@ public class MainActivity extends AppCompatActivity
                     if (result.size() <= 0) {
                         return;
                     }
-                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "");
+                    if (getWeatherData(result.get(Integer.parseInt(routeid)))){
+                        umbrellaBring = true;
+                    }
+                    NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "" , umbrellaBring);
                     if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
                         card1.setFavorite(true);
                     else
@@ -2162,7 +2167,10 @@ public class MainActivity extends AppCompatActivity
                             Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                         }
                     }
-                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *");
+                    if (getWeatherData(result.get(0))){
+                        umbrellaBring = true;
+                    }
+                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *", umbrellaBring);
                     card.setType(card.NAVIGATE_TRANSIT_CARD);
                     transitCardList.add(card);
                     suggestedList.add(card.getRouteID());
@@ -2171,8 +2179,11 @@ public class MainActivity extends AppCompatActivity
                     else
                         card.setFavorite(false);
                     for (int i = 0; i < result.size(); i++) {
+                        if (getWeatherData(result.get(i))){
+                            umbrellaBring = true;
+                        }
                         if (getDistanceMatrix(result.get(i)) == "bus_congest" || getDistanceMatrix(result.get(i))=="mrt_fault") {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay");//<-if change words, change at CardAdapter also for text colour
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay", umbrellaBring);//<-if change words, change at CardAdapter also for text colour
                             if(!suggestedList.contains(card1.getRouteID())) {
                                 card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card1);
@@ -2186,7 +2197,7 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         else{
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "");
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "", umbrellaBring);
                             if(!suggestedList.contains(card1.getRouteID())) {
                                 card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card1);
@@ -2243,20 +2254,22 @@ public class MainActivity extends AppCompatActivity
                 double startLat = routeSteps.get(i).getStartLocationLat();
                 double startLng = routeSteps.get(i).getStartLocationLng();
                 if (sgWeather!=null) {
-                    Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
-                    sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
-                    String temp = sgWeather.getmTempForLatLong();
-                    String weather = sgWeather.getmWeatherForLatLong();
-                    Log.d("WALKing -------------- ", "TEMPERATURE " + temp);
-                    Log.d("WALKing -------------- ", "WEATHER " + weather);
-                    if (weather != null) {
-                        if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
-                            umbrella = true;
+                    if (routeSteps.get(i).getTravelMode().equals("WALKING") && routeSteps.get(i).getHtmlInstructions()!=null) {
+                        Log.d("WALKing -------------- ", "START " + startLat + ", " + startLng);
+                        sgWeather.updateForSpecificLocation(new LatLng(startLat, startLng));
+                        String temp = sgWeather.getmTempForLatLong();
+                       // String weather = sgWeather.getmWeatherForLatLong();
+                        String weather = "Showers";
+                        Log.d("WALKing -------------- ", "WEATHER " + weather);
+                        if (weather != null) {
+                            if (weather.contains("Sunny") || weather.contains("Rain") || weather.contains("Thunderstorms") || weather.contains("Showers")) {
+                                umbrella = true;
+                            } else {
+                                umbrella = false;
+                            }
                         } else {
                             umbrella = false;
                         }
-                    } else {
-                        umbrella = false;
                     }
                 }
             }
@@ -2344,10 +2357,6 @@ public class MainActivity extends AppCompatActivity
                     else{
                         pass = "";
                     }
-                }
-
-                else if (type == "walk"){
-                    pass="walk";
                 }
             }
         } catch (InterruptedException | ExecutionException e) {

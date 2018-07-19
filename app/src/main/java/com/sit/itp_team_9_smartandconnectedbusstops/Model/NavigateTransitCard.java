@@ -54,7 +54,7 @@ public class NavigateTransitCard extends Card {
     private List<String> inBetweenStops;
     private List<LatLng> polyLines;
     private String condition;
-    private boolean isFavorite;
+    private boolean isFavorite, isUmbrella;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
 
     private String placeidStart, placeidEnd, routeID;
@@ -226,6 +226,10 @@ public class NavigateTransitCard extends Card {
         this.routeID = routeID;
     }
 
+    public boolean isUmbrella(){return isUmbrella;}
+
+    public void setUmbrella(boolean umbrella){ isUmbrella = umbrella;}
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -234,7 +238,7 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
+    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon, boolean umbrellaBring) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         card.setNeedsUpdate(true);
@@ -244,6 +248,7 @@ public class NavigateTransitCard extends Card {
             card.setTotalTime(googleRoutesData.getTotalDuration());
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+            card.setUmbrella(umbrellaBring);
             String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
             card.setRouteID(routeID);
             Log.d(TAG, "getRouteData: setRouteID: "+routeID);
