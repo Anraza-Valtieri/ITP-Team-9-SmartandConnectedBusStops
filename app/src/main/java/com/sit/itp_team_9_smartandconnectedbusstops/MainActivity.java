@@ -501,7 +501,7 @@ public class MainActivity extends AppCompatActivity
                     protected void onPostExecute(Object o) {
                         super.onPostExecute(o);
                         if(o != null)
-                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o));
+                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition((CameraPosition) o), 500, null);
                     }
                 };
 
@@ -908,7 +908,7 @@ public class MainActivity extends AppCompatActivity
                         .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                         .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                         .build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos));
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos), 500, null);
 
                 if (!isPooling()) {
                     setPooling(true);
@@ -967,8 +967,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @SuppressLint("MissingPermission")
-    @SuppressWarnings("unchecked")
     private void getDeviceLocation() {
         /*
          * Get the best and most recent location of the device, which may be null in rare
@@ -995,7 +993,7 @@ public class MainActivity extends AppCompatActivity
                                 .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                                 .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                                 .build();                   // Creates a CameraPosition from the builder
-                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),500, null);
                         mMap.setMaxZoomPreference(MAX_ZOOM);
                         mMap.setMinZoomPreference(MIN_ZOOM);
                         sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
@@ -1043,40 +1041,44 @@ public class MainActivity extends AppCompatActivity
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         LocationSettingsRequest mLocationSettingsRequest = builder.build();
-        if (mLocationPermissionGranted) {
-            mSettingsClient
-                .checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(this, locationSettingsResponse -> {
-                    Log.i(TAG, "All location settings are satisfied.");
-                    //noinspection MissingPermission
-                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                            mLocationCallback, Looper.myLooper());
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (mLocationPermissionGranted) {
+                mSettingsClient
+                        .checkLocationSettings(mLocationSettingsRequest)
+                        .addOnSuccessListener(this, locationSettingsResponse -> {
+                            Log.i(TAG, "All location settings are satisfied.");
+                            //noinspection MissingPermission
+                            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                    mLocationCallback, Looper.myLooper());
 
-                })
-                .addOnFailureListener(this, e -> {
-                    int statusCode = ((ApiException) e).getStatusCode();
-                    switch (statusCode) {
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                    "location settings ");
-                            try {
-                                // Show the dialog by calling startResolutionForResult(), and check the
-                                // result in onActivityResult().
-                                ResolvableApiException rae = (ResolvableApiException) e;
-                                rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
-                            } catch (IntentSender.SendIntentException sie) {
-                                Log.i(TAG, "PendingIntent unable to execute request.");
+                        })
+                        .addOnFailureListener(this, e -> {
+                            int statusCode = ((ApiException) e).getStatusCode();
+                            switch (statusCode) {
+                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                    Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                            "location settings ");
+                                    try {
+                                        // Show the dialog by calling startResolutionForResult(), and check the
+                                        // result in onActivityResult().
+                                        ResolvableApiException rae = (ResolvableApiException) e;
+                                        rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                    } catch (IntentSender.SendIntentException sie) {
+                                        Log.i(TAG, "PendingIntent unable to execute request.");
+                                    }
+                                    break;
+                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                    String errorMessage = "Location settings are inadequate, and cannot be " +
+                                            "fixed here. Fix in Settings.";
+                                    Log.e(TAG, errorMessage);
+
+                                    Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                             }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            String errorMessage = "Location settings are inadequate, and cannot be " +
-                                    "fixed here. Fix in Settings.";
-                            Log.e(TAG, errorMessage);
 
-                            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                    }
-
-                });
+                        });
+            }
         }
     }
 
@@ -1132,7 +1134,7 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null && result.size() > 0)
+                    if(result != null)
                         startingPointTextView.setText(result.get(0));
                     else
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
@@ -1143,7 +1145,7 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null && result.size() > 0)
+                    if(result != null)
                         destinationTextView.setText(result.get(0));
                     else
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
@@ -1399,7 +1401,7 @@ public class MainActivity extends AppCompatActivity
                 .target(new LatLng(1.3521, 103.8198))      // Sets the center of the map to Mountain View
                 .zoom(10)                   // Sets the zoom
                 .build();                   // Creates a CameraPosition from the builder
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),500, null);
 
         // Prompt the user for permission.
         getLocationPermission();

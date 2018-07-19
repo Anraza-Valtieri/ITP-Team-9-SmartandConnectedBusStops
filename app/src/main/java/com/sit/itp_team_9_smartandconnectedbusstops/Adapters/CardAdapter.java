@@ -193,7 +193,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                     Double.parseDouble(card.getBusStopLong())))
                             .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                             .build();                   // Creates a CameraPosition from the builder
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),500, null);
                     bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     recyclerView.scrollToPosition(position);
                 });
