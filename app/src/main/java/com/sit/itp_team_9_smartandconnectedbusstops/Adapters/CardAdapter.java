@@ -48,6 +48,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
@@ -423,6 +425,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView numStops;
         ExpandableListView listViewNumStops;
         ImageButton favTransit;
+        ImageView umbrella;
 
         //For navigate walking card
         TextView walkingTime;
@@ -465,6 +468,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
             condition = itemView.findViewById(R.id.textViewCondition);
             favTransit = itemView.findViewById(R.id.favoritebtnTransit);
+            umbrella = itemView.findViewById(R.id.imageViewUmbrella);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -569,7 +573,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             if (!value.get(1).equals("")) {
                                 duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
                                 if (value.get(4).equals(""))
-                                    wheel1.setVisibility(View.INVISIBLE);
+                                    wheel1.setVisibility(INVISIBLE);
 
                                 switch (value.get(2)) {
                                     case "SDA":
@@ -583,13 +587,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         break;
                                 }
                             } else
-                                card1.setVisibility(View.INVISIBLE);
+                                card1.setVisibility(INVISIBLE);
 
 
                             if (!value.get(5).equals("")) {
                                 duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
                                 if (value.get(7).equals(""))
-                                    wheel2.setVisibility(View.INVISIBLE);
+                                    wheel2.setVisibility(INVISIBLE);
 
                                 switch (value.get(6)) {
                                     case "SDA":
@@ -603,7 +607,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         break;
                                 }
                             } else
-                                card2.setVisibility(View.INVISIBLE);
+                                card2.setVisibility(INVISIBLE);
                                 direction.setText(value.get(0));
                                 options_layout.addView(to_add);
                         }
@@ -627,8 +631,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
-                        Log.d("COST", cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
+
+                        //traffic condition
                         if(cardsTransit.getCondition()=="Slight delay"){
                            this.condition.setTextColor(Color.RED);
                         }
@@ -636,6 +641,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             this.condition.setTextColor(mContext.getResources().getColor(android.R.color.holo_green_dark));
                         }
 
+                        //for umbrella icon
+                        if(cardsTransit.isUmbrella()) {
+                            Log.d("UMRELLA ", "- ------------" + cardsTransit.isUmbrella());
+                            this.umbrella.setImageResource(R.drawable.ic_umbrellasvg);
+                        }
+                        else {
+                            this.umbrella.setVisibility(View.GONE);
+                        }
+
+                        //for favorite btn
                         if(cardsTransit.isFavorite())
                             this.favTransit.setImageResource(R.drawable.ic_favorite_red);
                         else
