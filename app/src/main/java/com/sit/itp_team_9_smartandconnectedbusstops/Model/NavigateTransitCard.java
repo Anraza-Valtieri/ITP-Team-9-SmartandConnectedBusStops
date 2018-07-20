@@ -360,6 +360,7 @@ public class NavigateTransitCard extends Card {
                             }else{
                                 //if bus
                                 lineName = routeSteps.get(i).getBusNum();
+                                listOfTransitModeAndDistances.add(new TransitModeDistances("bus", lineName, routeSteps.get(i).getDistance()));
                                 imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
                                 imageViewColor = NavigateTransitCard.BUS_COLOR;
                                 timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
