@@ -1989,7 +1989,7 @@ public class MainActivity extends AppCompatActivity
             Float distance1 = result1[0];
 
             float[] result2 = new float[3];
-            Location.distanceBetween(myLatitude, myLongitude, o.getLatLng().latitude, o.getLatLng().longitude, result2);
+            Location.distanceBetween(myLatitude, myLongitude, o2.getLatLng().latitude, o2.getLatLng().longitude, result2);
             Float distance2 = result2[0];
             return distance1.compareTo(distance2);
         };
@@ -2120,8 +2120,10 @@ public class MainActivity extends AppCompatActivity
 //                    sortedList.addAll(favCardList1);
 //                    return sortCardsByLocation(sortedList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 //                    sortLocations(sortedLTABusStopData, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                    sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                    return sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    List<Card> newList = new ArrayList<>();
+                    newList.addAll(sortRouteByLocation(favCardList1, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                    newList.addAll(sortBusCardsByLocation(favCardList, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                    return newList;
 
                 }
                 else
