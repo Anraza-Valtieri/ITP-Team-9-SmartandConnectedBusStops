@@ -113,6 +113,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.gson.Gson;
+import com.google.maps.android.PolyUtil;
 import com.google.maps.android.clustering.ClusterManager;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
@@ -127,6 +128,8 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.MRT.Line;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.MRT.MRTJson;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
@@ -183,8 +186,8 @@ public class MainActivity extends AppCompatActivity
     // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
     private static final int DEFAULT_ZOOM = 18;
-    private static final float MAX_ZOOM = 20.0f;
-    private static final float MIN_ZOOM = 15.0f;
+    private static final float MAX_ZOOM = 25.0f;
+    private static final float MIN_ZOOM = 10.0f;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
@@ -1453,7 +1456,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setIndoorEnabled(false);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
-        mMap.setTrafficEnabled(true);
+        mMap.setTrafficEnabled(false);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -1501,31 +1504,19 @@ public class MainActivity extends AppCompatActivity
         busRoute.createMap();
 
         //TODO add polylines here if transitCardList not empty
-        /*if (!transitCardList.isEmpty()) {
-            Log.i(TAG, "(ON MAP READY) transit: ");
-            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
-            navigateCardList = (ArrayList<? extends Card>) transitCardList;
-            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
-
-            for (NavigateTransitCard transitCard : castToNavigate) {
-                List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
-                Log.i(TAG, "(ON MAP READY) points: "+String.valueOf(points));
-                for (int j = 0; j < points.size() - 1; j++) {
-                    LatLng src = points.get(j);
-                    LatLng dest = points.get(j + 1);
-
-                    // mMap is the Map Object
-                    Polyline line = mMap.addPolyline(
-                            new PolylineOptions()
-                                    .clickable(true)
-                                    .add(
-                                    new LatLng(src.latitude, src.longitude),
-                                    new LatLng(dest.latitude, dest.longitude)
-                            ).width(10).color(Color.BLUE).geodesic(true)
-                    );
-                }
+        Gson gson2 = new Gson();
+        MRTJson mrtJson = gson2.fromJson( Utils.loadRailRouteJSONFromAsset(getApplicationContext()), MRTJson.class );
+        List<Line> lines = mrtJson.getLines();
+        for (Line railLine : lines) {
+            PolylineOptions options = new PolylineOptions().width(10).color(Color.parseColor(railLine.getColour())).geodesic(true);
+            List<LatLng> poly = PolyUtil.decode(railLine.getCoords());
+            for (int z = 0; z < poly.size(); z++) {
+                LatLng point = poly.get(z);
+                options.add(point);
             }
-        }*/
+            Polyline line = mMap.addPolyline(options);
+        }
+
     }
     @Override
     public void onCameraMove() {

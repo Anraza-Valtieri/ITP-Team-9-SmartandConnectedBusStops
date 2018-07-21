@@ -256,6 +256,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         if(oldLine != null)
                             oldLine.remove();
                         oldLine = line;
+
+                        bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     }
                 });
                 break;
