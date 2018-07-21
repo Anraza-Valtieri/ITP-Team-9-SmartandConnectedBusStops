@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.PolyUtil;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
@@ -114,7 +115,9 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                     steps.setDistance(stepsObject.getJSONObject("distance").getString("text"));
                                     steps.setDuration(stepsObject.getJSONObject("duration").getString("text"));
                                     steps.setHtmlInstructions(stepsObject.getString("html_instructions"));
-                                    steps.setPolyline(decodePolyLine(stepsObject.getJSONObject("polyline").getString("points")));
+//                                    steps.setPolyline(decodePolyLine(stepsObject.getJSONObject("polyline").getString("points")));
+                                    List<LatLng> locations = PolyUtil.decode(stepsObject.getJSONObject("polyline").getString("points"));
+                                    steps.setPolyline(locations);
                                     Log.d(TAG,"polyline"+ steps.getPolyline());
                                     steps.setTravelMode(stepsObject.getString("travel_mode"));
 
@@ -214,7 +217,6 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                 delegate.processFinishFromGoogle(result);
         }
     }
-
     private LatLng decodePolyLine(final String poly) {
         int len = poly.length();
         int index = 0;

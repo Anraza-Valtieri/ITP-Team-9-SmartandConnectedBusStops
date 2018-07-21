@@ -278,7 +278,7 @@ public class NavigateTransitCard extends Card {
 
                 for (int i = 0; i < routeSteps.size(); i++) {
                     List<Object> timeTakenEachStep = new ArrayList<>();
-                    listOfPolyLines.add(routeSteps.get(i).getPolyline());
+                    listOfPolyLines.addAll(routeSteps.get(i).getPolyline());
                     String travelMode = routeSteps.get(i).getTravelMode();
                     String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                     float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
