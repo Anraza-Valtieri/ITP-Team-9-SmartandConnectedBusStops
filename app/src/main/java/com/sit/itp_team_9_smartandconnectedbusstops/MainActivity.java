@@ -145,6 +145,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -1606,29 +1607,60 @@ public class MainActivity extends AppCompatActivity
             showNoNetworkDialog(this);
         }
 
-        List<String> urlsList = new ArrayList<>();
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1000");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1500");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2000");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2500");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3000");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
-        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
+//        List<String> urlsList = new ArrayList<>();
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1000");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=1500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2000");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=2500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3000");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=3500");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4000");
+//        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=4500");
 //        urlsList.add("http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip=5000");
-        JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
-        try {
-            allBusStops.putAll(ltaData.execute().get());
-            for (Map.Entry<String,LTABusStopData> newData : allBusStops.entrySet()){
-                sortedLTABusStopData.add(newData.getValue());
-            }
-            FillBusData();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+//        JSONLTABusStopParser ltaData = new JSONLTABusStopParser(MainActivity.this, urlsList);
 
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                InputStream is = null;
+                try {
+                    String json;
+                    is = context.getAssets().open("bus_stop_data.json");
+
+                    int size = is.available();
+                    byte[] buffer = new byte[size];
+                    is.read(buffer);
+                    is.close();
+                    json = new String(buffer, "UTF-8");
+
+                    JSONObject response1 = new JSONObject(json);
+                    JSONArray jsonArray = response1.getJSONArray("value");
+                    for(int i=0; i< jsonArray.length(); i++) {
+                        JSONObject obj = jsonArray.getJSONObject(i);
+                        LTABusStopData entry = new LTABusStopData(
+                                obj.getString("BusStopCode"),
+                                obj.getString("RoadName"),
+                                obj.getString("Description"));
+                        entry.setBusStopLat(obj.getString("Latitude"));
+                        entry.setBusStopLong(obj.getString("Longitude"));
+    //                        finalResponse.put(entry.getDescription(), entry);
+                        allBusStops.put(obj.getString("BusStopCode"), entry);
+                    }
+
+                    for (Map.Entry<String,LTABusStopData> newData : allBusStops.entrySet()){
+                        sortedLTABusStopData.add(newData.getValue());
+                    }
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+                FillBusData();
+                return null;
+            }
+        };
+        asyncTask.execute();
     }
 
     public void LinkIDtoName(){

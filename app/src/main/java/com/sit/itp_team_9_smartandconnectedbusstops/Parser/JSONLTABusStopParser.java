@@ -8,9 +8,11 @@ import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -18,6 +20,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LTABusStopData>> {
 
@@ -44,7 +47,7 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
 
     @Override
     protected Map<String, LTABusStopData> doInBackground(Void... voids) {
-        try {
+        /*try {
             for(String url : getUrls()) {
                 URL link = new URL(url);
                 urlConnection = (HttpURLConnection) link.openConnection();
@@ -98,7 +101,33 @@ public class JSONLTABusStopParser extends AsyncTask<Void, String, Map<String, LT
         }
         finally {
             return finalResponse;
+        }*/
+        String json;
+        try {
+            InputStream is = activity.getApplication().getApplicationContext().getAssets().open("bus_stop_data.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+
+            JSONObject response1 = new JSONObject(json);
+            JSONArray jsonArray = response1.getJSONArray("value");
+            for(int i=0; i< jsonArray.length(); i++) {
+                JSONObject obj = jsonArray.getJSONObject(i);
+                LTABusStopData entry = new LTABusStopData(
+                        obj.getString("BusStopCode"),
+                        obj.getString("RoadName"),
+                        obj.getString("Description"));
+                entry.setBusStopLat(obj.getString("Latitude"));
+                entry.setBusStopLong(obj.getString("Longitude"));
+//                        finalResponse.put(entry.getDescription(), entry);
+                finalResponse.put(obj.getString("BusStopCode"), entry);
+            }
+        } catch (IOException | JSONException ex) {
+            ex.printStackTrace();
         }
+        return finalResponse;
     }
 
     @Override
