@@ -52,9 +52,9 @@ public class NavigateTransitCard extends Card {
     private String departureStationCode;
     private String numStops;
     private List<String> inBetweenStops;
-    private List<String> polyLines;
+    private List<LatLng> polyLines;
     private String condition;
-    private boolean isFavorite;
+    private boolean isFavorite, isUmbrella;
     private Map<String,List<Object>> transitStations; //arrival stop, List<image resource(int),color(int), lineName(string), arrivalStop (string)>
 
     private String placeidStart, placeidEnd, routeID;
@@ -126,11 +126,11 @@ public class NavigateTransitCard extends Card {
         this.inBetweenStops = inBetweenStops;
     }
 
-    public List<String> getPolyLines() {
+    public List<LatLng> getPolyLines() {
         return polyLines;
     }
 
-    public void setPolyLines(List<String> polyLines) {
+    public void setPolyLines(List<LatLng> polyLines) {
         this.polyLines = polyLines;
     }
 
@@ -226,6 +226,10 @@ public class NavigateTransitCard extends Card {
         this.routeID = routeID;
     }
 
+    public boolean isUmbrella(){return isUmbrella;}
+
+    public void setUmbrella(boolean umbrella){ isUmbrella = umbrella;}
+
     /**
      * Sets and returns a NavigateTransitCard card
      * <p>
@@ -234,7 +238,7 @@ public class NavigateTransitCard extends Card {
      * @param googleRoutesData GoogleRoutesData
      * @return card NavigateTransitCard
      */
-    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon) {
+    public static NavigateTransitCard getRouteData(GoogleRoutesData googleRoutesData, String fareTypes, String trafCon, boolean umbrellaBring) {
         NavigateTransitCard card = new NavigateTransitCard();
         card.setType(Card.NAVIGATE_TRANSIT_CARD);
         card.setNeedsUpdate(true);
@@ -244,6 +248,7 @@ public class NavigateTransitCard extends Card {
             card.setTotalTime(googleRoutesData.getTotalDuration());
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
+            card.setUmbrella(umbrellaBring);
             String routeID = googleRoutesData.getStartPlaceId()+"/"+ googleRoutesData.geEndPlaceId()+"/"+googleRoutesData.getID()+"/"+fareTypes;
             card.setRouteID(routeID);
             Log.d(TAG, "getRouteData: setRouteID: "+routeID);
@@ -258,7 +263,7 @@ public class NavigateTransitCard extends Card {
                 Map<String,List<Object>> transitStations = new LinkedHashMap<>();
                 List<List<Object>> timeTakenList = new ArrayList<>();
                 List<TransitModeDistances> listOfTransitModeAndDistances = new ArrayList<>();
-                List<String> listOfPolyLines = new ArrayList<>();
+                List<LatLng> listOfPolyLines = new ArrayList<>();
                 float totalWalkingDistance = 0;
                 //find largest duration of each step for weights in breakdownBar
                 int largestDuration = 0;
@@ -273,7 +278,7 @@ public class NavigateTransitCard extends Card {
 
                 for (int i = 0; i < routeSteps.size(); i++) {
                     List<Object> timeTakenEachStep = new ArrayList<>();
-                    //listOfPolyLines.add(routeSteps.get(i).getPolyline());
+                    listOfPolyLines.add(routeSteps.get(i).getPolyline());
                     String travelMode = routeSteps.get(i).getTravelMode();
                     String intValue = routeSteps.get(i).getDuration().replaceAll("[^0-9]", "");
                     float timeTakenWeight = Float.parseFloat(intValue)/largestDuration;
@@ -355,6 +360,7 @@ public class NavigateTransitCard extends Card {
                             }else{
                                 //if bus
                                 lineName = routeSteps.get(i).getBusNum();
+                                listOfTransitModeAndDistances.add(new TransitModeDistances("bus", lineName, routeSteps.get(i).getDistance()));
                                 imageViewTransit = R.drawable.ic_directions_bus_black_24dp;
                                 imageViewColor = NavigateTransitCard.BUS_COLOR;
                                 timeTakenEachStep.add(NavigateTransitCard.BUS_COLOR);
@@ -395,7 +401,7 @@ public class NavigateTransitCard extends Card {
                                         }
                                     }
 
-//<<<<<<< HEAD 
+//
                     // String translatedDuration = "";
                     // String hourTranslate = "";
 
@@ -462,7 +468,6 @@ public class NavigateTransitCard extends Card {
 
                     //                 else if(routeSteps.get(i).getDistance().contains("m")) {
                     //                     translatedWalkingDistance = routeSteps.get(i).getDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
-//=======
                                     //bus route
                                     JSONLTABusRoute busRoute = new JSONLTABusRoute();
                                     Map<String, LinkedList<Value>> busMap = busRoute.getBusRouteMap();
@@ -554,7 +559,6 @@ public class NavigateTransitCard extends Card {
                                             queryAllStationsInLine = "https://data.gov.sg/api/action/datastore_search?resource_id=65c1093b-0c34-41cf-8f0e-f11318766298&q="
                                                     + trainLine;
                                             break;
-//>>>>>>> jerry
                                     }
                                     List<TrainStation> allTrainStationsInLine = lookUpTrainStations(queryAllStationsInLine);
                                     if (allTrainStationsInLine != null) {
@@ -583,58 +587,69 @@ public class NavigateTransitCard extends Card {
                                                 }
                                             }
                                         }
-
-                                        //change order of stations in list to account for LRT loops
-                                        /*if (trainLine.equals("Bukit Panjang LRT")){
-                                            List<TrainStation> changeOrderBP = new ArrayList<>();
-                                            for (int j = 10; j < allTrainStationsInLine.size()-1; j++){
-                                                changeOrderBP.add(allTrainStationsInLine.get(j));
-                                            }
-                                            Collections.reverse(changeOrderBP);
-                                            allTrainStationsInLine.removeIf((TrainStation ts) -> ts.getStationNum() >= 11);
-                                            allTrainStationsInLine.addAll(changeOrderBP);
-
-                                        }else if (trainLine.equals("Sengkang LRT")){
-
-                                        }else if (trainLine.equals("Punggol LRT")){
-
-                                        }*/
-
                                         for(TrainStation trainStation: allTrainStationsInLine){
                                             System.out.println("sortedStation: "+trainStation.toString()+"\n");
                                         }
                                     }
-//<<<<<<< HEAD
-//                                     if (!transitStations.containsKey(routeSteps.get(i).getDepartureStop())) {
-//                                         //sets transport type image, color and line name/bus num for each part of the journey
-//                                         List<Object> stationDetails = new ArrayList<>();
-//                                         stationDetails.add(imageViewTransit);
-//                                         stationDetails.add(imageViewColor);
-//                                         stationDetails.add(lineName); //line name is bus num
-//                                         //get in between bus stops
-//                                         List<String> busStopNames = new ArrayList<>();
-//                                         if (imageViewColor == NavigateTransitCard.BUS_COLOR) {
-//                                             Log.i(TAG,"is this a bus?");
-//                                             //get departure stop's code
-//                                             //go into linkedlist to get the next X stops
-//                                             // then get bus stop name
-//                                             //MainActivity mainActivity = new MainActivity();
-//                                             Map<String, String> allBusByIdMap = MainActivity.allBusByID;
-// //                                            Log.i(TAG,"allBusByIdMap "+allBusByIdMap.keySet());
-//                                             String departureBusStopCode = "";
-// //                                            for (Map.Entry<String, String> entry : allBusByIdMap.entrySet()) {
-// //                                        Log.i(TAG,"allBusByIdMap.entrySet()");
-//                                             if(allBusByIdMap.containsKey(routeSteps.get(i).getDepartureStop())){
-// //                                                String busStopIDCode = entry.getKey();
-//                                                 Log.i(TAG,"c "+routeSteps.get(i).getDepartureStop());
-// //                                                String busStopName = entry.getValue();
-//                                                 String busStopName = allBusByIdMap.get(routeSteps.get(i).getDepartureStop());
-//                                                 if (busStopName.equals(routeSteps.get(i).getDepartureStop())){
-// //                                                    departureBusStopCode = busStopIDCode;
-//                                                     departureBusStopCode = routeSteps.get(i).getDepartureStop();
-//                                                     Log.i(TAG,"DEPARTURE CODE "+ departureBusStopCode);
-//                                                 }
-//=======
+                                    List<TrainStation> lrtEastLoop = new ArrayList<>();
+                                    List<TrainStation> lrtWestLoop = new ArrayList<>();
+                                    //separate east and west loop into 2 lists
+                                    if (trainLine.equals("Sengkang LRT")){
+                                        for(TrainStation trainStation: allTrainStationsInLine) {
+                                            Log.i(TAG, "Sengkang LRT:"+trainStation.toString());
+                                            if (trainStation.getStationCode().equals("STC")){
+                                                //main sengkang stop is available from both loops
+                                                Log.i(TAG,"STC?"+trainStation.getStationName());
+                                                trainStation.setStationNum(0);
+                                                lrtWestLoop.add(trainStation);
+                                                lrtEastLoop.add(trainStation);
+                                            } else if(trainStation.getStationCode().contains("SW")){
+                                                //west loop
+                                                lrtWestLoop.add(trainStation);
+                                            }
+                                            else{
+                                                //east loop
+                                                lrtEastLoop.add(trainStation);
+                                            }
+                                        }
+
+                                        for(TrainStation trainStation: lrtEastLoop){
+                                            Log.i(TAG,"east loop: "+trainStation.toString()+"\n");
+                                        }
+                                        for(TrainStation trainStation: lrtWestLoop){
+                                            Log.i(TAG,"west loop: "+trainStation.toString()+"\n");
+                                        }
+                                    }else if (trainLine.equals("Punggol LRT")){
+                                        for(TrainStation trainStation: allTrainStationsInLine) {
+                                            if (trainStation.getStationCode().equals("PTC")){
+                                                //main punggol stop is available from both loops
+                                                trainStation.setStationNum(0);
+                                                lrtWestLoop.add(trainStation);
+                                                lrtEastLoop.add(trainStation);
+                                            } else if(trainStation.getStationCode().contains("PW")){
+                                                //west loop
+                                                if (trainStation.getStationCode().equals("PW2")) {
+                                                    //PW2 Teck Lee not in use
+                                                    continue;
+                                                }
+                                                lrtWestLoop.add(trainStation);
+                                            }
+                                            else{
+                                                //east loop
+                                                lrtEastLoop.add(trainStation);
+                                            }
+                                        }
+
+                                        Collections.sort(lrtEastLoop); //sort by ascending station num
+                                        Collections.sort(lrtWestLoop); //sort by ascending station num
+
+                                        for(TrainStation trainStation: lrtEastLoop){
+                                            Log.i(TAG,"east loop: "+trainStation.toString()+"\n");
+                                        }
+                                        for(TrainStation trainStation: lrtWestLoop){
+                                            Log.i(TAG,"west loop: "+trainStation.toString()+"\n");
+                                        }
+                                    }
 
                                     if(allTrainStationsInLine != null) {
                                         TrainStation departureTrainStation = null, arrivalTrainStation = null;
@@ -652,7 +667,6 @@ public class NavigateTransitCard extends Card {
                                                     arrivalStation)){
                                                 arrivalTrainStation = trainStationInList;
                                                 Log.i(TAG, "found arrival train station");
-//>>>>>>> jerry
                                             }
                                             //TODO LRT loops
                                         }
@@ -700,6 +714,84 @@ public class NavigateTransitCard extends Card {
                                                                 break;
                                                             }
 
+                                                            if (trainLine.equals("Sengkang LRT")){
+                                                                if (arrivalTrainStation.getStationCode().contains("SE")) {
+                                                                    //east loop
+                                                                    if(arrivalTrainStation.getStationNum() > 3 &&
+                                                                            departureTrainStation.getStationNum() == 0){
+                                                                        //go backwards from last station
+                                                                        //only happens when from Sengkang (STC)
+                                                                        for (int l = 1; l < numStops; l++) {
+                                                                            trainStationNames.add(lrtEastLoop
+                                                                                    .get(lrtEastLoop.size() - l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = 1; l < numStops; l++) {
+                                                                        trainStationNames.add(lrtEastLoop
+                                                                                .get(departureTrainStation.getStationNum() + l).getStationName());
+                                                                    }
+                                                                }else{
+                                                                    //west loop
+                                                                    if(arrivalTrainStation.getStationNum() > 5 &&
+                                                                            departureTrainStation.getStationNum() == 0){
+                                                                        //go backwards from last station
+                                                                        //only happens when from Sengkang (STC)
+                                                                        for (int l = 1; l < numStops; l++) {
+                                                                            trainStationNames.add(lrtWestLoop
+                                                                                    .get(lrtWestLoop.size() - l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = 1; l < numStops; l++) {
+                                                                        trainStationNames.add(lrtWestLoop
+                                                                                .get(departureTrainStation.getStationNum() + l).getStationName());
+                                                                    }
+                                                                }
+                                                                break;
+                                                            }
+
+                                                            if (trainLine.equals("Punggol LRT")){
+                                                                if (arrivalTrainStation.getStationCode().contains("PE")) {
+                                                                    //east loop
+                                                                    if(arrivalTrainStation.getStationNum() > 4 &&
+                                                                            departureTrainStation.getStationNum() == 0){
+                                                                        //go backwards from last station
+                                                                        //only happens when from Punggol (PTC)
+                                                                        for (int l = 1; l < numStops; l++) {
+                                                                            trainStationNames.add(lrtEastLoop
+                                                                                    .get(lrtEastLoop.size() - l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = 1; l < numStops; l++) {
+                                                                        trainStationNames.add(lrtEastLoop
+                                                                                .get(departureTrainStation.getStationNum() + l).getStationName());
+                                                                    }
+                                                                }else{
+                                                                    //west loop
+                                                                    if(arrivalTrainStation.getStationNum() > 4 &&
+                                                                            departureTrainStation.getStationNum() == 0){
+                                                                        //go backwards from last station
+                                                                        //only happens when from Punggol (PTC)
+                                                                        for (int l = 1; l < numStops; l++) {
+                                                                            trainStationNames.add(lrtWestLoop
+                                                                                    .get(lrtWestLoop.size() - l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = 1; l < numStops; l++) {
+                                                                        trainStationNames.add(lrtWestLoop
+                                                                                .get(departureTrainStation.getStationNum() + l).getStationName());
+                                                                    }
+                                                                }
+                                                                break;
+                                                            }
+
                                                             trainStationNames.add(allTrainStationsInLine
                                                                     .get(j + k).getStationName());
                                                         }
@@ -743,6 +835,87 @@ public class NavigateTransitCard extends Card {
                                                                     Log.i(TAG,"m7");
                                                                     trainStationNames.add(allTrainStationsInLine
                                                                             .get(m).getStationName());
+                                                                }
+                                                                break;
+                                                            }
+
+                                                            if (trainLine.equals("Sengkang LRT")){
+                                                                if (departureTrainStation.getStationCode().contains("SE")) {
+                                                                    //east loop
+                                                                    if(departureTrainStation.getStationNum() > 3 &&
+                                                                            arrivalTrainStation.getStationNum() == 0){
+                                                                        //only happens when going to Sengkang (STC)
+                                                                        for (int l = departureTrainStation.getStationNum()+1;
+                                                                             l < lrtEastLoop.size() ; l++) {
+                                                                            trainStationNames.add(lrtEastLoop
+                                                                                    .get(l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = departureTrainStation.getStationNum()-1;
+                                                                         l > arrivalTrainStation.getStationNum(); l--) {
+                                                                        trainStationNames.add(lrtEastLoop
+                                                                                .get(l).getStationName());
+                                                                    }
+                                                                }else{
+                                                                    //west loop
+                                                                    if(departureTrainStation.getStationNum() > 5 &&
+                                                                            arrivalTrainStation.getStationNum() == 0){
+                                                                        //only happens when going to Sengkang (STC)
+                                                                        for (int l = departureTrainStation.getStationNum()+1;
+                                                                             l < lrtWestLoop.size() ; l++) {
+                                                                            trainStationNames.add(lrtWestLoop
+                                                                                    .get(l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = departureTrainStation.getStationNum()-1;
+                                                                         l > arrivalTrainStation.getStationNum(); l--) {
+                                                                        trainStationNames.add(lrtWestLoop
+                                                                                .get(l).getStationName());
+                                                                    }
+                                                                }
+                                                                break;
+                                                            }
+                                                            if (trainLine.equals("Punggol LRT")){
+                                                                if (departureTrainStation.getStationCode().contains("PE")) {
+                                                                    //east loop
+                                                                    if(departureTrainStation.getStationNum() > 4 &&
+                                                                            arrivalTrainStation.getStationNum() == 0){
+                                                                        //only happens when going to Punggol (PTC)
+                                                                        for (int l = departureTrainStation.getStationNum()+1;
+                                                                             l < lrtEastLoop.size() ; l++) {
+                                                                            trainStationNames.add(lrtEastLoop
+                                                                                    .get(l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = departureTrainStation.getStationNum()-1;
+                                                                         l > arrivalTrainStation.getStationNum(); l--) {
+                                                                        trainStationNames.add(lrtEastLoop
+                                                                                .get(l).getStationName());
+                                                                    }
+                                                                }else{
+                                                                    //west loop
+                                                                    if(departureTrainStation.getStationNum() > 4 &&
+                                                                            arrivalTrainStation.getStationNum() == 0){
+                                                                        //only happens when going to Punggol (STC)
+                                                                        for (int l = departureTrainStation.getStationNum();
+                                                                             l < lrtWestLoop.size() ; l++) {
+                                                                            trainStationNames.add(lrtWestLoop
+                                                                                    .get(l).getStationName());
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    //as per normal
+                                                                    for (int l = departureTrainStation.getStationNum()-2;
+                                                                         l > arrivalTrainStation.getStationNum(); l--) {
+                                                                        trainStationNames.add(lrtWestLoop
+                                                                                .get(l).getStationName());
+                                                                    }
                                                                 }
                                                                 break;
                                                             }

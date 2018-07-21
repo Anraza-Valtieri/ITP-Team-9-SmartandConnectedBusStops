@@ -156,11 +156,14 @@ public class Utils {
 
     public static Date formatCardTime(String datetime){
         Date cal = Calendar.getInstance().getTime();
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.getDefault());
-        try {
-            cal.setTime(sdf.parse(datetime).getTime());// all done
-        } catch (ParseException e) {
-            e.printStackTrace();
+        if(!datetime.equals("")) {
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+            try {
+                cal.setTime(sdf.parse(datetime).getTime());// all done
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            return cal;
         }
         return cal;
     }
