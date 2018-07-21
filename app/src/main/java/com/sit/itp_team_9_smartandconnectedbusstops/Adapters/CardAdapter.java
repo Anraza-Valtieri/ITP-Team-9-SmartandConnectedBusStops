@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -682,7 +683,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
 
-                                String walkingInstructions = "Walk " + key +
+                                String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
                                         " ( " + timeTakenForEachWaypoint + ")";
                                 //For detailed steps (expandable list adapter and listeners)
                                 List<String> walkingHeader = new ArrayList<>();
@@ -693,23 +694,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         walkingHeader,detailedWalkingSteps);
                                 listViewDetailedWalking.setAdapter(walkingAdapter);
 
-                                listViewDetailedWalking.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-                                    @Override
-                                    public void onGroupExpand(int groupPosition) {
-                                        Log.i(TAG,"on group expand");
-                                        Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
-                                        listViewDetailedWalking.smoothScrollToPosition(groupPosition);
+                                listViewDetailedWalking.setOnGroupExpandListener(groupPosition -> {
+                                    Log.i(TAG,"on group expand");
+                                    Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
+                                    listViewDetailedWalking.smoothScrollToPosition(groupPosition);
 
-                                    }
                                 });
 
-                                listViewDetailedWalking.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
-
-                                    @Override
-                                    public void onGroupCollapse(int groupPosition) {
-                                        Log.i(TAG,"on group collapse");
-                                        Utils.setListViewToOriginal(listViewDetailedWalking);
-                                    }
+                                listViewDetailedWalking.setOnGroupCollapseListener(groupPosition -> {
+                                    Log.i(TAG,"on group collapse");
+                                    Utils.setListViewToOriginal(listViewDetailedWalking);
                                 });
 
 

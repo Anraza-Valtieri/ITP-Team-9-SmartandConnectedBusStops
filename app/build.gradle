@@ -16,15 +16,15 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName '1.4'
+        versionName '1.5'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-        versionNameSuffix 'Beta'
+        versionNameSuffix ' Beta'
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
             shrinkResources false
-            minifyEnabled false
             useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
