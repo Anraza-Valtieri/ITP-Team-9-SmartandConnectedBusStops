@@ -36,3 +36,9 @@ captures/
 ks
 
 app/release/
+
+app/src/main/res/\.DS_Store
+
+*.iml
+
+app/\.DS_Store

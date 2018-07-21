@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
@@ -48,6 +49,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> implements JSONLTAResponse {
@@ -191,7 +194,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                     Double.parseDouble(card.getBusStopLong())))
                             .zoom(DEFAULT_ZOOM)                   // Sets the zoom
                             .build();                   // Creates a CameraPosition from the builder
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),500, null);
                     bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     recyclerView.scrollToPosition(position);
                 });
@@ -206,16 +209,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 ImageButton favTransit = cardTransit.findViewById(R.id.favoritebtnTransit);
 
                 favTransit.setOnClickListener(v -> {
-                    if (transitCard.isFavorite()) {
-                        transitCard.setFavorite(false);
-                        favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
-                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
-                        favRoute.remove(transitCard.getRouteID());
-                    } else {
-                        transitCard.setFavorite(true);
-                        favTransit.setImageResource(R.drawable.ic_favorite_red);
-                        Log.d(TAG, "onBindViewHolder: favTransit:"+ transitCard.getRouteID());
-                        favRoute.add(transitCard.getRouteID());
+                    if (transitCard.getRouteID()!=null) {
+                        if (transitCard.isFavorite()) {
+                            transitCard.setFavorite(false);
+                            favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+                            Log.d(TAG, "onBindViewHolder: favTransit:" + transitCard.getRouteID());
+                            favRoute.remove(transitCard.getRouteID());
+                        } else {
+                            transitCard.setFavorite(true);
+                            favTransit.setImageResource(R.drawable.ic_favorite_red);
+                            Log.d(TAG, "onBindViewHolder: favTransit:" + transitCard.getRouteID());
+                            favRoute.add(transitCard.getRouteID());
+                        }
                     }
 
                     if (mOnFavoriteClickListener != null) {
@@ -289,6 +294,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 //            showNoNetworkDialog(mContext);
             return;
         }
+        Log.d(TAG, "updateCardData: Start");
         @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
@@ -313,7 +319,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void resumeHandlers(){
 //        handler2.removeCallbacksAndMessages(null);
 //        handler2.post(runnable2);
-        handler2.postDelayed(runnable2, 1000);
+        handler2.postDelayed(runnable2, 2000);
     }
 
     Runnable runnable2 = new Runnable() {
@@ -420,6 +426,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         TextView numStops;
         ExpandableListView listViewNumStops;
         ImageButton favTransit;
+        ImageView umbrella;
 
         //For navigate walking card
         TextView walkingTime;
@@ -462,6 +469,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             listViewNumStops = itemView.findViewById(R.id.listViewNumStops);
             condition = itemView.findViewById(R.id.textViewCondition);
             favTransit = itemView.findViewById(R.id.favoritebtnTransit);
+            umbrella = itemView.findViewById(R.id.imageViewUmbrella);
             //startingStation = itemView.findViewById(R.id.textViewStartingStation);
             //imageViewStartingStation = itemView.findViewById(R.id.imageViewStartingStation);
             //transitStation = itemView.findViewById(R.id.textViewTransitStation);
@@ -504,8 +512,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     fadeIn.setDuration(500);
                     fadeOut.setDuration(500);
                     fadeOut.setStartOffset(500+fadeIn.getStartOffset()+500);
-                    fadeIn.setRepeatCount(1);
-                    fadeOut.setRepeatCount(1);
+                    fadeIn.setRepeatCount(3);
+                    fadeOut.setRepeatCount(2);
                     updating.startAnimation(fadeIn);
                     updating.startAnimation(fadeOut);
 
@@ -566,7 +574,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             if (!value.get(1).equals("")) {
                                 duration.setText(Utils.dateCheck(Utils.formatTime(value.get(1))));
                                 if (value.get(4).equals(""))
-                                    wheel1.setVisibility(View.INVISIBLE);
+                                    wheel1.setVisibility(INVISIBLE);
 
                                 switch (value.get(2)) {
                                     case "SDA":
@@ -580,13 +588,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         break;
                                 }
                             } else
-                                card1.setVisibility(View.INVISIBLE);
+                                card1.setVisibility(INVISIBLE);
 
 
                             if (!value.get(5).equals("")) {
                                 duration2.setText(Utils.dateCheck(Utils.formatTime(value.get(5))));
                                 if (value.get(7).equals(""))
-                                    wheel2.setVisibility(View.INVISIBLE);
+                                    wheel2.setVisibility(INVISIBLE);
 
                                 switch (value.get(6)) {
                                     case "SDA":
@@ -600,7 +608,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         break;
                                 }
                             } else
-                                card2.setVisibility(View.INVISIBLE);
+                                card2.setVisibility(INVISIBLE);
                                 direction.setText(value.get(0));
                                 options_layout.addView(to_add);
                         }
@@ -625,6 +633,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
+
+                        //traffic condition
                         if(cardsTransit.getCondition()=="Slight delay"){
                            this.condition.setTextColor(Color.RED);
                         }
@@ -632,6 +642,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             this.condition.setTextColor(mContext.getResources().getColor(android.R.color.holo_green_dark));
                         }
 
+                        //for umbrella icon
+                        if(cardsTransit.isUmbrella()) {
+                            Log.d("UMRELLA ", "- ------------" + cardsTransit.isUmbrella());
+                            this.umbrella.setImageResource(R.drawable.ic_umbrellasvg);
+                        }
+                        else {
+                            this.umbrella.setVisibility(View.GONE);
+                        }
+
+                        //for favorite btn
                         if(cardsTransit.isFavorite())
                             this.favTransit.setImageResource(R.drawable.ic_favorite_red);
                         else
@@ -663,7 +683,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
 
-                                String walkingInstructions = "Walk " + key +
+                                String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
                                         " ( " + timeTakenForEachWaypoint + ")";
                                 //For detailed steps (expandable list adapter and listeners)
                                 List<String> walkingHeader = new ArrayList<>();
@@ -674,23 +694,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                         walkingHeader,detailedWalkingSteps);
                                 listViewDetailedWalking.setAdapter(walkingAdapter);
 
-                                listViewDetailedWalking.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-                                    @Override
-                                    public void onGroupExpand(int groupPosition) {
-                                        Log.i(TAG,"on group expand");
-                                        Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
-                                        listViewDetailedWalking.smoothScrollToPosition(groupPosition);
+                                listViewDetailedWalking.setOnGroupExpandListener(groupPosition -> {
+                                    Log.i(TAG,"on group expand");
+                                    Utils.setListViewHeightBasedOnChildren(listViewDetailedWalking);
+                                    listViewDetailedWalking.smoothScrollToPosition(groupPosition);
 
-                                    }
                                 });
 
-                                listViewDetailedWalking.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
-
-                                    @Override
-                                    public void onGroupCollapse(int groupPosition) {
-                                        Log.i(TAG,"on group collapse");
-                                        Utils.setListViewToOriginal(listViewDetailedWalking);
-                                    }
+                                listViewDetailedWalking.setOnGroupCollapseListener(groupPosition -> {
+                                    Log.i(TAG,"on group collapse");
+                                    Utils.setListViewToOriginal(listViewDetailedWalking);
                                 });
 
 

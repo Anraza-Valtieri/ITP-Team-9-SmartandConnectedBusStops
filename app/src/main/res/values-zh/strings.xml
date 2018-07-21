@@ -5,7 +5,7 @@
     <string name="about">关于</string>
     <string name="current_weather">目前的天气</string>
     <string name="directions">导航</string>
-    <string name="nearby">抵达</string>
+    <string name="nearby">附近</string>
     <string name="favorites">收藏</string>
     <string name="no_bus_service_available_at_this_time">巴士服务已终止</string>
     <string name="stops">站</string>
@@ -77,7 +77,7 @@
     <string name="minute">分钟</string>
     <string name="minutes">分钟</string>
     <string name="secs">秒</string>
-    <string name="arriving">到达</string>
+    <string name="arriving">抵达</string>
     <string name="km">公里</string>
     <string name="m">米</string>
     <string name="walk">步行</string>
