@@ -1,5 +1,7 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.List;
 
 public class GoogleRoutesSteps {
@@ -14,6 +16,7 @@ public class GoogleRoutesSteps {
     private String duration;
     private String htmlInstructions;
     private String travelMode;
+    private List<LatLng> polyline;
 
     //in expandable list
     private List<GoogleRoutesSteps> detailedSteps; //WALKING, step-by-step turns to take etc.
@@ -95,6 +98,14 @@ public class GoogleRoutesSteps {
         this.travelMode = travelMode;
     }
 
+    public List<LatLng> getPolyline() {
+        return polyline;
+    }
+
+    public void setPolyline(List<LatLng> polyline) {
+        this.polyline = polyline;
+    }
+
     //WALKING
     public List<GoogleRoutesSteps> getDetailedSteps() {
         return detailedSteps;
@@ -147,4 +158,24 @@ public class GoogleRoutesSteps {
         this.numStops = numStops;
     }
 
+    @Override
+    public String toString() {
+        return "GoogleRoutesSteps{" +
+                "steps=" + steps +
+                ", startLocationLat=" + startLocationLat +
+                ", startLocationLng=" + startLocationLng +
+                ", endLocationLat=" + endLocationLat +
+                ", endLocationLng=" + endLocationLng +
+                ", distance='" + distance + '\'' +
+                ", duration='" + duration + '\'' +
+                ", htmlInstructions='" + htmlInstructions + '\'' +
+                ", travelMode='" + travelMode + '\'' +
+                ", detailedSteps=" + detailedSteps +
+                ", trainLine='" + trainLine + '\'' +
+                ", departureStop='" + departureStop + '\'' +
+                ", arrivalStop='" + arrivalStop + '\'' +
+                ", busNum='" + busNum + '\'' +
+                ", numStops=" + numStops +
+                '}';
+    }
 }

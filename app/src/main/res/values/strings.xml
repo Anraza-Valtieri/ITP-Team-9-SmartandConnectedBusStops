@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ITP-Team-9-SmartandConnectedBusStops</string>
+    <string name="app_name">TransitThere</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -17,7 +17,129 @@
     <string name="starting_point">Starting point</string>
     <string name="destination">Destination</string>
     <string name="transit_error">No routes available</string>
+    <string name="stops">stops</string>
+    <string name="publictransport">Public Transport</string>
+    <string name="walking">Walking</string>
 
+    <string name="student">Student</string>
+    <string name="adult">Adult</string>
+    <string name="seniorcitizens">Senior Citizens</string>
+
+    <!-- Alert Dialog -->
+    <string name="chooselanguage">Choose your preferred language</string>
+
+    <!-- Fare Types Spinner -->
+    <string-array name="fare_types_array">
+        <item>@string/adult</item>
+        <item>@string/seniorcitizens</item>
+        <item>@string/student</item>
+    </string-array>
+
+    <string name="leastTime">Shortest Time </string>
+    <string name="leastDistance">Shortest Distance</string>
+    <string name="leastWalking">Least Walking</string>
+
+    <string-array name="sort_by_array">
+        <item>@string/leastTime</item>
+        <item>@string/leastDistance</item>
+        <item>@string/leastWalking</item>
+    </string-array>
+
+    <string name="hour">hour</string>
+    <string name="hours">hours</string>
+    <string name="minute">min</string>
+    <string name="minutes">mins</string>
+    <string name="secs">secs</string>
+    <string name="arriving">Arriving</string>
+
+    <string name="day">Day</string>
+    <string name="night">Night</string>
+
+    <string name="fair">Fair</string>
+    <string name="partcloudy">Partly Cloudy</string>
+    <string name="cloudy">Cloudy</string>
+    <string name="lightshowers">Light Showers</string>
+    <string name="showers">Showers</string>
+    <string name="thunderyshowers">Thundery Showers</string>
+
+    <string name="suggestedroute">* Suggested Route *</string>
+    <string name="walk">Walk</string>
+    <string name="km">km</string>
+    <string name="m">m</string>
+
+    <string name="dummy">Lorem imposummmmm</string>
+    <string name="collapsed">Collapsed</string>
+    <string name="dragging">Dragging</string>
+    <string name="expanded">Expanded</string>
+    <string name="hidden">Hidden</string>
+    <string name="settling">Settling</string>
+    <string name="undefined">Undefined</string>
+    <string name="offset">Offset: %f</string>
+    <string name="peek_me">Peek me!</string>
+    <string name="drag_me">Drag me!</string>
+    <string name="modal">Modal bottom sheet</string>
+    <string name="_4_min">X min</string>
+    <string name="no_bus_service_available_at_this_time">No bus service available at this time</string>
+    <string name="favorites">Favorites</string>
+    <string name="nearby">Nearby</string>
+    <string name="directions">Directions</string>
+    <string name="current_weather">Current Weather</string>r
+    <string name="degree">°C</string>
+    <string name="uvIndex">UV Index</string>
+    <string name="language">Language Preferences</string>
+    <string name="appguide">App Guide</string>
+    <string name="about">About</string>
+
+    <string name="displayfares">Displaying Fares for:</string>
+    <string name="sortby">Sort By:</string>
+
+    <string name="AngMoKio">Ang Mo Kio</string>
+    <string name="Bedok">Bedok</string>
+    <string name="Bishan">Bishan</string>
+    <string name="BoonLay">Boon Lay</string>
+    <string name="BukitBatok">Bukit Batok</string>
+    <string name="BukitMerah">Bukit Merah</string>
+    <string name="BukitPanjang">Bukit Panjang</string>
+    <string name="BukitTimah">Bukit Timah</string>
+    <string name="CentralWaterCatchment">Central Water Catchment</string>
+    <string name="Changi">Changi</string>
+    <string name="ChoaChuKang">Choa Chu Kang</string>
+    <string name="Clementi">Clementi</string>
+    <string name="City">City</string>
+    <string name="Geylang">Geylang</string>
+    <string name="Hougang">Hougang</string>
+    <string name="JalanBahar">Jalan Bahar</string>
+    <string name="JurongEast">Jurong East</string>
+    <string name="JurongIsland">Jurong Island</string>
+    <string name="JurongWest">Jurong West</string>
+    <string name="Kallang">Kallang</string>
+    <string name="LimChuKang">Lim Chu Kang</string>
+    <string name="Mandai">Mandai</string>
+    <string name="MarineParade">Marine Parade</string>
+    <string name="Novena">Novena</string>
+    <string name="PasirRis">Pasir Ris</string>
+    <string name="PayaLebar">Paya Lebar</string>
+    <string name="Pioneer">Pioneer</string>
+    <string name="PulauTekong">Pulau Tekong</string>
+    <string name="PulauUbin">Pulau Ubin</string>
+    <string name="Punggol">Punggol</string>
+    <string name="Queenstown">Queenstown</string>
+    <string name="Seletar">Seletar</string>
+    <string name="Sembawang">Sembawang</string>
+    <string name="Sengkang">Sengkang</string>
+    <string name="Sentosa">Sentosa</string>
+    <string name="Serangoon">Serangoon</string>
+    <string name="SouthernIslands">Southern Islands</string>
+    <string name="SungeiKadut">Sungei Kadut</string>
+    <string name="Tampines">Tampines</string>
+    <string name="Tanglin">Tanglin</string>
+    <string name="Tengah">Tengah</string>
+    <string name="ToaPayoh">Toa Payoh</string>
+    <string name="Tuas">Tuas</string>
+    <string name="WesternIslands">Western Islands</string>
+    <string name="WesternWaterCatchment">Western Water Catchment</string>
+    <string name="Woodlands">Woodlands</string>
+    <string name="Yishun">Yishun</string>
 
     <string name="large_text">
         "Material is the metaphor.\n\n"
@@ -108,22 +230,5 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
-    <string name="dummy">Lorem imposummmmm</string>
-    <string name="collapsed">Collapsed</string>
-    <string name="dragging">Dragging</string>
-    <string name="expanded">Expanded</string>
-    <string name="hidden">Hidden</string>
-    <string name="settling">Settling</string>
-    <string name="undefined">Undefined</string>
-    <string name="offset">Offset: %f</string>
-    <string name="peek_me">Peek me!</string>
-    <string name="drag_me">Drag me!</string>
-    <string name="modal">Modal bottom sheet</string>
-    <string name="_4_min">X min</string>
-    <string name="no_bus_service_available_at_this_time">No bus service available at this time</string>
-    <string name="favorites">Favorites</string>
-    <string name="nearby">Nearby</string>
-    <string name="directions">Directions</string>
-    <string name="current_weather">Current Weather</string>
-    <string name="about">About</string>
+    <string name="feedback">Feedback</string>
 </resources>

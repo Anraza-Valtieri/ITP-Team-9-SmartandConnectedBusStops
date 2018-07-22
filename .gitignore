@@ -32,3 +32,13 @@ proguard/
 captures/
 
 \.idea/
+
+ks
+
+app/release/
+
+app/src/main/res/\.DS_Store
+
+*.iml
+
+app/\.DS_Store

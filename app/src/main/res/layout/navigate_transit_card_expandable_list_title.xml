@@ -12,18 +12,9 @@
         android:id="@+id/textViewTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="X stops" />
-
-    <TextView
-        android:id="@+id/textViewNumStops"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        app:layout_constraintStart_toEndOf="@+id/textViewTime"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="(X mins)" />
 
 </android.support.constraint.ConstraintLayout>

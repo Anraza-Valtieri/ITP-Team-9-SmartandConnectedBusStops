@@ -6,20 +6,18 @@ import android.util.Log;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<DistanceData>> {
     private static final String TAG = JSONDistanceMatrixParser.class.getSimpleName();
@@ -30,9 +28,9 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
     private List<DistanceData> distanceDataList = new ArrayList<>();
     public MainActivity delegate = null;
 
-    public JSONDistanceMatrixParser(Activity activity, List<String> urls){
-        this.urls = urls;
-        this.activity = activity;
+    public JSONDistanceMatrixParser(Activity mainactivity, List<String> url){
+        urls = url;
+        activity = mainactivity;
     }
 
     public List<String> getUrls() {
@@ -45,6 +43,8 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
 
     @Override
     protected List<DistanceData> doInBackground(Void... voids) {
+        if(getUrls().size() < 1)
+            return null;
 
         try {
             for(String url : getUrls()) {
@@ -77,7 +77,7 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
 
                     DistanceData durationDetails = new DistanceData();
                     if(response1.getString("status").equals("OK")) {
-                        Log.e(TAG, "STATUS OK!");
+//                        Log.e(TAG, "STATUS OK!");
                         for (int i = 0; i < jsonArrayRows.length(); i++) {
                             JSONObject obj = jsonArrayRows.getJSONObject(i);
 
@@ -105,6 +105,8 @@ public class JSONDistanceMatrixParser extends AsyncTask<Void, String, List<Dista
                     }
                 }
             }
+        }catch (IOException e) {
+            throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
         }

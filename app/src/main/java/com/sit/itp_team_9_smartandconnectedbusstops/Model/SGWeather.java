@@ -7,6 +7,8 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
+import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
+import com.sit.itp_team_9_smartandconnectedbusstops.R;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPM25.JSONPM25Parser;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPSI.Item;
 import com.sit.itp_team_9_smartandconnectedbusstops.SGPSI.JSONPSIParser;
@@ -30,6 +32,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class SGWeather {
@@ -51,6 +54,8 @@ public class SGWeather {
     private JSONPSIParser psiParser;
     private JSONUVParser uvParser;
     private JSONPM25Parser pm25Parser;
+
+    private HashMap<String, String> locationHashMap = new HashMap<>();
 
     public SGWeather() {
         @SuppressLint("StaticFieldLeak")
@@ -84,6 +89,7 @@ public class SGWeather {
     }
 
     public void updateForSpecificLocation(LatLng latLng){
+//        Log.d("SGWEATHER -------------", latLng.latitude + ", " + latLng.longitude);
         getForecastForLatLong(latLng);
         getTemperatureForLatLong(latLng);
     }
@@ -95,6 +101,8 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "updateTemperature: No Metadata?");
+                    setmTemperature("Refreshing data..");
+                    getTemperature();
                     return null;
                 }
 
@@ -113,7 +121,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updateTemperature: BEGIN SORTING!");
+//                Log.d(TAG, "updateTemperature: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(station), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updateTemperature: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -140,6 +148,8 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(temperatureParser == null) {
                     Log.e(TAG, "getTemperatureForLatLong: No Metadata?");
+                    setmTemperature("Refreshing data..");
+                    getTemperature();
                     return null;
                 }
 
@@ -158,7 +168,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "getTemperatureForLatLong: BEGIN SORTING!");
+//                Log.d(TAG, "getTemperatureForLatLong: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(station), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "getTemperatureForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -179,12 +189,17 @@ public class SGWeather {
     }
 
     private void updateForecast(){
+
+        populateLocationHashMap();
+
         @SuppressLint("StaticFieldLeak")
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "updateForecast: No Metadata?");
+                    setmWeatherForecast("Refreshing data..");
+                    getForecast();
                     return null;
                 }
 
@@ -202,7 +217,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updateForecast: BEGIN SORTING!");
+//                Log.d(TAG, "updateForecast: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(meta), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updateForecast: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -211,9 +226,38 @@ public class SGWeather {
                 Forecasts[] forecasts = readings[0].getForecasts();
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
-                        setmWeatherForecast(entry.getForecast());
-                        setmLocation(entry.getArea());
-                        Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
+
+                        /*String dayNightForecast = "";
+                        if(entry.getForecast().contains("Day")) {
+                            dayNightForecast = entry.getForecast().replace("Day", MainActivity.context.getResources().getString(R.string.day));
+                        }
+                        else if(entry.getForecast().contains("Night")) {
+                            dayNightForecast = entry.getForecast().replace("Night", MainActivity.context.getResources().getString(R.string.night));
+                        }*/
+
+                        String translatedForecast = "";
+                        if(entry.getForecast().contains("Fair")) {
+                            translatedForecast = entry.getForecast().replace("Fair", MainActivity.context.getResources().getString(R.string.fair));
+                        }
+                        else if(entry.getForecast().contains("Partly Cloudy")) {
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.partcloudy));
+                        }
+                        else if(entry.getForecast().contains("Cloudy")) {
+                            translatedForecast = entry.getForecast().replace("Cloudy", MainActivity.context.getResources().getString(R.string.cloudy));
+                        }
+                        else if(entry.getForecast().contains("Light Showers")) {
+                            translatedForecast = entry.getForecast().replace("Cloudy", MainActivity.context.getResources().getString(R.string.lightshowers));
+                        }
+                        else if(entry.getForecast().contains("Showers")) {
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.showers));
+                        }
+                        else if(entry.getForecast().contains("Thundery Showers")) {
+                            translatedForecast = entry.getForecast().replace("Partly Cloudy", MainActivity.context.getResources().getString(R.string.thunderyshowers));
+                        }
+
+                        setmWeatherForecast(translatedForecast);
+                        setmLocation(locationHashMap.get(entry.getArea()));
+//                        Log.d(TAG, "updateForecast: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
                 }
@@ -230,6 +274,8 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(weatherParser == null) {
                     Log.e(TAG, "getForecastForLatLong: No Metadata?");
+                    setmWeatherForLatLong("Refreshing data..");
+                    getForecast();
                     return null;
                 }
 
@@ -247,7 +293,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "getForecastForLatLong: BEGIN SORTING!");
+//                Log.d(TAG, "getForecastForLatLong: BEGIN SORTING!");
                 Collections.sort(Arrays.asList(meta), comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "getForecastForLatLong: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -257,7 +303,7 @@ public class SGWeather {
                 for(Forecasts entry : forecasts){
                     if(entry.getArea().equals(meta[0].getName())) {
                         setmWeatherForLatLong(entry.getForecast());
-                        Log.d(TAG, "getForecastForLatLong: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
+//                        Log.d(TAG, "getForecastForLatLong: Nearest "+entry.getArea()+" "+meta[0].getName()+" "+ getmWeatherForecast());
                         break;
                     }
                 }
@@ -274,6 +320,8 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(psiParser == null) {
                     Log.e(TAG, "updatePSI: No Metadata?");
+                    setmPM10("No data");
+                    getDataForPSI();
                     return null;
                 }
 
@@ -291,7 +339,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updatePSI: BEGIN SORTING!");
+//                Log.d(TAG, "updatePSI: BEGIN SORTING!");
                 Collections.sort(meta, comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updatePSI: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -320,7 +368,7 @@ public class SGWeather {
                         setmPM10(data.getPm10SubIndex().getNational().toString());
                         break;
                 }
-                Log.d(TAG, "updatePSI: Nearest "+meta.get(0).getName()+" PM 10: "+ getmPM10()+" PM 2.5:"+getmPM25());
+//                Log.d(TAG, "updatePSI: Nearest "+meta.get(0).getName()+" PM 10: "+ getmPM10()+" PM 2.5:"+getmPM25());
 
                 return null;
             }
@@ -335,11 +383,13 @@ public class SGWeather {
             protected Object doInBackground(Object[] objects) {
                 if(uvParser == null) {
                     Log.e(TAG, "updateUV: No data?");
+                    setmUV("No data");
+                    getDataForUV();
                     return null;
                 }
                 List<com.sit.itp_team_9_smartandconnectedbusstops.SGUV.Item> item = uvParser.getItems();
                 setmUV(item.get(0).getIndex().get(0).getValue().toString());
-                Log.d(TAG, "updateUV: UV="+getmUV());
+                Log.d(TAG, "updateUV: UV = "+getmUV());
 
                 return null;
             }
@@ -353,7 +403,9 @@ public class SGWeather {
             @Override
             protected Object doInBackground(Object[] objects) {
                 if(pm25Parser == null) {
-                    Log.e(TAG, "updatePM25: No data?");
+                    Log.e(TAG, "updatePM25: No metadata?");
+                    setmPM25("No data");
+                    getDataForPM25();
                     return null;
                 }
 
@@ -371,7 +423,7 @@ public class SGWeather {
                 };
 
                 long start = System.currentTimeMillis();
-                Log.d(TAG, "updatePM25: BEGIN SORTING!");
+//                Log.d(TAG, "updatePM25: BEGIN SORTING!");
                 Collections.sort(meta, comp);
                 long elapsedTime = System.currentTimeMillis() - start;
                 Log.d(TAG, "updatePM25: COMPLETED SORTING! "+elapsedTime+"ms");
@@ -400,7 +452,7 @@ public class SGWeather {
                         setmPM25(data.getPm25OneHourly().getCentral().toString());
                         break;
                 }
-                Log.d(TAG, "updatePM25: Nearest "+meta.get(0).getName()+" PM 2.5:"+getmPM25());
+                Log.d(TAG, "updatePM25: Nearest "+meta.get(0).getName()+" PM 2.5 : "+getmPM25());
 
                 return null;
             }
@@ -654,6 +706,55 @@ public class SGWeather {
             }
         };
         asyncTask.execute();
+    }
+
+    public void populateLocationHashMap() {
+        locationHashMap.put("Ang Mo Kio", MainActivity.context.getResources().getString(R.string.AngMoKio));
+        locationHashMap.put("Bedok", MainActivity.context.getResources().getString(R.string.Bedok));
+        locationHashMap.put("Bishan", MainActivity.context.getResources().getString(R.string.Bishan));
+        locationHashMap.put("Boon Lay", MainActivity.context.getResources().getString(R.string.BoonLay));
+        locationHashMap.put("Bukit Batok", MainActivity.context.getResources().getString(R.string.BukitBatok));
+        locationHashMap.put("Bukit Merah", MainActivity.context.getResources().getString(R.string.BukitMerah));
+        locationHashMap.put("Bukit Panjang", MainActivity.context.getResources().getString(R.string.BukitPanjang));
+        locationHashMap.put("Bukit Timah", MainActivity.context.getResources().getString(R.string.BukitTimah));
+        locationHashMap.put("Central Water Catchment", MainActivity.context.getResources().getString(R.string.CentralWaterCatchment));
+        locationHashMap.put("Changi", MainActivity.context.getResources().getString(R.string.Changi));
+        locationHashMap.put("Choa Chu Kang", MainActivity.context.getResources().getString(R.string.ChoaChuKang));
+        locationHashMap.put("Clementi", MainActivity.context.getResources().getString(R.string.Clementi));
+        locationHashMap.put("City", MainActivity.context.getResources().getString(R.string.City));
+        locationHashMap.put("Geylang", MainActivity.context.getResources().getString(R.string.Geylang));
+        locationHashMap.put("Hougang", MainActivity.context.getResources().getString(R.string.Hougang));
+        locationHashMap.put("Jalan Bahar", MainActivity.context.getResources().getString(R.string.JalanBahar));
+        locationHashMap.put("Jurong East", MainActivity.context.getResources().getString(R.string.JurongEast));
+        locationHashMap.put("Jurong Island", MainActivity.context.getResources().getString(R.string.JurongIsland));
+        locationHashMap.put("Jurong West", MainActivity.context.getResources().getString(R.string.JurongWest));
+        locationHashMap.put("Kallang", MainActivity.context.getResources().getString(R.string.Kallang));
+        locationHashMap.put("Lim Chu Kang", MainActivity.context.getResources().getString(R.string.LimChuKang));
+        locationHashMap.put("Mandai", MainActivity.context.getResources().getString(R.string.Mandai));
+        locationHashMap.put("Marine Parade", MainActivity.context.getResources().getString(R.string.MarineParade));
+        locationHashMap.put("Pasir Ris", MainActivity.context.getResources().getString(R.string.PasirRis));
+        locationHashMap.put("Paya Lebar", MainActivity.context.getResources().getString(R.string.PayaLebar));
+        locationHashMap.put("Pioneer", MainActivity.context.getResources().getString(R.string.Pioneer));
+        locationHashMap.put("Pulau Tekong", MainActivity.context.getResources().getString(R.string.PulauTekong));
+        locationHashMap.put("Pulau Ubin", MainActivity.context.getResources().getString(R.string.PulauUbin));
+        locationHashMap.put("Punggol", MainActivity.context.getResources().getString(R.string.Punggol));
+        locationHashMap.put("Queenstown", MainActivity.context.getResources().getString(R.string.Queenstown));
+        locationHashMap.put("Seletar", MainActivity.context.getResources().getString(R.string.Seletar));
+        locationHashMap.put("Sembawang", MainActivity.context.getResources().getString(R.string.Sembawang));
+        locationHashMap.put("Sengkang", MainActivity.context.getResources().getString(R.string.Sengkang));
+        locationHashMap.put("Sentosa", MainActivity.context.getResources().getString(R.string.Sentosa));
+        locationHashMap.put("Serangoon", MainActivity.context.getResources().getString(R.string.Serangoon));
+        locationHashMap.put("Southern Islands", MainActivity.context.getResources().getString(R.string.SouthernIslands));
+        locationHashMap.put("Sungei Kadut", MainActivity.context.getResources().getString(R.string.SungeiKadut));
+        locationHashMap.put("Tampines", MainActivity.context.getResources().getString(R.string.Tampines));
+        locationHashMap.put("Tanglin", MainActivity.context.getResources().getString(R.string.Tanglin));
+        locationHashMap.put("Tengah", MainActivity.context.getResources().getString(R.string.Tengah));
+        locationHashMap.put("Toa Payoh", MainActivity.context.getResources().getString(R.string.ToaPayoh));
+        locationHashMap.put("Tuas", MainActivity.context.getResources().getString(R.string.Tuas));
+        locationHashMap.put("Western Islands", MainActivity.context.getResources().getString(R.string.WesternIslands));
+        locationHashMap.put("Western Water Catchment", MainActivity.context.getResources().getString(R.string.WesternWaterCatchment));
+        locationHashMap.put("Woodlands", MainActivity.context.getResources().getString(R.string.Woodlands));
+        locationHashMap.put("Yishun", MainActivity.context.getResources().getString(R.string.Yishun));
     }
 
     public String getmTemperature() {

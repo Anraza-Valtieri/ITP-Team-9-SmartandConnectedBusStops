@@ -7,11 +7,11 @@
     <item android:drawable="@android:color/white"/>
 
     <!-- Your product logo - 144dp color version of your app icon -->
-    <item android:bottom="150dp">
-        <bitmap android:src="@drawable/googleg_standard_color_18"
+    <item android:bottom="190dp">
+        <bitmap android:src="@drawable/ic_launcher"
             android:gravity="center_horizontal"/>
     </item>
-    <item android:bottom="60dp">
+    <item android:bottom="0dp">
         <bitmap android:src="@drawable/powered_by_google_light"
             android:gravity="center_horizontal" />
     </item>

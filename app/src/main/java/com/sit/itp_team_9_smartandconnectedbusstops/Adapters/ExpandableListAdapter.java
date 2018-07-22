@@ -1,7 +1,6 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
 import android.content.Context;
-import android.support.v7.widget.CardView;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +11,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.sit.itp_team_9_smartandconnectedbusstops.R;
-import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +49,10 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        return this.mListDataChild.get(this.mListDataHeader.get(groupPosition)).size();
+        if (this.mListDataChild.get(this.mListDataHeader.get(groupPosition)) !=null) {
+            return this.mListDataChild.get(this.mListDataHeader.get(groupPosition)).size();
+        }else
+            return 0;
     }
 
     @Override
@@ -78,9 +79,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
             view = infalInflater.inflate(R.layout.navigate_transit_card_expandable_list_title,
                     (ViewGroup) parent.getRootView(), false);
         }
-        TextView lblListNumStops = (TextView) view.findViewById(R.id.textViewNumStops);
+        TextView lblListTimeTakenNumStops = (TextView) view.findViewById(R.id.textViewTime);
         //lblListNumStops.setTypeface(null, Typeface.BOLD);
-        lblListNumStops.setText(headerTitle);
+        lblListTimeTakenNumStops.setText(headerTitle);
         return view;
     }
 
