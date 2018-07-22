@@ -742,31 +742,36 @@ public class MainActivity extends AppCompatActivity
                     hideActionBar(toolbar);
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
-                singleCardList.clear();
-                hideKeyboard();
+
+                if (!isPooling()) {
+                    setPooling(true);
+                    singleCardList.clear();
+                    handler.postDelayed(runnable, 3000);
+                    hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
 
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-                if (favBusStopID.size() > 0 || favRoute.size() > 0) {
-                    progressBar.setVisibility(View.VISIBLE);
-                    if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                    if (favBusStopID.size() > 0 || favRoute.size() > 0) {
+                        progressBar.setVisibility(View.VISIBLE);
+                        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
 //                        ArrayList<String> favString = new ArrayList<>(getFavBusStopID());
 //                        favString.addAll(getFavRoute());
-                        prepareFavoriteCards();
-                    }else
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                    recyclerView.scrollToPosition(0);
-                }
-                Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
-                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
-                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
-                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                            prepareFavoriteCards();
+                        } else
+                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                        recyclerView.scrollToPosition(0);
+                    }
+                    Bundle bundle = new Bundle();
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                    bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                    mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
-                if(adapter != null)
-                    adapter.clearRoute();
+                    if (adapter != null)
+                        adapter.clearRoute();
+                }
 
             } else if (id == R.id.action_nav) {
                 suggestedList.clear();
@@ -939,13 +944,6 @@ public class MainActivity extends AppCompatActivity
                     return false;
                 }
 
-                singleCardList.clear();
-
-                hideKeyboard();
-
-                if(adapter != null)
-                    adapter.clearRoute();
-
                 CameraPosition pos = new CameraPosition.Builder()
                         .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
                         .zoom(DEFAULT_ZOOM)                   // Sets the zoom
@@ -954,6 +952,14 @@ public class MainActivity extends AppCompatActivity
 
                 if (!isPooling()) {
                     setPooling(true);
+
+                    singleCardList.clear();
+
+                    hideKeyboard();
+
+                    if(adapter != null)
+                        adapter.clearRoute();
+
                     if(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
                         lookUpNearbyBusStops();
                     }else
