@@ -442,8 +442,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         mCard.get(i).setNeedsUpdate(false);
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
-                    else
-                        mCard.get(i).setNeedsUpdate(false);
+                    else {
+                        if(mCard.get(i).isNeedsUpdate())
+                            mCard.get(i).setNeedsUpdate(true);
+                        else
+                            mCard.get(i).setNeedsUpdate(false);
+                    }
                 }
                 updateCardData(busStopCards);
                 notifyItemRangeChanged(0, mCard.size());

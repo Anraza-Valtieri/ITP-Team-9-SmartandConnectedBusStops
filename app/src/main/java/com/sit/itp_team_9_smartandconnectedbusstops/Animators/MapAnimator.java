@@ -85,7 +85,7 @@ public class MapAnimator {
 
 
         PolylineOptions optionsBackground = new PolylineOptions().add(route.get(0))
-                .color(GREY)
+                .color(Color.CYAN)
                 .width(12)
                 .startCap(new SquareCap())
                 .endCap(new SquareCap())
@@ -93,7 +93,7 @@ public class MapAnimator {
         backgroundPolyline = googleMap.addPolyline(optionsBackground);
 
         optionsForeground = new PolylineOptions().add(route.get(0))
-                .color(Color.CYAN)
+                .color(GREY)
                 .width(10)
                 .startCap(new SquareCap())
                 .endCap(new SquareCap())
@@ -125,7 +125,7 @@ public class MapAnimator {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                foregroundPolyline.setColor(GREY);
+                foregroundPolyline.setColor(Color.CYAN);
                 foregroundPolyline.setPoints(backgroundPolyline.getPoints());
             }
 
@@ -141,7 +141,7 @@ public class MapAnimator {
         });
 
 
-        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), GREY, Color.CYAN);
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), Color.CYAN, GREY);
         colorAnimation.setInterpolator(new AccelerateInterpolator());
         colorAnimation.setDuration(1200); // milliseconds
 
