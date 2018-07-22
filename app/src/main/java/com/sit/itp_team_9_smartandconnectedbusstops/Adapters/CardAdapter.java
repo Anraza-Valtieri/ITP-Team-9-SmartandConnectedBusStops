@@ -30,7 +30,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnBusCardClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.MainActivity;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -70,10 +73,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<String> favBusStopID = new ArrayList<>();
     private ArrayList<String> favRoute = new ArrayList<>();
 
+    private Polyline oldLine;
+
     private OnFavoriteClick mOnFavoriteClickListener;
+    private OnBusCardClick mOnBusCardClickListener;
 
     public void setOnFavoriteClickListener(OnFavoriteClick l) {
         mOnFavoriteClickListener = l;
+    }
+
+    public void setOnBusCardClickListener(OnBusCardClick l) {
+        mOnBusCardClickListener = l;
     }
 
     public ArrayList<String> getFavBusStopID() {
@@ -197,6 +207,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),500, null);
                     bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     recyclerView.scrollToPosition(position);
+
+                    if(mOnBusCardClickListener != null){
+                        mOnBusCardClickListener.onBusCardClick(card.getBusStopID());
+                    }
                 });
                 break;
             case NAVIGATE_TRANSIT_CARD:
@@ -225,6 +239,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                     if (mOnFavoriteClickListener != null) {
                         mOnFavoriteClickListener.onFavoriteRouteClick(favRoute);
+                    }
+                });
+
+                cardTransit.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
+
+                        PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
+                        for (int z = 0; z < points.size(); z++) {
+                            LatLng point = points.get(z);
+                            options.add(point);
+                        }
+                        Polyline line = mMap.addPolyline(options);
+                        if(oldLine != null)
+                            oldLine.remove();
+                        oldLine = line;
+
+                        bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     }
                 });
                 break;

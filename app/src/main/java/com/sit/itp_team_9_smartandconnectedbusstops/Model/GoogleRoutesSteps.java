@@ -16,7 +16,7 @@ public class GoogleRoutesSteps {
     private String duration;
     private String htmlInstructions;
     private String travelMode;
-    private LatLng polyline;
+    private List<LatLng> polyline;
 
     //in expandable list
     private List<GoogleRoutesSteps> detailedSteps; //WALKING, step-by-step turns to take etc.
@@ -98,11 +98,11 @@ public class GoogleRoutesSteps {
         this.travelMode = travelMode;
     }
 
-    public LatLng getPolyline() {
+    public List<LatLng> getPolyline() {
         return polyline;
     }
 
-    public void setPolyline(LatLng polyline) {
+    public void setPolyline(List<LatLng> polyline) {
         this.polyline = polyline;
     }
 

@@ -98,10 +98,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -111,11 +113,14 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.gson.Gson;
+import com.google.maps.android.PolyUtil;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.ClusterRenderer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
+import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnBusCardClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
@@ -124,6 +129,8 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.GoogleRoutesSteps;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.LTABusStopData;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.MRT.Line;
+import com.sit.itp_team_9_smartandconnectedbusstops.Model.MRT.MRTJson;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.MapMarkers;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateTransitCard;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.NavigateWalkingCard;
@@ -133,6 +140,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixPar
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Rendering.CustomClusterRenderer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
@@ -180,8 +188,8 @@ public class MainActivity extends AppCompatActivity
     // A default location (Singapore, Singapore) and default zoom to use when location permission is
     // not granted.
     private static final int DEFAULT_ZOOM = 18;
-    private static final float MAX_ZOOM = 20.0f;
-    private static final float MIN_ZOOM = 15.0f;
+    private static final float MAX_ZOOM = 25.0f;
+    private static final float MIN_ZOOM = 10.0f;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
@@ -263,6 +271,7 @@ public class MainActivity extends AppCompatActivity
     // Map Markers
     private ClusterManager<MapMarkers> mClusterManager;
     private Map<String, MapMarkers> markerMap = new HashMap<>();
+    private Marker oldMarker;
 
     // Recycler
     private CardAdapter adapter = null;
@@ -702,6 +711,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFavoriteRouteClick(ArrayList<String> favRouteID) {
                 setFavRoute(favRouteID);
+            }
+        });
+
+        adapter.setOnBusCardClickListener(new OnBusCardClick() {
+            @Override
+            public void onBusCardClick(String id) {
+                SelectMarker(id);
             }
         });
 
@@ -1442,7 +1458,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setIndoorEnabled(false);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
-        mMap.setTrafficEnabled(true);
+        mMap.setTrafficEnabled(false);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -1450,14 +1466,27 @@ public class MainActivity extends AppCompatActivity
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
         mClusterManager.setAnimation(false);
-//        mClusterManager.setAlgorithm(new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<>()));
+        mClusterManager.getMarkerCollection().getMarkers();
+        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
+                mClusterManager));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnCameraMoveListener(this);
-        mMap.setOnMarkerClickListener(mClusterManager);
+//        mMap.setOnMarkerClickListener(mClusterManager);
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+//                if (marker == user_marker) {
+//                    return true;
+//                }
+                SelectMarker(marker.getSnippet());
+                return true;
+            }
+        });
 
 //        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
 
@@ -1479,31 +1508,19 @@ public class MainActivity extends AppCompatActivity
         busRoute.createMap();
 
         //TODO add polylines here if transitCardList not empty
-        /*if (!transitCardList.isEmpty()) {
-            Log.i(TAG, "(ON MAP READY) transit: ");
-            ArrayList<? extends Card> navigateCardList = new ArrayList<NavigateTransitCard>();
-            navigateCardList = (ArrayList<? extends Card>) transitCardList;
-            List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
-
-            for (NavigateTransitCard transitCard : castToNavigate) {
-                List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
-                Log.i(TAG, "(ON MAP READY) points: "+String.valueOf(points));
-                for (int j = 0; j < points.size() - 1; j++) {
-                    LatLng src = points.get(j);
-                    LatLng dest = points.get(j + 1);
-
-                    // mMap is the Map Object
-                    Polyline line = mMap.addPolyline(
-                            new PolylineOptions()
-                                    .clickable(true)
-                                    .add(
-                                    new LatLng(src.latitude, src.longitude),
-                                    new LatLng(dest.latitude, dest.longitude)
-                            ).width(10).color(Color.BLUE).geodesic(true)
-                    );
-                }
+        Gson gson2 = new Gson();
+        MRTJson mrtJson = gson2.fromJson( Utils.loadRailRouteJSONFromAsset(getApplicationContext()), MRTJson.class );
+        List<Line> lines = mrtJson.getLines();
+        for (Line railLine : lines) {
+            PolylineOptions options = new PolylineOptions().width(10).color(Color.parseColor(railLine.getColour())).geodesic(true);
+            List<LatLng> poly = PolyUtil.decode(railLine.getCoords());
+            for (int z = 0; z < poly.size(); z++) {
+                LatLng point = poly.get(z);
+                options.add(point);
             }
-        }*/
+            Polyline line = mMap.addPolyline(options);
+        }
+
     }
     @Override
     public void onCameraMove() {
@@ -1733,23 +1750,27 @@ public class MainActivity extends AppCompatActivity
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
 //                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
                     mClusterManager.addItem(infoWindowItem);
-                    markerMap.put(value.getDescription(), infoWindowItem);
-                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-//                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
-                            BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-                            if(card != null) {
-                                card.setType(Card.BUS_STOP_CARD);
-                                singleCardList.clear();
-                                singleCardList.add(card);
-                                updateAdapterList(singleCardList);
-                            }
-//                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                        } else {
-                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-                        }
-                        return false;
-                    });
+//                    markerMap.put(value.getDescription(), infoWindowItem);
+                    markerMap.put(id, infoWindowItem);
+//                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
+//                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
+////                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
+//                            /*BusStopCards card = getBusStopData(mapMarkers.getSnippet());
+//                            if(card != null) {
+//                                card.setType(Card.BUS_STOP_CARD);
+//                                singleCardList.clear();
+//                                singleCardList.add(card);
+//                                updateAdapterList(singleCardList);
+//                                SelectMarker(card.getBusStopID());
+//                            }*/
+////                            SelectMarker(mapMarkers.getSnippet());
+//                            return true;
+////                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+//                        } else {
+//                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
+//                        }
+//                        return false;
+//                    });
 //                    }
                 }
 
@@ -2739,4 +2760,27 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    void SelectMarker(String id){
+        if(oldMarker != null && id != null) {
+            Log.d(TAG, "onBusCardClick: oldmarker: "+oldMarker.getSnippet());
+            oldMarker.remove();
+        }
+        Log.d(TAG, "onBusCardClick: newid: "+id);
+        MapMarkers marker =  markerMap.get(id);
+        if(marker != null) {
+            oldMarker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(marker.getPosition().latitude, marker.getPosition().longitude))
+                    .title(marker.getTitle())
+                    .snippet(marker.getSnippet())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+            BusStopCards card = getBusStopData(id);
+            if (card != null) {
+                card.setType(Card.BUS_STOP_CARD);
+                singleCardList.clear();
+                singleCardList.add(card);
+                updateAdapterList(singleCardList);
+            }
+        }
+    }
 }
