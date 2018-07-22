@@ -180,7 +180,7 @@ import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNet
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
-        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener {
+        GoogleMap.OnPoiClickListener, GoogleMap.OnCameraMoveListener, GoogleMap.OnCameraIdleListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -269,8 +269,9 @@ public class MainActivity extends AppCompatActivity
     UserData userData;
 
     // Map Markers
-    private ClusterManager<MapMarkers> mClusterManager;
-    private Map<String, MapMarkers> markerMap = new HashMap<>();
+//    private ClusterManager<MapMarkers> mClusterManager;
+    private HashMap<String, MapMarkers> markerMap = new HashMap<>();
+    private HashMap<String, Marker> visibleMarkers = new HashMap<>();
     private Marker oldMarker;
 
     // Recycler
@@ -742,7 +743,6 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(() -> showActionBar(toolbar), 350);
                 }
                 singleCardList.clear();
-
                 hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
@@ -764,6 +764,9 @@ public class MainActivity extends AppCompatActivity
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+
+                if(adapter != null)
+                    adapter.clearRoute();
 
             } else if (id == R.id.action_nav) {
                 suggestedList.clear();
@@ -833,7 +836,9 @@ public class MainActivity extends AppCompatActivity
                 handler.postDelayed(() -> {
                     startingPointTextView.setSelectAllOnFocus(true);
                     startingPointTextView.requestFocus();
-                    showKeyboard(startingPointTextView);
+                    if(transitCardList.size() == 0)
+                        showKeyboard(startingPointTextView);
+
                 },600);
 
                 startingPointTextView.setText(convertedAddress);
@@ -909,7 +914,6 @@ public class MainActivity extends AppCompatActivity
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                         Log.i(TAG,query);
                         hideKeyboard();
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                         lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
@@ -938,6 +942,9 @@ public class MainActivity extends AppCompatActivity
                 singleCardList.clear();
 
                 hideKeyboard();
+
+                if(adapter != null)
+                    adapter.clearRoute();
 
                 CameraPosition pos = new CameraPosition.Builder()
                         .target(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))      // Sets the center of the map to Mountain View
@@ -1464,16 +1471,16 @@ public class MainActivity extends AppCompatActivity
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<>(this, mMap);
-        mClusterManager.setAnimation(false);
-        mClusterManager.getMarkerCollection().getMarkers();
-        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
-                mClusterManager));
+//        mClusterManager = new ClusterManager<>(this, mMap);
+//        mClusterManager.setAnimation(false);
+//        mClusterManager.getMarkerCollection().getMarkers();
+//        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
+//                mClusterManager));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
-        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraMoveListener(this);
 //        mMap.setOnMarkerClickListener(mClusterManager);
 
@@ -1512,7 +1519,7 @@ public class MainActivity extends AppCompatActivity
         MRTJson mrtJson = gson2.fromJson( Utils.loadRailRouteJSONFromAsset(getApplicationContext()), MRTJson.class );
         List<Line> lines = mrtJson.getLines();
         for (Line railLine : lines) {
-            PolylineOptions options = new PolylineOptions().width(10).color(Color.parseColor(railLine.getColour())).geodesic(true);
+            PolylineOptions options = new PolylineOptions().width(5).color(Color.parseColor(railLine.getColour())).geodesic(true);
             List<LatLng> poly = PolyUtil.decode(railLine.getCoords());
             for (int z = 0; z < poly.size(); z++) {
                 LatLng point = poly.get(z);
@@ -1525,6 +1532,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCameraMove() {
 //        layer.animate().alpha(0).setDuration(1000);
+        addItemsToMap(markerMap);
     }
 
     public boolean isPooling() {
@@ -1558,6 +1566,55 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<String> getFavRoute() {
         return favRoute;
     }
+
+
+    private void addItemsToMap(HashMap<String, MapMarkers> items) {
+        if(this.mMap != null) {
+
+            if(mMap.getCameraPosition().zoom > 15.0f) {
+                //This is the current user-viewable region of the map
+                LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
+
+                //Loop through all the items that are available to be placed on the map
+                for (Map.Entry<String, MapMarkers> entry : items.entrySet()) {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    MapMarkers mark = (MapMarkers) value;
+                    if (bounds.contains(new LatLng(mark.getPosition().latitude, mark.getPosition().longitude))) {
+                        if (!visibleMarkers.containsKey(mark.getSnippet())) {
+                            MarkerOptions markerOptions = new MarkerOptions()
+                                    .position(new LatLng(mark.getPosition().latitude, mark.getPosition().longitude))
+                                    .title(mark.getTitle())
+                                    .snippet(mark.getSnippet())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                            visibleMarkers.put(mark.getSnippet(), mMap.addMarker(markerOptions));
+                        }
+                    } else { //If the marker is off screen
+                        //If the course was previously on screen
+                        if (visibleMarkers.containsKey(mark.getSnippet())) {
+                            //1. Remove the Marker from the GoogleMap
+                            visibleMarkers.get(mark.getSnippet()).remove();
+                            //2. Remove the reference to the Marker from the HashMap
+                            visibleMarkers.remove(mark.getSnippet());
+                        }
+                    }
+                }
+            }else{
+                for (Map.Entry<String, MapMarkers> entry : items.entrySet()) {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    MapMarkers mark = (MapMarkers) value;
+                    if (visibleMarkers.containsKey(mark.getSnippet())) {
+                        //1. Remove the Marker from the GoogleMap
+                        visibleMarkers.get(mark.getSnippet()).remove();
+                        //2. Remove the reference to the Marker from the HashMap
+                        visibleMarkers.remove(mark.getSnippet());
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Sets up favoritecards from list
      * <p>
@@ -1749,7 +1806,7 @@ public class MainActivity extends AppCompatActivity
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
 //                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-                    mClusterManager.addItem(infoWindowItem);
+//                    mClusterManager.addItem(infoWindowItem);
 //                    markerMap.put(value.getDescription(), infoWindowItem);
                     markerMap.put(id, infoWindowItem);
 //                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
@@ -2206,6 +2263,8 @@ public class MainActivity extends AppCompatActivity
     private void lookUpRoutes(String query, String fareTypes, String spinnerSelectedItem){
         transitCardList.clear();
         walkingCardList.clear();
+        suggestedList.clear();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         progressBar.setVisibility(View.VISIBLE);
         List<String> directionsQuery = new ArrayList<>();
         directionsQuery.add(query);
@@ -2633,6 +2692,11 @@ public class MainActivity extends AppCompatActivity
         } else {
             Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onCameraIdle() {
+
     }
 
     public class JSONTwitterParser extends AsyncTask<String, Void , String>{
