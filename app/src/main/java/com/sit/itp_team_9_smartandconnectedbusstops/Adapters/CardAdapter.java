@@ -599,7 +599,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
 
         private void setItem(Card card){
-            switch (this.cardType) {
+            switch (card.getType()) {
                 case BUS_STOP_CARD:
                     BusStopCards cards = (BusStopCards)card;
                     cards.setType(Card.BUS_STOP_CARD);
@@ -769,12 +769,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         else
                             this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+                        this.favTransit.setVisibility(VISIBLE);
+
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
                         LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
                         transit_layout.setOrientation(LinearLayout.VERTICAL);
 
                         transit_layout.removeAllViewsInLayout();
+
+                        transit_layout.setVisibility(VISIBLE);
                         for (Map.Entry<String, List<Object>> entry : cardsTransit.getTransitStations().entrySet()) {
                             String key = entry.getKey();
                             //List<Integer> stationImageStationColor = entry.getValue();
@@ -881,6 +885,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
 
                         breakdown_bar_layout.removeAllViewsInLayout();
+                        breakdown_bar_layout.setVisibility(VISIBLE);
                         @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
                             @Override
                             protected Object doInBackground(Object[] objects) {
@@ -936,8 +941,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         }*/
                     }else{
                         //No routes available
-                        this.totalDistance.setPadding(300,0,300,0);
-                        this.totalDistance.setText(R.string.transit_error);
+                        this.totalTime.setText(R.string.transit_error);
+                        this.totalDistance.setText("");
+                        this.cost.setText("");
+                        this.condition.setText("");
+
+                        this.favTransit.setVisibility(View.GONE);
+
+                        //Creates layout for transit stations
+                        final View transitCardView = itemView.findViewById(R.id.transitcard);
+                        LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
+                        transit_layout.setOrientation(LinearLayout.VERTICAL);
+                        transit_layout.removeAllViewsInLayout();
+                        transit_layout.setVisibility(View.GONE);
+
+                        LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
+                        breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
+
+                        breakdown_bar_layout.removeAllViewsInLayout();
+                        breakdown_bar_layout.setVisibility(View.GONE);
                     }
                     if (cardsTransit.isFavorite())
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
