@@ -155,7 +155,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                        BottomSheetBehavior bottomSheet, RecyclerView rv) {
 //        this.mApplications = mApplications;
         mContext = context;
-        this.mCard = card;
+        mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
         this.recyclerView = rv;
@@ -362,7 +362,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void addAllCard(ArrayList<? extends Card> card){
-        this.mCard.addAll(card);
+        mCard.addAll(card);
         Refresh();
 //        Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
@@ -376,7 +376,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void Clear(){
 //        Log.d(TAG, "Clear: called "+mCard.size());
-        this.mCard.clear();
+        mCard.clear();
         Refresh();
     }
 
