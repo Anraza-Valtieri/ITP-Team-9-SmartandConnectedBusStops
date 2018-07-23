@@ -1,10 +1,13 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Adapters;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Interpolator;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -19,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.LinearInterpolator;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,10 +32,20 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.ButtCap;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CustomCap;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.gms.maps.model.SquareCap;
+import com.sit.itp_team_9_smartandconnectedbusstops.Animators.MapAnimator;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONLTAResponse;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnBusCardClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
@@ -73,7 +87,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     private ArrayList<String> favBusStopID = new ArrayList<>();
     private ArrayList<String> favRoute = new ArrayList<>();
 
-    private Polyline oldLine;
+    private List<LatLng> listLatLng = new ArrayList<>();
 
     private OnFavoriteClick mOnFavoriteClickListener;
     private OnBusCardClick mOnBusCardClickListener;
@@ -84,6 +98,21 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void setOnBusCardClickListener(OnBusCardClick l) {
         mOnBusCardClickListener = l;
+    }
+
+    public List<LatLng> getListLatLng() {
+        return listLatLng;
+    }
+
+    public void setListLatLng(List<LatLng> listLatLng) {
+        this.listLatLng = listLatLng;
+    }
+
+    public void clearRoute(){
+        if(mMap != null) {
+            listLatLng.clear();
+            MapAnimator.getInstance().animateRoute(mMap, listLatLng);
+        }
     }
 
     public ArrayList<String> getFavBusStopID() {
@@ -247,17 +276,47 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     public void onClick(View v) {
                         List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
 
-                        PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
-                        for (int z = 0; z < points.size(); z++) {
-                            LatLng point = points.get(z);
-                            options.add(point);
-                        }
-                        Polyline line = mMap.addPolyline(options);
-                        if(oldLine != null)
-                            oldLine.remove();
-                        oldLine = line;
+                        PolylineOptions options = new PolylineOptions()
+                                .jointType(JointType.ROUND)
+                                .startCap(new SquareCap())
+                                .endCap(new SquareCap())
+                                .geodesic(true);
+                        if(points != null) {
+                            listLatLng.clear();
+//                            if (oldLine1 != null && oldLine2 != null) {
+                                clearPolylines();
+//                            }
+//                        PolylineOptions options = new PolylineOptions().width(10).color(Color.CYAN).geodesic(true);
+                            for (int z = 0; z < points.size(); z++) {
+                                LatLng point = points.get(z);
+                                options.add(point);
+                                listLatLng.add(point);
 
-                        bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                            }
+//                            options.color(Color.BLACK);
+//                            options.width(16);
+//                            options.zIndex(1);
+//                            Polyline line1 = mMap.addPolyline(options);
+//
+//                            options.color(Color.CYAN);
+//                            options.width(10);
+//                            options.zIndex(2);
+//                            Polyline line2 = mMap.addPolyline(options);
+//
+//
+//                            oldLine1 = line1;
+//                            oldLine2 = line2;
+                            bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
+
+                            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                            builder.include(listLatLng.get(listLatLng.size()-1));
+                            builder.include(listLatLng.get(0));
+                            LatLngBounds bounds = builder.build();
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+                            startAnim();
+                        }else{
+                            Toast.makeText(mContext, "Strangely there is no Route lines from Google.", Toast.LENGTH_LONG);
+                        }
                     }
                 });
                 break;
@@ -271,7 +330,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
 
+    private void startAnim(){
+        if(mMap != null && !listLatLng.isEmpty()) {
+            MapAnimator.getInstance().animateRoute(mMap, listLatLng);
+        } else {
+            Toast.makeText(mContext, "Map not ready", Toast.LENGTH_LONG).show();
+        }
+    }
 
+    public void resetAnimation(){
+        startAnim();
+    }
     @Override
     public int getItemCount() {
         return mCard == null ? 0 : mCard.size();
@@ -316,6 +385,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         notifyDataSetChanged();
 //        doAutoRefresh();
 //        updateUI();
+    }
+
+    public void clearPolylines(){
+//        resetAnimation();
+        clearRoute();
+
     }
 
 
@@ -367,8 +442,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         mCard.get(i).setNeedsUpdate(false);
                         busStopCards.add((BusStopCards) mCard.get(i));
                     }
-                    else
-                        mCard.get(i).setNeedsUpdate(false);
+                    else {
+                        if(mCard.get(i).isNeedsUpdate())
+                            mCard.get(i).setNeedsUpdate(true);
+                        else
+                            mCard.get(i).setNeedsUpdate(false);
+                    }
                 }
                 updateCardData(busStopCards);
                 notifyItemRangeChanged(0, mCard.size());
