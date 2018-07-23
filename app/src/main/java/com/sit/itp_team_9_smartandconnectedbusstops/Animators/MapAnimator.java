@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 import com.google.android.gms.maps.model.SquareCap;
 
 import java.util.List;
@@ -88,8 +89,8 @@ public class MapAnimator {
         PolylineOptions optionsBackground = new PolylineOptions().add(route.get(0))
                 .color(Color.CYAN)
                 .width(12)
-                .startCap(new SquareCap())
-                .endCap(new SquareCap())
+                .startCap(new RoundCap())
+                .endCap(new RoundCap())
                 .jointType(JointType.ROUND)
                 .zIndex(1);
         backgroundPolyline = googleMap.addPolyline(optionsBackground);
@@ -97,8 +98,8 @@ public class MapAnimator {
         optionsForeground = new PolylineOptions().add(route.get(0))
                 .color(GREY)
                 .width(10)
-                .startCap(new SquareCap())
-                .endCap(new SquareCap())
+                .startCap(new RoundCap())
+                .endCap(new RoundCap())
                 .jointType(JointType.ROUND)
                 .zIndex(2);
         foregroundPolyline = googleMap.addPolyline(optionsForeground);
