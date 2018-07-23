@@ -156,7 +156,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                        BottomSheetBehavior bottomSheet, RecyclerView rv) {
 //        this.mApplications = mApplications;
         mContext = context;
-        this.mCard = card;
+        mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
         this.recyclerView = rv;
@@ -284,36 +284,20 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 .geodesic(true);
                         if(points != null) {
                             listLatLng.clear();
-//                            if (oldLine1 != null && oldLine2 != null) {
-                                clearPolylines();
-//                            }
-//                        PolylineOptions options = new PolylineOptions().width(10).color(Color.CYAN).geodesic(true);
+                            clearPolylines();
                             for (int z = 0; z < points.size(); z++) {
                                 LatLng point = points.get(z);
                                 options.add(point);
                                 listLatLng.add(point);
 
                             }
-//                            options.color(Color.BLACK);
-//                            options.width(16);
-//                            options.zIndex(1);
-//                            Polyline line1 = mMap.addPolyline(options);
-//
-//                            options.color(Color.CYAN);
-//                            options.width(10);
-//                            options.zIndex(2);
-//                            Polyline line2 = mMap.addPolyline(options);
-//
-//
-//                            oldLine1 = line1;
-//                            oldLine2 = line2;
                             bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
                             LatLngBounds.Builder builder = new LatLngBounds.Builder();
                             builder.include(listLatLng.get(listLatLng.size()-1));
                             builder.include(listLatLng.get(0));
                             LatLngBounds bounds = builder.build();
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 150));
                             startAnim();
                         }else{
                             Toast.makeText(mContext, "Strangely there is no Route lines from Google.", Toast.LENGTH_LONG);
@@ -363,7 +347,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void addAllCard(ArrayList<? extends Card> card){
-        this.mCard.addAll(card);
+        mCard.addAll(card);
         Refresh();
 //        Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
@@ -377,7 +361,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void Clear(){
 //        Log.d(TAG, "Clear: called "+mCard.size());
-        this.mCard.clear();
+        mCard.clear();
         Refresh();
     }
 
@@ -600,7 +584,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
 
         private void setItem(Card card){
-            switch (this.cardType) {
+            switch (card.getType()) {
                 case BUS_STOP_CARD:
                     BusStopCards cards = (BusStopCards)card;
                     cards.setType(Card.BUS_STOP_CARD);
@@ -776,12 +760,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         else
                             this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+                        this.favTransit.setVisibility(VISIBLE);
+
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
                         LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
                         transit_layout.setOrientation(LinearLayout.VERTICAL);
 
                         transit_layout.removeAllViewsInLayout();
+
+                        transit_layout.setVisibility(VISIBLE);
                         for (Map.Entry<String, List<Object>> entry : cardsTransit.getTransitStations().entrySet()) {
                             String key = entry.getKey();
                             //List<Integer> stationImageStationColor = entry.getValue();
@@ -888,6 +876,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
 
                         breakdown_bar_layout.removeAllViewsInLayout();
+                        breakdown_bar_layout.setVisibility(VISIBLE);
                         @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
                             @Override
                             protected Object doInBackground(Object[] objects) {
@@ -943,8 +932,25 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         }*/
                     }else{
                         //No routes available
-                        this.totalDistance.setPadding(300,0,300,0);
-                        this.totalDistance.setText(R.string.transit_error);
+                        this.totalTime.setText(R.string.transit_error);
+                        this.totalDistance.setText("");
+                        this.cost.setText("");
+                        this.condition.setText("");
+
+                        this.favTransit.setVisibility(View.GONE);
+
+                        //Creates layout for transit stations
+                        final View transitCardView = itemView.findViewById(R.id.transitcard);
+                        LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
+                        transit_layout.setOrientation(LinearLayout.VERTICAL);
+                        transit_layout.removeAllViewsInLayout();
+                        transit_layout.setVisibility(View.GONE);
+
+                        LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
+                        breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
+
+                        breakdown_bar_layout.removeAllViewsInLayout();
+                        breakdown_bar_layout.setVisibility(View.GONE);
                     }
                     if (cardsTransit.isFavorite())
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
