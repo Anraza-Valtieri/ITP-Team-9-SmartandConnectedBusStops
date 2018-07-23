@@ -2358,7 +2358,7 @@ public class MainActivity extends AppCompatActivity
                     if (getWeatherData(result.get(0))){
                         umbrellaBring = true;
                     }
-                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, "* Suggested Route *", umbrellaBring);
+                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, context.getResources().getString(R.string.suggestedroute), umbrellaBring);
                     card.setType(card.NAVIGATE_TRANSIT_CARD);
                     transitCardList.add(card);
                     suggestedList.add(card.getRouteID());
@@ -2371,7 +2371,7 @@ public class MainActivity extends AppCompatActivity
                             umbrellaBring = true;
                         }
                         if (getDistanceMatrix(result.get(i)) == "bus_congest" || getDistanceMatrix(result.get(i))=="mrt_fault") {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, "Slight delay", umbrellaBring);//<-if change words, change at CardAdapter also for text colour
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, context.getResources().getString(R.string.slight_delay), umbrellaBring);//<-if change words, change at CardAdapter also for text colour
                             if(!suggestedList.contains(card1.getRouteID())) {
                                 card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card1);
