@@ -96,5 +96,6 @@
     <string name="leastWalking">少步行</string>
     <string name="action_help">帮助</string>
     <string name="about_app">关于</string>
-    <string name="data_sources">资料源</string>
+    <string name="data_sources">资料来源</string>
+    <string name="slight_delay">稍微延迟</string>
 </resources>

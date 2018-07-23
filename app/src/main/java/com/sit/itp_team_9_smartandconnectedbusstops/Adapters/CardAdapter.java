@@ -725,20 +725,61 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 case NAVIGATE_TRANSIT_CARD:
                     NavigateTransitCard cardsTransit = (NavigateTransitCard)card;
                     cardsTransit.setType(Card.NAVIGATE_TRANSIT_CARD);
-                    if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
-                        /*if(cardsTransit.getTotalTime().contains("hour")){
-                            String totalTimeText = String.format(Locale.getDefault(), "%d "+
-                                    MainActivity.context.getResources().getString(R.string.hour) + "%d"
-                                    +MainActivity.context.getResources().getString(R.string.minutes),cardsTransit.getTotalTime().,);
-                        }*/
 
-                        this.totalTime.setText(cardsTransit.getTotalTime());
-                        this.totalDistance.setText(cardsTransit.getTotalDistance());
+                    String totalTimeText;
+                    if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
+                        //total time
+                        if(cardsTransit.getTotalTime().contains("hour")){
+                            int hours = Integer.parseInt(cardsTransit.getTotalTime()
+                                    .replaceAll(" hour.*$",""));
+                            if (cardsTransit.getTotalTime().contains("minute")){
+                                //both hour and minute
+                                String removeHours = cardsTransit.getTotalTime().replaceFirst(".*hours ","");
+                                String removeHour = removeHours.replaceFirst(".*hour ","");
+                                String removeMins = removeHour.replaceAll(" mins.*$","");
+                                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+
+                                totalTimeText = String.format(Locale.getDefault(), "%d "+
+                                                MainActivity.context.getResources().getString(R.string.hour) + "%d"
+                                                +MainActivity.context.getResources().getString(R.string.minutes)
+                                        ,hours,minutes);
+                            }else {
+                                //only hour
+                                totalTimeText = String.format(Locale.getDefault(), "%d " +
+                                                MainActivity.context.getResources().getString(R.string.hour), hours);
+                            }
+
+                        }else{
+                            //only minutes
+                            int minutes = Integer.parseInt(cardsTransit.getTotalTime()
+                                    .replaceAll(" min.*$",""));
+                            totalTimeText = String.format(Locale.getDefault(), "%d "
+                                            +MainActivity.context.getResources().getString(R.string.minutes),minutes);
+                        }
+                        this.totalTime.setText(totalTimeText);
+
+                        //total distance
+                        String totalDistanceText;
+                        if(cardsTransit.getTotalDistance().contains("km")) {
+                            //only km
+                            int kmInt = Integer.parseInt(cardsTransit.getTotalDistance()
+                                    .replaceAll(" km.*$", ""));
+                            totalDistanceText = String.format(Locale.getDefault(), "%d "
+                                    +MainActivity.context.getResources().getString(R.string.km),kmInt);
+                        }else{
+                            //only m
+                            int mInt = Integer.parseInt(cardsTransit.getTotalDistance()
+                                    .replaceAll(" m.*$", ""));
+                            totalDistanceText = String.format(Locale.getDefault(), "%d "
+                                    +MainActivity.context.getResources().getString(R.string.m),mInt);
+                        }
+                        this.totalDistance.setText(totalDistanceText);
+
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
 
-                        //traffic condition
-                        if(cardsTransit.getCondition()=="Slight delay"){
+                        //traffic condition slight delay
+                        if(cardsTransit.getCondition()==MainActivity.context.getResources().getString(R.string.slight_delay)){
                            this.condition.setTextColor(Color.RED);
                         }
                         else{
