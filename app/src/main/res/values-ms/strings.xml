@@ -97,5 +97,6 @@
     <string name="action_help">Membantu</string>
     <string name="about_app">Berkaitan dengan</string>
     <string name="data_sources">Sumber data</string>
+    <string name="slight_delay">Sedikit kelewatan</string>
 
 </resources>

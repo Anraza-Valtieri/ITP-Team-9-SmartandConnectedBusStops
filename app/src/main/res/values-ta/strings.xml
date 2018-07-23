@@ -97,5 +97,7 @@
     <string name="action_help">உதவி</string>
     <string name="about_app">பற்றி</string>
     <string name="data_sources">தரவு மூலங்கள்</string>
+    <string name="slight_delay">சிறிய தாமதம்</string>
+
 
 </resources>
