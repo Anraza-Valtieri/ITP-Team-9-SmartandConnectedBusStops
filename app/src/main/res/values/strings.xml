@@ -6,6 +6,10 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+    <string name="action_help">Help</string>
+    <string name="feedback">Feedback</string>
+    <string name="about_app">About App</string>
+    <string name="data_sources">Data Sources</string>
 
     <string name="title_activity_maps">Current Place Details</string>
     <string name="default_info_title">Default Location</string>
@@ -230,5 +234,6 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
-    <string name="feedback">Feedback</string>
+
+
 </resources>

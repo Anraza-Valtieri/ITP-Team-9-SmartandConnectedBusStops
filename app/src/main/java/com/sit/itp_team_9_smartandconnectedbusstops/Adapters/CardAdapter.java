@@ -64,6 +64,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.view.View.INVISIBLE;
@@ -741,6 +742,12 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     NavigateTransitCard cardsTransit = (NavigateTransitCard)card;
                     cardsTransit.setType(Card.NAVIGATE_TRANSIT_CARD);
                     if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
+                        /*if(cardsTransit.getTotalTime().contains("hour")){
+                            String totalTimeText = String.format(Locale.getDefault(), "%d "+
+                                    MainActivity.context.getResources().getString(R.string.hour) + "%d"
+                                    +MainActivity.context.getResources().getString(R.string.minutes),cardsTransit.getTotalTime().,);
+                        }*/
+
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
                         this.cost.setText(cardsTransit.getCost());
