@@ -294,6 +294,7 @@ public class MainActivity extends AppCompatActivity
 
     //Progress
     private ProgressBar progressBar;
+    private ProgressDialog progressDialog;
 
     //Navigate
     boolean optionMode = true;
@@ -439,7 +440,7 @@ public class MainActivity extends AppCompatActivity
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();
+//        db.disableNetwork();
 
         Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
         startService(startServiceIntent);
@@ -548,8 +549,9 @@ public class MainActivity extends AppCompatActivity
         autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
         mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
 
-        downloadTweets();
-
+//        downloadTweets();
+        if(progressDialog != null && progressDialog.isShowing())
+            progressDialog.hide();
     }
 
     @Override
@@ -1305,31 +1307,37 @@ public class MainActivity extends AppCompatActivity
                 title.setGravity(Gravity.CENTER);
                 title.setTypeface(Typeface.DEFAULT_BOLD);
                 title.setPadding(8,16,8,0);
-
+                progressDialog = new ProgressDialog(getApplicationContext());
+                progressDialog.setMessage("Loading..");
                 mBuilder.setCustomTitle(title);
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
                         saveSelectedItem(option);
+
                         switch (option) {
                             case 0:
                                 //English
                                 setLocale("en");
+//                                progressDialog.show();
                                 recreate();
                                 break;
                             case 1:
                                 //chinese
                                 setLocale("zh");
+//                                progressDialog.show();
                                 recreate();
                                 break;
                             case 2:
                                 //malay
                                 setLocale("ms");
+//                                progressDialog.show();
                                 recreate();
                                 break;
                             case 3:
                                 //tamil
                                 setLocale("ta");
+//                                progressDialog.show();
                                 recreate();
                                 break;
                             default:
@@ -1523,6 +1531,15 @@ public class MainActivity extends AppCompatActivity
 
 //        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
 
+//
+        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                downloadTweets();
+                return null;
+            }
+        };
+        asyncTask.execute();
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
             PrepareLTAData();
@@ -1860,7 +1877,7 @@ public class MainActivity extends AppCompatActivity
         asyncTask.execute();
 
 
-        lookUpNearbyBusStops();
+//        lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
     }
 
