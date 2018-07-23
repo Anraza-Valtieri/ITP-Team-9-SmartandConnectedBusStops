@@ -283,36 +283,20 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 .geodesic(true);
                         if(points != null) {
                             listLatLng.clear();
-//                            if (oldLine1 != null && oldLine2 != null) {
-                                clearPolylines();
-//                            }
-//                        PolylineOptions options = new PolylineOptions().width(10).color(Color.CYAN).geodesic(true);
+                            clearPolylines();
                             for (int z = 0; z < points.size(); z++) {
                                 LatLng point = points.get(z);
                                 options.add(point);
                                 listLatLng.add(point);
 
                             }
-//                            options.color(Color.BLACK);
-//                            options.width(16);
-//                            options.zIndex(1);
-//                            Polyline line1 = mMap.addPolyline(options);
-//
-//                            options.color(Color.CYAN);
-//                            options.width(10);
-//                            options.zIndex(2);
-//                            Polyline line2 = mMap.addPolyline(options);
-//
-//
-//                            oldLine1 = line1;
-//                            oldLine2 = line2;
                             bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
                             LatLngBounds.Builder builder = new LatLngBounds.Builder();
                             builder.include(listLatLng.get(listLatLng.size()-1));
                             builder.include(listLatLng.get(0));
                             LatLngBounds bounds = builder.build();
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 150));
                             startAnim();
                         }else{
                             Toast.makeText(mContext, "Strangely there is no Route lines from Google.", Toast.LENGTH_LONG);
