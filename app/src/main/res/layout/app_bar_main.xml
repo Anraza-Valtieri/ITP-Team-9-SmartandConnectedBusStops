@@ -53,7 +53,9 @@
         layout="@layout/content_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:elevation="0dp" />
+        android:layout_marginBottom="56dp"
+        android:elevation="0dp"
+        app:layout_anchorGravity="top|fill_vertical|fill_horizontal" />
 
     <View
         android:id="@+id/bg"
@@ -117,6 +119,7 @@
         android:id="@+id/bottombar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
         android:elevation="8dp"
         android:visibility="visible"
         app:layout_anchor="@+id/include2"
