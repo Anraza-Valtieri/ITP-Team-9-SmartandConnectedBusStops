@@ -1,12 +1,17 @@
 package com.sit.itp_team_9_smartandconnectedbusstops;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -18,6 +23,8 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TTFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -64,7 +71,11 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(this, MainActivity.class);
         Intent feedbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
         Intent updateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/open?id=1wgvp6lIvjLnC8sOza4nYgrL6n_mea2Sj"));
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        feedbackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        updateIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Log.e(TAG, "Notification JSON " + json.toString());
         try{
             JSONObject data = json.getJSONObject("data");
@@ -72,33 +83,65 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
             String message = data.getString("message");
             String imageUrl = data.getString("image");
 
-            PendingIntent pendingIntent = null;
-            if(title.contains("update")) {
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            if(title.contains("update") || title.contains("Update")) {
                 pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, updateIntent,
-                        PendingIntent.FLAG_ONE_SHOT);
-            }else if (title.contains("feedback")) {
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+            if (title.contains("feedback") || title.contains("Feedback")) {
                 pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, feedbackIntent,
-                        PendingIntent.FLAG_ONE_SHOT);
+                        PendingIntent.FLAG_UPDATE_CURRENT);
             }
 
             Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_launcher)
+            Bitmap rawBitMap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+            NotificationCompat.Builder groupBuilder = new NotificationCompat.Builder(this, "0")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setGroupSummary(true)
+                    .setGroup("TRANSITTHERE")
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
+                    .setContentIntent(pendingIntent);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "0")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
                     .setContentTitle(title)
                     .setContentText(message)
                     .setAutoCancel(true)
+                    .setGroup("TRANSITTHERE")
                     .setSound(defaultSoundUri)
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
                     .setContentIntent(pendingIntent);
 
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-            notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                NotificationChannel channel = new NotificationChannel("0", "General Notifications", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("General Notice");
+                channel.enableLights(true);
+                channel.setLightColor(Color.BLUE);
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            notificationManager.notify(0 /* ID of notification */, groupBuilder.build());
+            notificationManager.notify(getID() /* ID of notification */, notificationBuilder.build());
 
         } catch (JSONException e) {
             Log.e(TAG, "Json Exception: " + e.getMessage());
         } catch (Exception e) {
             Log.e(TAG, "Exception: " + e.getMessage());
         }
+    }
+
+    private final static AtomicInteger c = new AtomicInteger(1);
+    private static int getID(){
+        return c.incrementAndGet();
     }
 }

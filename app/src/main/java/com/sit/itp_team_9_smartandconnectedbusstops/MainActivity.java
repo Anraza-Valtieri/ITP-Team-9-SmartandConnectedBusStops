@@ -7,6 +7,10 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -20,11 +24,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -46,6 +53,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -172,6 +181,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
@@ -1365,7 +1375,9 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case R.id.nav_about_app:
-
+                if(BuildConfig.DEBUG) {
+                    sendNotification();
+                }
                 intent = new Intent(context, AboutActivity.class);
                 startActivity(intent);
                 break;
@@ -2883,5 +2895,81 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(singleCardList);
             }
         }
+    }
+
+    private void sendNotification() {
+        Intent intent = new Intent(this, MainActivity.class);
+        Log.d(TAG, "sendNotification: Called!");
+        Intent feedbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+        Intent updateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/open?id=1wgvp6lIvjLnC8sOza4nYgrL6n_mea2Sj"));
+        feedbackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        updateIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        try{
+            String title = "Hey developer!";
+            String message = "Tutorials are re-enabled. You may now restart the application.";
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            if(title.contains("update") || title.contains("Update")) {
+                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, updateIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                Log.d(TAG, "sendNotification: update!");
+            }
+            if (title.contains("feedback") || title.contains("Feedback")) {
+                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, feedbackIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                Log.d(TAG, "sendNotification: feedback!");
+            }
+
+            Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Bitmap rawBitMap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+            NotificationCompat.Builder groupBuilder = new NotificationCompat.Builder(this, "1")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setGroupSummary(true)
+                    .setGroup("TRANSITTHERE")
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
+                    .setContentIntent(pendingIntent);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "1")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setAutoCancel(true)
+                    .setGroup("TRANSITTHERE")
+                    .setSound(defaultSoundUri)
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
+                    .setContentIntent(pendingIntent);
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                NotificationChannel channel = new NotificationChannel("1", "Debug", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("For Debugging");
+                channel.enableLights(true);
+                channel.setLightColor(Color.BLUE);
+                notificationManager.createNotificationChannel(channel);
+            }
+            notificationManager.notify(0 /* ID of notification */, groupBuilder.build());
+            notificationManager.notify(getID() /* ID of notification */, notificationBuilder.build());
+            Log.d(TAG, "sendNotification: Built");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception: " + e.getMessage());
+        }
+    }
+
+    private final static AtomicInteger c = new AtomicInteger(1);
+    private static int getID(){
+        return c.incrementAndGet();
     }
 }
