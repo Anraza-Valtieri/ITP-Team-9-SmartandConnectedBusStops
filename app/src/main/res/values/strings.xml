@@ -24,6 +24,7 @@
     <string name="stops">stops</string>
     <string name="publictransport">Public Transport</string>
     <string name="walking">Walking</string>
+    <string name="slight_delay">Slight delay</string>
 
     <string name="student">Student</string>
     <string name="adult">Adult</string>
