@@ -81,7 +81,7 @@
     <string name="km">km</string>
     <string name="m">m</string>
     <string name="walk">Berjalan</string>
-    <string name="feedback">Feedback</string>
+    <string name="feedback">Maklum balas</string>
     <string name="chooselanguage">Pilih Bahasa Pilihan Anda</string>
     <string name="suggestedroute">* Laluan Yang Dicadangkan *</string>
     <string name="publictransport">Pengangkutan Awam</string>
@@ -90,5 +90,12 @@
     <string name="thunderyshowers">Pancuran Hujan</string>
     <string name="lightshowers">Pancuran Air</string>
     <string name="cloudy">Mendung</string>
+    <string name="appguide">Panduan</string>
+    <string name="leastTime">Masa yang singkat</string>
+    <string name="leastDistance">Jarak terpendek</string>
+    <string name="leastWalking">Berjalan kaki terpendek</string>
+    <string name="action_help">Membantu</string>
+    <string name="about_app">Berkaitan dengan</string>
+    <string name="data_sources">Sumber data</string>
 
 </resources>

@@ -11,7 +11,7 @@
                 android:title="@string/language" />
         </menu>
     </item>
-    <item android:title="Help">
+    <item android:title="@string/action_help">
         <menu>
             <item
                 android:id="@+id/nav_app_guide"
@@ -24,11 +24,11 @@
             <item
                 android:id="@+id/nav_about_app"
                 android:icon="@drawable/ic_info_outline_black_24dp"
-                android:title="About App" />
+                android:title="@string/about_app" />
             <item
                 android:id="@+id/nav_datasources"
                 android:icon="@drawable/ic_wifi_tethering_black_24dp"
-                android:title="Data Sources" />
+                android:title="@string/data_sources" />
             <item
                 android:id="@+id/nav_feedback"
                 android:icon="@drawable/ic_feedback_black_24dp"
