@@ -244,8 +244,45 @@ public class NavigateTransitCard extends Card {
         card.setNeedsUpdate(true);
         if (googleRoutesData.getError() == null || googleRoutesData.getError().isEmpty()){
             card.setID(googleRoutesData.getID());
-            card.setTotalDistance(googleRoutesData.getTotalDistance());
-            card.setTotalTime(googleRoutesData.getTotalDuration());
+
+            String translatedDistance = "";
+
+            if(googleRoutesData.getTotalDistance().contains("km")) {
+                translatedDistance = googleRoutesData.getTotalDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
+            }
+            else if(googleRoutesData.getTotalDistance().contains("m")) {
+                translatedDistance = googleRoutesData.getTotalDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
+            }
+
+            card.setTotalDistance(translatedDistance);
+
+            String translatedDuration = "";
+            String hourTranslate = "";
+
+            if(googleRoutesData.getTotalDuration().contains("0 mins")) {
+                googleRoutesData.setTotalDuration(googleRoutesData.getTotalDuration().replace("0 mins", ""));
+            }
+
+            if(googleRoutesData.getTotalDuration().contains("hours") && !(googleRoutesData.getTotalDuration().contains("mins"))) {
+                translatedDuration = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
+            }
+            else if(googleRoutesData.getTotalDuration().contains("hours") && googleRoutesData.getTotalDuration().contains("mins")) {
+                hourTranslate = googleRoutesData.getTotalDuration().replace("hours", MainActivity.context.getResources().getString(R.string.hours));
+                translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+            }
+            else if(!(googleRoutesData.getTotalDuration().contains("hour")) && googleRoutesData.getTotalDuration().contains("mins")) {
+                translatedDuration = googleRoutesData.getTotalDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+            }
+            else if(googleRoutesData.getTotalDuration().contains("hour") && !(googleRoutesData.getTotalDuration().contains("mins"))) {
+                translatedDuration = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
+            }
+            else if(googleRoutesData.getTotalDuration().contains("hour") && googleRoutesData.getTotalDuration().contains("mins")) {
+                hourTranslate = googleRoutesData.getTotalDuration().replace("hour", MainActivity.context.getResources().getString(R.string.hour));
+                translatedDuration = hourTranslate.replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+            }
+
+            card.setTotalTime(translatedDuration);
+
             card.setStartPlaceId(googleRoutesData.getStartPlaceId());
             card.setEndPlaceId(googleRoutesData.geEndPlaceId());
             card.setUmbrella(umbrellaBring);
@@ -303,9 +340,30 @@ public class NavigateTransitCard extends Card {
                             for (int j = 3; j < 5; j++) {
                                 walkingDetails.add(j,null);
                             }
-                            walkingDetails.add(5,routeSteps.get(i).getDuration());
+
+                            String translatedStepDuration = "";
+
+                            if(routeSteps.get(i).getDuration().contains("mins")) {
+                                translatedStepDuration = routeSteps.get(i).getDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+                            }
+                            else if(routeSteps.get(i).getDuration().contains("min")) {
+                                translatedStepDuration = routeSteps.get(i).getDuration().replace("min", MainActivity.context.getResources().getString(R.string.minute));
+                            }
+
+                            walkingDetails.add(5,translatedStepDuration);
                             walkingDetails.add(6,walkingDetailedStepsChildren);
-                            transitStations.put(routeSteps.get(i).getDistance(),walkingDetails);
+
+                            String translatedWalkingDistance = "";
+
+                            if(routeSteps.get(i).getDistance().contains("km")) {
+                                translatedWalkingDistance = routeSteps.get(i).getDistance().replace("km", MainActivity.context.getResources().getString(R.string.km));
+                            }
+                            else if(routeSteps.get(i).getDistance().contains("m")) {
+                                translatedWalkingDistance = routeSteps.get(i).getDistance().replace("m", MainActivity.context.getResources().getString(R.string.m));
+                            }
+
+
+                            transitStations.put(translatedWalkingDistance,walkingDetails);
 
                             //for sorting by walking distance
                             float walkingDistance = convertDistanceToKm(routeSteps.get(i).getDistance());
@@ -862,7 +920,17 @@ public class NavigateTransitCard extends Card {
                                 }
 
                                 stationDetails.add(routeSteps.get(i).getArrivalStop());
-                                stationDetails.add(routeSteps.get(i).getDuration());
+
+                                String translatedBusMrtDuration = "";
+
+                                if(routeSteps.get(i).getDuration().contains("mins")) {
+                                    translatedBusMrtDuration = routeSteps.get(i).getDuration().replace("mins", MainActivity.context.getResources().getString(R.string.minutes));
+                                }
+                                else if(routeSteps.get(i).getDuration().contains("min")) {
+                                    translatedBusMrtDuration = routeSteps.get(i).getDuration().replace("min", MainActivity.context.getResources().getString(R.string.minute));
+                                }
+
+                                stationDetails.add(translatedBusMrtDuration);
                                 if (!busStopNames.isEmpty()){
                                     stationDetails.add(busStopNames);
                                     Log.i(TAG,"BUS STOP NAMES: "+busStopNames);

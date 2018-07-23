@@ -81,7 +81,7 @@
     <string name="km">கிலோமீட்டர்</string>
     <string name="m">மீட்டர்</string>
     <string name="walk">நடந்துவிட்டு</string>
-    <string name="feedback">Feedback</string>
+    <string name="feedback">பின்னூட்டம்</string>
     <string name="chooselanguage">நீங்கள் விரும்பும் மொழியைத் தேர்ந்தெடுக்கவும்</string>
     <string name="suggestedroute">* பரிந்துரைக்கப்பட்ட வழி *</string>
     <string name="publictransport">பொது போக்குவரத்து</string>
@@ -90,5 +90,14 @@
     <string name="showers">மழை</string>
     <string name="lightshowers">ஒளி மழை</string>
     <string name="cloudy">மேகமூட்டம்</string>
+    <string name="slightdelay">சற்று தாமதம்</string>
+    <string name="refreshingdata">தரவு புதுப்பிக்கவும்</string>
+    <string name="help">உதவி</string>
+    <string name="appguide">பயன்பாட்டு வழிகாட்டி</string>
+    <string name="aboutapp">மொபைல் பயன்பாடு பற்றி</string>
+    <string name="leastWalking">குறைந்த நடைபயிற்சி</string>
+    <string name="leastDistance">குறுகிய பயணம்</string>
+    <string name="leastTime">குறுகிய நேரம்</string>
+    <string name="datasources">தரவு மூலங்கள்</string>
 
 </resources>

@@ -747,8 +747,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         this.condition.setText(cardsTransit.getCondition());
 
                         //traffic condition
-                        if(cardsTransit.getCondition()=="Slight delay"){
-                           this.condition.setTextColor(Color.RED);
+                        if(cardsTransit.getCondition()== MainActivity.context.getResources().getString(R.string.slightdelay)){
+                            this.condition.setTextColor(Color.RED);
                         }
                         else{
                             this.condition.setTextColor(mContext.getResources().getColor(android.R.color.holo_green_dark));

@@ -16,7 +16,7 @@
     <string name="directions">Navigasi</string>
     <string name="nearby">Berdekatan</string>
     <string name="favorites">Kegemaran</string>
-    <string name="seniorcitizens">Warga emas</string>
+    <string name="seniorcitizens">Warga Emas</string>
     <string name="adult">Dewasa</string>
     <string name="student">Pelajar</string>
     <string name="day">Siang hari</string>
@@ -81,7 +81,7 @@
     <string name="km">km</string>
     <string name="m">m</string>
     <string name="walk">Berjalan</string>
-    <string name="feedback">Feedback</string>
+    <string name="feedback">Maklum Balas</string>
     <string name="chooselanguage">Pilih Bahasa Pilihan Anda</string>
     <string name="suggestedroute">* Laluan Yang Dicadangkan *</string>
     <string name="publictransport">Pengangkutan Awam</string>
@@ -90,5 +90,14 @@
     <string name="thunderyshowers">Pancuran Hujan</string>
     <string name="lightshowers">Pancuran Air</string>
     <string name="cloudy">Mendung</string>
+    <string name="slightdelay">Kelewatan Sedikit</string>
+    <string name="refreshingdata">Menyegarkan Data</string>
+    <string name="datasources">Sumber Data</string>
+    <string name="aboutapp">Mengenai Aplikasi</string>
+    <string name="appguide">Panduan Apl</string>
+    <string name="help">Bantuan</string>
+    <string name="leastTime">Masa Terpendek</string>
+    <string name="leastDistance">Perjalanan Paling Singkat</string>
+    <string name="leastWalking">Kurang Erjalan</string>
 
 </resources>

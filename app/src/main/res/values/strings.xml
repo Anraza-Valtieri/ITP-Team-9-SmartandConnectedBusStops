@@ -35,7 +35,7 @@
         <item>@string/student</item>
     </string-array>
 
-    <string name="leastTime">Shortest Time </string>
+    <string name="leastTime">Shortest Time</string>
     <string name="leastDistance">Shortest Distance</string>
     <string name="leastWalking">Least Walking</string>
 
@@ -55,6 +55,7 @@
     <string name="day">Day</string>
     <string name="night">Night</string>
 
+    <string name="refreshingdata">Refreshing data...</string>
     <string name="fair">Fair</string>
     <string name="partcloudy">Partly Cloudy</string>
     <string name="cloudy">Cloudy</string>
@@ -63,6 +64,8 @@
     <string name="thunderyshowers">Thundery Showers</string>
 
     <string name="suggestedroute">* Suggested Route *</string>
+    <string name="slightdelay">Slight delay</string>
+
     <string name="walk">Walk</string>
     <string name="km">km</string>
     <string name="m">m</string>
@@ -86,9 +89,16 @@
     <string name="current_weather">Current Weather</string>r
     <string name="degree">°C</string>
     <string name="uvIndex">UV Index</string>
+
     <string name="language">Language Preferences</string>
+
+    <string name="help">Help</string>
     <string name="appguide">App Guide</string>
+
     <string name="about">About</string>
+    <string name="aboutapp">About App</string>
+    <string name="datasources">Data Sources</string>
+    <string name="feedback">Feedback</string>
 
     <string name="displayfares">Displaying Fares for:</string>
     <string name="sortby">Sort By:</string>
@@ -140,6 +150,12 @@
     <string name="WesternWaterCatchment">Western Water Catchment</string>
     <string name="Woodlands">Woodlands</string>
     <string name="Yishun">Yishun</string>
+
+    <string name="listofdatasourcesused">List of Data Sources Used</string>
+    <string name="googlemapsdescription">Provide display of maps, location critical information and navigation routes</string>
+    <string name="twitterdescription">Provide updates on train services</string>
+    <string name="datagovdescription">Provide weather forecast, PSI level and UV Index information</string>
+    <string name="ltadatamalldescription">Provide timely bus timing information for different bus services in Singapore</string>
 
     <string name="large_text">
         "Material is the metaphor.\n\n"
@@ -230,5 +246,4 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
-    <string name="feedback">Feedback</string>
 </resources>
