@@ -728,35 +728,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                     String totalTimeText;
                     if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
-                        //total time
-                        if(cardsTransit.getTotalTime().contains("hour")){
-                            int hours = Integer.parseInt(cardsTransit.getTotalTime()
-                                    .replaceAll(" hour.*$",""));
-                            if (cardsTransit.getTotalTime().contains("minute")){
-                                //both hour and minute
-                                String removeHours = cardsTransit.getTotalTime().replaceFirst(".*hours ","");
-                                String removeHour = removeHours.replaceFirst(".*hour ","");
-                                String removeMins = removeHour.replaceAll(" mins.*$","");
-                                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
-
-                                totalTimeText = String.format(Locale.getDefault(), "%d "+
-                                                MainActivity.context.getResources().getString(R.string.hour) + "%d"
-                                                +MainActivity.context.getResources().getString(R.string.minutes)
-                                        ,hours,minutes);
-                            }else {
-                                //only hour
-                                totalTimeText = String.format(Locale.getDefault(), "%d " +
-                                                MainActivity.context.getResources().getString(R.string.hour), hours);
-                            }
-
-                        }else{
-                            //only minutes
-                            int minutes = Integer.parseInt(cardsTransit.getTotalTime()
-                                    .replaceAll(" min.*$",""));
-                            totalTimeText = String.format(Locale.getDefault(), "%d "
-                                            +MainActivity.context.getResources().getString(R.string.minutes),minutes);
-                        }
-                        this.totalTime.setText(totalTimeText);
+                        this.totalTime.setText(translateTime(cardsTransit.getTotalTime()));
 
                         //total distance
                         String totalDistanceText;
@@ -832,7 +804,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
 
                                 String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
-                                        " ( " + timeTakenForEachWaypoint + ")";
+                                        " ( " + translateTime(timeTakenForEachWaypoint) + ")";
                                 //For detailed steps (expandable list adapter and listeners)
                                 List<String> walkingHeader = new ArrayList<>();
                                 walkingHeader.add(walkingInstructions);
@@ -877,38 +849,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
-
-                                String timeTakenForEachWaypointString;
-
-                                if(timeTakenForEachWaypoint.contains("hour")){
-                                    int hours = Integer.parseInt(timeTakenForEachWaypoint
-                                            .replaceAll(" hour.*$",""));
-                                    if (cardsTransit.getTotalTime().contains("minute")){
-                                        //both hour and minute
-                                        String removeHours = timeTakenForEachWaypoint.replaceFirst(".*hours ","");
-                                        String removeHour = removeHours.replaceFirst(".*hour ","");
-                                        String removeMins = removeHour.replaceAll(" mins.*$","");
-                                        int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
-
-                                        timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d "+
-                                                        MainActivity.context.getResources().getString(R.string.hour) + "%d"
-                                                        +MainActivity.context.getResources().getString(R.string.minutes)
-                                                ,hours,minutes);
-                                    }else {
-                                        //only hour
-                                        timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d " +
-                                                MainActivity.context.getResources().getString(R.string.hour), hours);
-                                    }
-
-                                }else{
-                                    //only minutes
-                                    int minutes = Integer.parseInt(timeTakenForEachWaypoint
-                                            .replaceAll(" min.*$",""));
-                                    timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d "
-                                            +MainActivity.context.getResources().getString(R.string.minutes),minutes);
-                                }
-
-                                String inBetweenStopsHeaderString = timeTakenForEachWaypointString
+                                String inBetweenStopsHeaderString = translateTime(timeTakenForEachWaypoint)
                                         + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
                                 Log.i(TAG, inBetweenStopsHeaderString);
@@ -966,7 +907,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                     Log.i(TAG, "breakdownBarPartWeight: " + breakdownBarPartWeight);
                                     breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
-                                    breakdownBarPartTime.setText(breakdownBarPartActualTime);
+                                    breakdownBarPartTime.setText(translateTime(breakdownBarPartActualTime));
                                     to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
 //                                    breakdown_bar_layout.addView(to_add_breakdown);
 //                                    return to_add_breakdown;
@@ -1070,5 +1011,37 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     break;
             }
         }
+    }
+
+    private String translateTime(String originalTime){
+        String translatedTime;
+        if(originalTime.contains("hour")){
+            int hours = Integer.parseInt(originalTime
+                    .replaceAll(" hour.*$",""));
+            if (originalTime.contains("minute")){
+                //both hour and minute
+                String removeHours = originalTime.replaceFirst(".*hours ","");
+                String removeHour = removeHours.replaceFirst(".*hour ","");
+                String removeMins = removeHour.replaceAll(" mins.*$","");
+                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+
+                translatedTime = String.format(Locale.getDefault(), "%d "+
+                                MainActivity.context.getResources().getString(R.string.hour) + "%d"
+                                +MainActivity.context.getResources().getString(R.string.minutes)
+                        ,hours,minutes);
+            }else {
+                //only hour
+                translatedTime = String.format(Locale.getDefault(), "%d " +
+                        MainActivity.context.getResources().getString(R.string.hour), hours);
+            }
+
+        }else{
+            //only minutes
+            int minutes = Integer.parseInt(originalTime
+                    .replaceAll(" min.*$",""));
+            translatedTime = String.format(Locale.getDefault(), "%d "
+                    +MainActivity.context.getResources().getString(R.string.minutes),minutes);
+        }
+        return translatedTime;
     }
 }
