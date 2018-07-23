@@ -762,16 +762,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         String totalDistanceText;
                         if(cardsTransit.getTotalDistance().contains("km")) {
                             //only km
-                            int kmInt = Integer.parseInt(cardsTransit.getTotalDistance()
+                            float kmFloat = Float.parseFloat(cardsTransit.getTotalDistance()
                                     .replaceAll(" km.*$", ""));
-                            totalDistanceText = String.format(Locale.getDefault(), "%d "
-                                    +MainActivity.context.getResources().getString(R.string.km),kmInt);
+                            totalDistanceText = String.format(Locale.getDefault(), "%.1f "
+                                    +MainActivity.context.getResources().getString(R.string.km),kmFloat);
                         }else{
                             //only m
-                            int mInt = Integer.parseInt(cardsTransit.getTotalDistance()
+                            float mFloat = Float.parseFloat(cardsTransit.getTotalDistance()
                                     .replaceAll(" m.*$", ""));
-                            totalDistanceText = String.format(Locale.getDefault(), "%d "
-                                    +MainActivity.context.getResources().getString(R.string.m),mInt);
+                            totalDistanceText = String.format(Locale.getDefault(), "%.1f "
+                                    +MainActivity.context.getResources().getString(R.string.m),mFloat);
                         }
                         this.totalDistance.setText(totalDistanceText);
 
@@ -877,7 +877,38 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
-                                String inBetweenStopsHeaderString = timeTakenForEachWaypoint
+
+                                String timeTakenForEachWaypointString;
+
+                                if(timeTakenForEachWaypoint.contains("hour")){
+                                    int hours = Integer.parseInt(timeTakenForEachWaypoint
+                                            .replaceAll(" hour.*$",""));
+                                    if (cardsTransit.getTotalTime().contains("minute")){
+                                        //both hour and minute
+                                        String removeHours = timeTakenForEachWaypoint.replaceFirst(".*hours ","");
+                                        String removeHour = removeHours.replaceFirst(".*hour ","");
+                                        String removeMins = removeHour.replaceAll(" mins.*$","");
+                                        int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+
+                                        timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d "+
+                                                        MainActivity.context.getResources().getString(R.string.hour) + "%d"
+                                                        +MainActivity.context.getResources().getString(R.string.minutes)
+                                                ,hours,minutes);
+                                    }else {
+                                        //only hour
+                                        timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d " +
+                                                MainActivity.context.getResources().getString(R.string.hour), hours);
+                                    }
+
+                                }else{
+                                    //only minutes
+                                    int minutes = Integer.parseInt(timeTakenForEachWaypoint
+                                            .replaceAll(" min.*$",""));
+                                    timeTakenForEachWaypointString = String.format(Locale.getDefault(), "%d "
+                                            +MainActivity.context.getResources().getString(R.string.minutes),minutes);
+                                }
+
+                                String inBetweenStopsHeaderString = timeTakenForEachWaypointString
                                         + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
                                 Log.i(TAG, inBetweenStopsHeaderString);
