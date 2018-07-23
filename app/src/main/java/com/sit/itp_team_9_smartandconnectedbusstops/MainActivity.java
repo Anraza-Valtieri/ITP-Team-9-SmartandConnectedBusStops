@@ -2898,30 +2898,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendNotification() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, ActionReceiver.class);
         Log.d(TAG, "sendNotification: Called!");
-        Intent feedbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
-        Intent updateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/open?id=1wgvp6lIvjLnC8sOza4nYgrL6n_mea2Sj"));
-        feedbackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        updateIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
         try{
             String title = "Hey developer!";
             String message = "Tutorials are re-enabled. You may now restart the application.";
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             if(title.contains("update") || title.contains("Update")) {
-                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, updateIntent,
+                intent.putExtra("action", "action1");
+                pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
-                Log.d(TAG, "sendNotification: update!");
             }
             if (title.contains("feedback") || title.contains("Feedback")) {
-                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, feedbackIntent,
+                intent.putExtra("action", "action2");
+                pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
-                Log.d(TAG, "sendNotification: feedback!");
             }
 
             Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -2948,6 +2942,13 @@ public class MainActivity extends AppCompatActivity
                     .setWhen(System.currentTimeMillis())
                     .setStyle(new NotificationCompat.BigTextStyle())
                     .setContentIntent(pendingIntent);
+
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action1")){
+                notificationBuilder.addAction(R.drawable.ic_update_black_24dp, "Update",pendingIntent);
+            }
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action2")){
+                notificationBuilder.addAction(R.drawable.ic_feedback_black_24dp, "Feedback",pendingIntent);
+            }
 
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
