@@ -1048,7 +1048,12 @@ public class MainActivity extends AppCompatActivity
                         loadingScreen.setVisibility(View.GONE);
 //                        bottomNav.setSelectedItemId(R.id.action_fav);
                         bottomNav.setVisibility(View.VISIBLE);
-                        bottomNav.setSelectedItemId(R.id.action_nearby);
+
+                        if(favBusStopID != null && favBusStopID.size() >0 || favRoute != null && favRoute.size() > 0)
+                            bottomNav.setSelectedItemId(R.id.action_fav);
+                        else
+                            bottomNav.setSelectedItemId(R.id.action_nearby);
+
 
                         Geocoder gc = new Geocoder(getApplicationContext());
                         try {
@@ -1841,6 +1846,7 @@ public class MainActivity extends AppCompatActivity
             }
         };
         asyncTask.execute();
+
 
         lookUpNearbyBusStops();
 //        handler.postDelayed(runnable2, 5000);
