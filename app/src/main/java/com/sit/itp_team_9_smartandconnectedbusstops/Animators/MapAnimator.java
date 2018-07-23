@@ -11,6 +11,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -89,6 +90,7 @@ public class MapAnimator {
                 .width(12)
                 .startCap(new SquareCap())
                 .endCap(new SquareCap())
+                .jointType(JointType.ROUND)
                 .zIndex(1);
         backgroundPolyline = googleMap.addPolyline(optionsBackground);
 
@@ -97,6 +99,7 @@ public class MapAnimator {
                 .width(10)
                 .startCap(new SquareCap())
                 .endCap(new SquareCap())
+                .jointType(JointType.ROUND)
                 .zIndex(2);
         foregroundPolyline = googleMap.addPolyline(optionsForeground);
 
