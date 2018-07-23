@@ -62,6 +62,8 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
 
     private void sendNotification(JSONObject json) {
         Intent intent = new Intent(this, MainActivity.class);
+        Intent feedbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+        Intent updateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/open?id=1wgvp6lIvjLnC8sOza4nYgrL6n_mea2Sj"));
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         Log.e(TAG, "Notification JSON " + json.toString());
         try{
@@ -70,8 +72,14 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
             String message = data.getString("message");
             String imageUrl = data.getString("image");
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                    PendingIntent.FLAG_ONE_SHOT);
+            PendingIntent pendingIntent = null;
+            if(title.contains("update")) {
+                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, updateIntent,
+                        PendingIntent.FLAG_ONE_SHOT);
+            }else if (title.contains("feedback")) {
+                pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, feedbackIntent,
+                        PendingIntent.FLAG_ONE_SHOT);
+            }
 
             Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)

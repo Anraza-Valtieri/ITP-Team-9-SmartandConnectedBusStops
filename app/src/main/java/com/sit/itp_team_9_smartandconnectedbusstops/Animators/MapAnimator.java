@@ -11,13 +11,19 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
 import com.google.android.gms.maps.model.SquareCap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapAnimator {
@@ -35,6 +41,11 @@ public class MapAnimator {
 
     static final int GREY = Color.parseColor("#FFA7A6A6");
 
+
+    private static final PatternItem DOT = new Dot();
+    private static final PatternItem GAP = new Gap(20);
+    private static final PatternItem DASH = new Dash(20);
+    private static final List<PatternItem> PATTERN_POLYGON = Arrays.asList(GAP, DASH);
 
     private MapAnimator(){
 
@@ -86,12 +97,14 @@ public class MapAnimator {
         }
 
 
+
         PolylineOptions optionsBackground = new PolylineOptions().add(route.get(0))
                 .color(Color.CYAN)
                 .width(12)
                 .startCap(new RoundCap())
                 .endCap(new RoundCap())
                 .jointType(JointType.ROUND)
+//                .pattern(PATTERN_POLYGON)
                 .zIndex(1);
         backgroundPolyline = googleMap.addPolyline(optionsBackground);
 
@@ -101,6 +114,7 @@ public class MapAnimator {
                 .startCap(new RoundCap())
                 .endCap(new RoundCap())
                 .jointType(JointType.ROUND)
+//                .pattern(PATTERN_POLYGON)
                 .zIndex(2);
         foregroundPolyline = googleMap.addPolyline(optionsForeground);
 
