@@ -277,17 +277,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     public void onClick(View v) {
                         List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
 
-                        PolylineOptions options = new PolylineOptions()
-                                .jointType(JointType.ROUND)
-                                .startCap(new SquareCap())
-                                .endCap(new SquareCap())
-                                .geodesic(true);
                         if(points != null) {
                             listLatLng.clear();
                             clearPolylines();
                             for (int z = 0; z < points.size(); z++) {
                                 LatLng point = points.get(z);
-                                options.add(point);
                                 listLatLng.add(point);
 
                             }
