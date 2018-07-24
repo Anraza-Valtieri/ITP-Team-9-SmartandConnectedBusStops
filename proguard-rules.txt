@@ -168,3 +168,6 @@ public static *** e(...);
   **[] $VALUES;
   public *;
 }
+
+#Firestore bug fix
+-keep class io.grpc.** {*;}
