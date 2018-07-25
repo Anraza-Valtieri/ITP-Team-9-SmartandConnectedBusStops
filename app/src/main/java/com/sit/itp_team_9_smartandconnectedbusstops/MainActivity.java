@@ -2241,7 +2241,7 @@ public class MainActivity extends AppCompatActivity
                         umbrellaBring = true;
                     }
                     if (getDistanceMatrix(result.get(Integer.parseInt(routeid))) == "bus_congest" || getDistanceMatrix(result.get(Integer.parseInt(routeid)))=="mrt_fault") {
-                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "Slight delay", umbrellaBring);
+                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, context.getResources().getString(R.string.slight_delay), umbrellaBring);
                         if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
                             card1.setFavorite(true);
                         else
