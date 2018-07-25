@@ -562,6 +562,11 @@ public class MainActivity extends AppCompatActivity
 //        downloadTweets();
         if(progressDialog != null && progressDialog.isShowing())
             progressDialog.hide();
+
+        mFirebaseAnalytics.setUserProperty("device_Man", android.os.Build.MANUFACTURER);
+        mFirebaseAnalytics.setUserProperty("device_Name", android.os.Build.MODEL);
+        mFirebaseAnalytics.setUserProperty("device_OS", android.os.Build.VERSION.RELEASE);
+
     }
 
     @Override
@@ -900,6 +905,12 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+                                Bundle bundle = new Bundle();
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Keyboard");
+                                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                                 lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                             }else{
@@ -946,6 +957,11 @@ public class MainActivity extends AppCompatActivity
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                         Log.i(TAG,query);
                         hideKeyboard();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Button");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                         lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
@@ -1199,6 +1215,12 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
 
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Attempt");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+
         try {
             startActivityForResult(intent, requestCode);
         }
@@ -1214,10 +1236,22 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         startingPointTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FAILED");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
 
@@ -1225,10 +1259,22 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         destinationTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
         }
@@ -1627,12 +1673,14 @@ public class MainActivity extends AppCompatActivity
         if(this.mMap != null) {
             //This is the current user-viewable region of the map
             LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
-            if(bounds.contains(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))){
-                if(fab.isShown())
-                    fab.hide();
-            }else{
-                if(!fab.isShown())
-                    fab.show();
+            if(mCurrentLocation != null) {
+                if (bounds.contains(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))) {
+                    if (fab.isShown())
+                        fab.hide();
+                } else {
+                    if (!fab.isShown())
+                        fab.show();
+                }
             }
 
             if(mMap.getCameraPosition().zoom > 15.0f) {

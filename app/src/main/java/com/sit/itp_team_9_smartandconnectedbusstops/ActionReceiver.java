@@ -13,12 +13,13 @@ public class ActionReceiver extends BroadcastReceiver {
         mContext = context;
         // an Intent broadcast.
         String action = intent.getStringExtra("action");
-        if(action.equals("action1"))
+        if(action.equals("update"))
             updateApp();
-        else if(action.equals("action2"))
+        if(action.equals("feedback"))
             goToFeedback();
-        else
+        if(action.equals("default"))
             goDefault();
+
         Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         context.sendBroadcast(it);
     }
