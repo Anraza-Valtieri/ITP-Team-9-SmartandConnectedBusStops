@@ -389,15 +389,21 @@ public class NavigateTransitCard extends Card {
                                         //Log.i(TAG,"busStopIDCode "+busStopIDCode);
                                         String busStopName = entry.getValue();
                                         //Log.i(TAG,"busStopName "+busStopName);
-                                        if (routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
+                                        if (busStopName != null && routeSteps.get(i).getDepartureStop() != null
+                                                && routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
                                             //departureBusStopCode = busStopIDCode;
                                             departureBusStopCodeList.add(busStopIDCode);
                                             Log.i(TAG,"departure code list "+ departureBusStopCodeList);
+                                        }else{
+                                            departureBusStopCodeList.add("UNKNOWN");
                                         }
-                                        if (routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
+                                        if (busStopName != null && routeSteps.get(i).getDepartureStop() != null
+                                                && routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
                                             //arrivalBusStopCode = busStopIDCode;
                                             arrivalBusStopCodeList.add(busStopIDCode);
                                             Log.i(TAG,"arrival code list"+ arrivalBusStopCodeList);
+                                        }else{
+                                            arrivalBusStopCodeList.add("UNKNOWN");
                                         }
                                     }
                                     //bus route

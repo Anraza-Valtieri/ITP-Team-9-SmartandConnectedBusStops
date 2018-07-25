@@ -76,17 +76,21 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
             String message = data.getString("message");
             String imageUrl = data.getString("image");
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent;
             if(title.contains("update") || title.contains("Update")) {
-                intent.putExtra("action", "action1");
+                intent.putExtra("action", "update");
                 pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
             }
-            if (title.contains("feedback") || title.contains("Feedback")) {
-                intent.putExtra("action", "action2");
+            else if (title.contains("feedback") || title.contains("Feedback")) {
+                intent.putExtra("action", "feedback");
                 pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
+            } else{
+                intent.putExtra("action", "default");
+                pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+
             }
 
             Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -114,10 +118,10 @@ public class TTFirebaseMessagingService extends FirebaseMessagingService {
                     .setStyle(new NotificationCompat.BigTextStyle())
                     .setContentIntent(pendingIntent);
 
-            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action1")){
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("update")){
                 notificationBuilder.addAction(R.drawable.ic_update_black_24dp, "Update",pendingIntent);
             }
-            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action2")){
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("feedback")){
                 notificationBuilder.addAction(R.drawable.ic_feedback_black_24dp, "Feedback",pendingIntent);
             }
 

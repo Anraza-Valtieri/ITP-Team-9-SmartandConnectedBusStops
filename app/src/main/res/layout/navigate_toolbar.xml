@@ -44,7 +44,6 @@
 
                 <AutoCompleteTextView
                     android:id="@+id/textViewStartingPoint"
-                    style="@android:style/Widget.Material.AutoCompleteTextView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -107,7 +106,6 @@
 
                 <AutoCompleteTextView
                     android:id="@+id/textViewDestination"
-                    style="@android:style/Widget.Material.AutoCompleteTextView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"

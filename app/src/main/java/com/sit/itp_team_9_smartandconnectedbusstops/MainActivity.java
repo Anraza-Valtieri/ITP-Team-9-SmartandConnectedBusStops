@@ -562,6 +562,11 @@ public class MainActivity extends AppCompatActivity
 //        downloadTweets();
         if(progressDialog != null && progressDialog.isShowing())
             progressDialog.hide();
+
+        mFirebaseAnalytics.setUserProperty("device_Man", android.os.Build.MANUFACTURER);
+        mFirebaseAnalytics.setUserProperty("device_Name", android.os.Build.MODEL);
+        mFirebaseAnalytics.setUserProperty("device_OS", android.os.Build.VERSION.RELEASE);
+
     }
 
     @Override
@@ -669,7 +674,8 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -677,14 +683,15 @@ public class MainActivity extends AppCompatActivity
                         if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
-                        fab.show();
+//                        fab.show();
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         if(toolbarNavigate.isShown())
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
                         if(singleCardList.size() <= 0) {
                             if (bottomNav.getSelectedItemId() == R.id.action_nearby)
@@ -702,7 +709,8 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-                    fab.hide();
+                    if(fab.isShown())
+                        fab.hide();
 //                    fab.setSize(1-(int)slideOffset);
                 }
             });
@@ -897,6 +905,12 @@ public class MainActivity extends AppCompatActivity
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+                                Bundle bundle = new Bundle();
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Keyboard");
+                                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                                 lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                             }else{
@@ -943,6 +957,11 @@ public class MainActivity extends AppCompatActivity
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                         Log.i(TAG,query);
                         hideKeyboard();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Button");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                         lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
@@ -1196,6 +1215,12 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
 
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Attempt");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+
         try {
             startActivityForResult(intent, requestCode);
         }
@@ -1211,10 +1236,22 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         startingPointTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FAILED");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
 
@@ -1222,10 +1259,22 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         destinationTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
         }
@@ -1622,11 +1671,19 @@ public class MainActivity extends AppCompatActivity
 
     private void addItemsToMap(HashMap<String, MapMarkers> items) {
         if(this.mMap != null) {
+            //This is the current user-viewable region of the map
+            LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
+            if(mCurrentLocation != null) {
+                if (bounds.contains(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))) {
+                    if (fab.isShown())
+                        fab.hide();
+                } else {
+                    if (!fab.isShown())
+                        fab.show();
+                }
+            }
 
             if(mMap.getCameraPosition().zoom > 15.0f) {
-                //This is the current user-viewable region of the map
-                LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
-
                 //Loop through all the items that are available to be placed on the map
                 for (Map.Entry<String, MapMarkers> entry : items.entrySet()) {
                     String key = entry.getKey();
@@ -2241,7 +2298,7 @@ public class MainActivity extends AppCompatActivity
                         umbrellaBring = true;
                     }
                     if (getDistanceMatrix(result.get(Integer.parseInt(routeid))) == "bus_congest" || getDistanceMatrix(result.get(Integer.parseInt(routeid)))=="mrt_fault") {
-                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "Slight delay", umbrellaBring);
+                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, context.getResources().getString(R.string.slight_delay), umbrellaBring);
                         if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
                             card1.setFavorite(true);
                         else
