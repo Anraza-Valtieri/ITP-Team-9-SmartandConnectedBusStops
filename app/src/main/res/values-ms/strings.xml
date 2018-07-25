@@ -76,7 +76,7 @@
     <string name="minute">minit</string>
     <string name="hours">jam</string>
     <string name="minutes">minit</string>
-    <string name="secs">detik</string>
+    <string name="secs">saat</string>
     <string name="arriving">Tiba</string>
     <string name="km">km</string>
     <string name="m">m</string>
@@ -95,7 +95,7 @@
     <string name="leastDistance">Jarak terpendek</string>
     <string name="leastWalking">Berjalan kaki terpendek</string>
     <string name="action_help">Membantu</string>
-    <string name="about_app">Berkaitan dengan</string>
+    <string name="about_app">Informasi app</string>
     <string name="data_sources">Sumber data</string>
     <string name="slight_delay">Sedikit kelewatan</string>
 
