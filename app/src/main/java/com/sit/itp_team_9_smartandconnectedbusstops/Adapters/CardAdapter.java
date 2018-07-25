@@ -420,8 +420,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         ((BusStopCards) mCard.get(i)).setMajorUpdate(true);
                         mCard.get(i).setNeedsUpdate(false);
                         busStopCards.add((BusStopCards) mCard.get(i));
-                    }
-                    else {
+                    } else {
                         if(mCard.get(i).isNeedsUpdate())
                             mCard.get(i).setNeedsUpdate(true);
                         else
