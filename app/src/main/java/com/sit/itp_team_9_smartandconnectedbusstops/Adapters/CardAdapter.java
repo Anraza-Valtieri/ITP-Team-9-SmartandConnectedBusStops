@@ -722,24 +722,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                     String totalTimeText;
                     if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
-                        this.totalTime.setText(translateTime(cardsTransit.getTotalTime()));
-
-                        //total distance
-                        String totalDistanceText;
-                        if(cardsTransit.getTotalDistance().contains("km")) {
-                            //only km
-                            float kmFloat = Float.parseFloat(cardsTransit.getTotalDistance()
-                                    .replaceAll(" km.*$", ""));
-                            totalDistanceText = String.format(Locale.getDefault(), "%.1f "
-                                    +MainActivity.context.getResources().getString(R.string.km),kmFloat);
-                        }else{
-                            //only m
-                            float mFloat = Float.parseFloat(cardsTransit.getTotalDistance()
-                                    .replaceAll(" m.*$", ""));
-                            totalDistanceText = String.format(Locale.getDefault(), "%.1f "
-                                    +MainActivity.context.getResources().getString(R.string.m),mFloat);
-                        }
-                        this.totalDistance.setText(totalDistanceText);
+                        this.totalTime.setText(cardsTransit.getTotalTime());
+                        this.totalDistance.setText(cardsTransit.getTotalDistance());
 
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
@@ -790,15 +774,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                             LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                             assert inflater2 != null;
-                            if (stationImage.equals(R.drawable.ic_baseline_directions_walk_24px)){
+                            if (stationColor.equals(NavigateTransitCard.WALKING_COLOR)){
                                 //walking layout
                                 View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_walking,
                                         (ViewGroup) itemView.getRootView(), false);
                                 //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
 
+                                /*String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
+                                        " ( " + translateTime(timeTakenForEachWaypoint) + ")";*/
+
                                 String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
-                                        " ( " + translateTime(timeTakenForEachWaypoint) + ")";
+                                        " ( " + timeTakenForEachWaypoint + ")";
                                 //For detailed steps (expandable list adapter and listeners)
                                 List<String> walkingHeader = new ArrayList<>();
                                 walkingHeader.add(walkingInstructions);
@@ -843,7 +830,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
-                                String inBetweenStopsHeaderString = translateTime(timeTakenForEachWaypoint)
+                                /*String inBetweenStopsHeaderString = translateTime(timeTakenForEachWaypoint)
+                                        + " (" + numInBetweenStops + " "
+                                        + mContext.getString(R.string.stops) +  ")";*/
+                                String inBetweenStopsHeaderString = timeTakenForEachWaypoint
                                         + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
                                 Log.i(TAG, inBetweenStopsHeaderString);
@@ -901,7 +891,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                     Log.i(TAG, "breakdownBarPartWeight: " + breakdownBarPartWeight);
                                     breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
-                                    breakdownBarPartTime.setText(translateTime(breakdownBarPartActualTime));
+                                    //breakdownBarPartTime.setText(translateTime(breakdownBarPartActualTime));
+                                    breakdownBarPartTime.setText(breakdownBarPartActualTime);
                                     to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
 //                                    breakdown_bar_layout.addView(to_add_breakdown);
 //                                    return to_add_breakdown;
@@ -1007,7 +998,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
         }
     }
 
-    private String translateTime(String originalTime){
+    /*private String translateTime(String originalTime){
         String translatedTime;
         if(originalTime.contains("hour")){
             int hours = Integer.parseInt(originalTime
@@ -1037,5 +1028,5 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     +MainActivity.context.getResources().getString(R.string.minutes),minutes);
         }
         return translatedTime;
-    }
+    }*/
 }

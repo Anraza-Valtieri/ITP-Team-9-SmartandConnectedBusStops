@@ -72,8 +72,8 @@
     <string name="sortby">வரிசைப்படுத்து:</string>
     <string name="partcloudy">"ஓரளவுக்கு மேகமூட்டம் "</string>
     <string name="fair">நியாயமான வானிலை</string>
-    <string name="minutes">நிமிடம்</string>
-    <string name="minute">நிமிடம்</string>
+    <string name="minutes">நிமிடங்கள்</string>
+    <string name="minute">நிமிடங்கள்</string>
     <string name="hours">மணி</string>
     <string name="hour">மணி</string>
     <string name="secs">வினாடி</string>

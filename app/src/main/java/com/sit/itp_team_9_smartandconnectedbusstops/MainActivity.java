@@ -896,10 +896,29 @@ public class MainActivity extends AppCompatActivity
                                     mode = "walking";
                                     optionMode = false;
                                 }
+                                String queryLanguage;
+                                SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                                String language = prefs.getString("My_Lang", "");
+                                Log.i(TAG,"LANGUAGE?"+language);
+                                switch (language){
+                                    case "ms":
+                                        queryLanguage = "ms";
+                                        break;
+                                    case "ta":
+                                        queryLanguage = "ta";
+                                        break;
+                                    case "zh":
+                                        queryLanguage = "zh-CN";
+                                        break;
+                                    default:
+                                        queryLanguage = "en";
+                                        break;
+                                }
                                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                         + startingPointTextView.getText().toString() + "&destination="
                                         + destinationTextView.getText().toString()
                                         + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                        +"&language=" + queryLanguage
                                         + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                                 //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                                 Log.i(TAG,query);
@@ -949,13 +968,32 @@ public class MainActivity extends AppCompatActivity
                             mode = "walking";
                             optionMode = false;
                         }
+                        String queryLanguage;
+                        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                        String language = prefs.getString("My_Lang", "");
+                        Log.i(TAG,"LANGUAGE?"+language);
+                        switch (language){
+                            case "ms":
+                                queryLanguage = "ms";
+                                break;
+                            case "ta":
+                                queryLanguage = "ta";
+                                break;
+                            case "zh":
+                                queryLanguage = "zh-CN";
+                                break;
+                            default:
+                                queryLanguage = "en";
+                                break;
+                        }
                          query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
                                 + destinationTextView.getText().toString()
-                                + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                + "&mode=" + mode
+                                +"&language=" + queryLanguage
                                 + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
-                        Log.i(TAG,query);
+                        Log.i(TAG,"query: "+query);
                         hideKeyboard();
                         Bundle bundle = new Bundle();
                         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
