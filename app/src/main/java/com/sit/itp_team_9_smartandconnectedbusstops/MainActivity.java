@@ -669,7 +669,8 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -677,14 +678,15 @@ public class MainActivity extends AppCompatActivity
                         if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
-                        fab.show();
+//                        fab.show();
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         if(toolbarNavigate.isShown())
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
                         if(singleCardList.size() <= 0) {
                             if (bottomNav.getSelectedItemId() == R.id.action_nearby)
@@ -702,7 +704,8 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-                    fab.hide();
+                    if(fab.isShown())
+                        fab.hide();
 //                    fab.setSize(1-(int)slideOffset);
                 }
             });
@@ -1622,11 +1625,17 @@ public class MainActivity extends AppCompatActivity
 
     private void addItemsToMap(HashMap<String, MapMarkers> items) {
         if(this.mMap != null) {
+            //This is the current user-viewable region of the map
+            LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
+            if(bounds.contains(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))){
+                if(fab.isShown())
+                    fab.hide();
+            }else{
+                if(!fab.isShown())
+                    fab.show();
+            }
 
             if(mMap.getCameraPosition().zoom > 15.0f) {
-                //This is the current user-viewable region of the map
-                LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
-
                 //Loop through all the items that are available to be placed on the map
                 for (Map.Entry<String, MapMarkers> entry : items.entrySet()) {
                     String key = entry.getKey();
