@@ -98,6 +98,5 @@
     <string name="about_app">பற்றி</string>
     <string name="data_sources">தரவு மூலங்கள்</string>
     <string name="slight_delay">சிறிய தாமதம்</string>
-
-
+    <string name="mrt_station">MRT Station</string>
 </resources>
