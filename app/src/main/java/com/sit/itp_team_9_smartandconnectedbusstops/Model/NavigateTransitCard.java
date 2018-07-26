@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -31,7 +32,7 @@ public class NavigateTransitCard extends Card {
     private final static int DTL_COLOR = Color.argb(255,1, 87, 155);
     private final static int EWL_COLOR = Color.argb(255,24, 158, 74);
     private final static int NSL_COLOR = Color.argb(255,211, 47, 47);
-    private final static int WALKING_COLOR = Color.argb(255,120, 120, 120);
+    public final static int WALKING_COLOR = Color.argb(255,120, 120, 120);
     private final static int LRT_COLOR = Color.argb(255,158, 158, 158);
     private final static int BUS_COLOR = Color.argb(255,0, 0, 0);
 
@@ -422,8 +423,8 @@ public class NavigateTransitCard extends Card {
                                             for (int j = 0; j < busMapValue.size(); j++) {
                                                 //loop through the bus service's bus stops (going through the bus route)
                                                 for (String potentialArrivalBusStopCode : arrivalBusStopCodeList) {
-                                                    Log.i(TAG, "arrival codes: "
-                                                            + " " + potentialArrivalBusStopCode);
+                                                    //Log.i(TAG, "arrival codes: "
+                                                    //        + " " + potentialArrivalBusStopCode);
                                                     if (busMapValue.get(j).getBusStopCode()
                                                             .equals(potentialArrivalBusStopCode)) {
                                                         Log.i(TAG, "ONLY NEED ARRIVAL");
@@ -446,7 +447,7 @@ public class NavigateTransitCard extends Card {
                                                     }
                                                 }
                                                 for (String potentialDepartureBusStopCode : departureBusStopCodeList) {
-                                                    Log.i(TAG,"no arrival");
+                                                    //Log.i(TAG,"no arrival");
                                                     //only departureBusStopCode found
                                                     if (busMapValue.get(j).getBusStopCode()
                                                             .equals(potentialDepartureBusStopCode)){
@@ -885,8 +886,8 @@ public class NavigateTransitCard extends Card {
                 //fare calculation
                 double transitDistance = 0.0;
                 for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
-
-                    transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
+                    String transitModeAndDistance = listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", "");
+                    transitDistance += Double.valueOf(transitModeAndDistance.replaceAll(".$", ""));
                 }
 
                 FareDetails fareDetails = new FareDetails();
@@ -1055,14 +1056,15 @@ public class NavigateTransitCard extends Card {
 
     private static Float convertDistanceToKm(String distanceString){
         float distanceInKm;
-        if (distanceString.contains(" m")){
+        if (distanceString.contains(MainActivity.context.getResources().getString(R.string.m))){
             //convert m to km
             Float walkingDistanceInMetres = Float.parseFloat(distanceString.replaceAll("[^0-9]",""));
             distanceInKm = walkingDistanceInMetres / 1000;
         }else{
             //already in kilometres
             //removes anything that is not a . or number
-            distanceInKm = Float.parseFloat(distanceString.replaceAll("[^.0-9]",""));
+            String distanceClean = distanceString.replaceAll("[^.0-9]","");
+            distanceInKm = Float.parseFloat(distanceClean.replaceAll("[.]$",""));
         }
 
         Log.i(TAG, "distanceInKm"+ distanceInKm);
@@ -1071,27 +1073,28 @@ public class NavigateTransitCard extends Card {
 
     private static int convertTimeToMinutes(String timeString){
         int totalTimeInMinutes, timeFromHoursAndMinutes = 0;
-        if (timeString.contains(" hour")){
+        if (timeString.contains(MainActivity.context.getResources().getString(R.string.hour))){
             int timeFromMinutes = 0;
 
             //convert hour to minutes
-            int hours = Integer.parseInt(timeString.replaceAll(" hour.*$",""));
+            int hours = Integer.parseInt(timeString.replaceAll(" "+MainActivity.context.getResources().getString(R.string.hour)+".*$",""));
             int timeFromHours = hours * 60;
 
-            if (timeString.contains(" min")){
+            if (timeString.contains(MainActivity.context.getResources().getString(R.string.minute))){
                 Log.i(TAG,"originalTime " + timeString);
                 //if time also contains min, get the minutes
-                String removeHours = timeString.replaceFirst(".*hours ","");
-                String removeHour = removeHours.replaceFirst(".*hour ","");
+                String removeHours = timeString.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hour),"").trim();
+                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hour));
+                String removeHour = removeHours.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hours),"").trim();
                 Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
-                String removeMins = removeHour.replaceAll(" mins.*$","");
-                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+                String removeMins = removeHour.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$","").trim();
+                int minutes = Integer.parseInt(removeMins.replaceAll(MainActivity.context.getResources().getString(R.string.minute)+".*$","").trim());
                 timeFromMinutes = minutes;
             }
             totalTimeInMinutes = timeFromHours + timeFromMinutes;
         }else {
             //already in min
-            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(" min.*$", ""));
+            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$", "").trim());
         }
 
         //totalTimeInMinutes = timeFromHoursAndMinutes +  timeFromMinutes;
