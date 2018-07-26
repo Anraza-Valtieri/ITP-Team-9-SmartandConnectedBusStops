@@ -99,5 +99,6 @@
     <string name="data_sources">资料来源</string>
     <string name="slight_delay">稍微延迟</string>
     <string name="mrt_station">地鐵站</string>
+    <string name="RestartToChangeLang">需要重启</string>
 
 </resources>

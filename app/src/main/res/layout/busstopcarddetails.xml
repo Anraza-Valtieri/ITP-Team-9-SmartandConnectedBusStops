@@ -67,10 +67,10 @@
 
         <TextView
             android:id="@+id/duration1"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:ellipsize="marquee"
-            android:maxWidth="65dp"
+            android:ellipsize="end"
+            android:maxWidth="120dp"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
             android:paddingEnd="8dp"
@@ -87,7 +87,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_conversion_absoluteHeight="20dp"
             tools:layout_conversion_absoluteWidth="30dp"
-            tools:text="24 mins" />
+            tools:text="Arriving" />
 
         <ImageView
             android:id="@+id/wheel1"
@@ -122,7 +122,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:ellipsize="marquee"
-            android:maxWidth="65dp"
+            android:maxWidth="90dp"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
             android:paddingEnd="8dp"

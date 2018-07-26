@@ -164,6 +164,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity
     private View navHeader;
     private LinearLayout navheaderbanner;
     private ActionBarDrawerToggle toggle;
+    private DrawerLayout drawer;
 
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
@@ -457,7 +459,7 @@ public class MainActivity extends AppCompatActivity
 
         userData = new UserData();
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -1287,7 +1289,7 @@ public class MainActivity extends AppCompatActivity
                     if(result != null) {
                         destinationTextView.setText(result.get(0));
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1295,7 +1297,7 @@ public class MainActivity extends AppCompatActivity
                     else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1310,7 +1312,7 @@ public class MainActivity extends AppCompatActivity
         if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }else{
-            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            drawer = findViewById(R.id.drawer_layout);
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
             } else {
@@ -1465,7 +1467,6 @@ public class MainActivity extends AppCompatActivity
             default:
                     break;
         }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -1481,6 +1482,40 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
         editor.putString("My_Lang", lang);
         editor.apply();
+
+        if(bottomNav != null) {
+            bottomNav.getMenu().findItem(R.id.action_nav).setTitle(R.string.directions);
+            bottomNav.getMenu().findItem(R.id.action_fav).setTitle(R.string.favorites);
+            bottomNav.getMenu().findItem(R.id.action_nearby).setTitle(R.string.nearby);
+        }
+        if(drawer != null){
+            MenuItem langPref, appGuide, aboutApp, dataSource, feedback;
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            Menu menu = navigationView.getMenu();
+            langPref = menu.findItem(R.id.nav_language_preferences);
+            appGuide = menu.findItem(R.id.nav_app_guide);
+            aboutApp = menu.findItem(R.id.nav_about_app);
+            dataSource = menu.findItem(R.id.nav_datasources);
+            feedback = menu.findItem(R.id.nav_feedback);
+
+            langPref.setTitle(R.string.language);
+            appGuide.setTitle(R.string.appguide);
+            aboutApp.setTitle(R.string.about_app);
+            dataSource.setTitle(R.string.data_sources);
+            feedback.setTitle(R.string.feedback);
+        }
+
+        if(toolbarNavigate != null){
+            TextView tvDisplayFares, tvSortBy, tvStartingPoint, tvDestination;
+            tvDisplayFares = toolbarNavigate.findViewById(R.id.tvDisplayFares);
+            tvSortBy = toolbarNavigate.findViewById(R.id.tvSortBy);
+            tvStartingPoint = toolbarNavigate.findViewById(R.id.textViewStartingPoint);
+            tvDestination = toolbarNavigate.findViewById(R.id.textViewDestination);
+            tvDisplayFares.setText(R.string.displayfares);
+            tvSortBy.setText(R.string.sortby);
+            tvStartingPoint.setText(R.string.starting_point);
+            tvDestination.setText(R.string.destination);
+        }
     }
 
     // load language saved in shared preferences
@@ -1507,11 +1542,12 @@ public class MainActivity extends AppCompatActivity
         }
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
-        sharedPrefEditor.commit();
+        sharedPrefEditor.apply();
 
-        Intent refresh = new Intent(this, MainActivity.class);
-        startActivity(refresh);
-        finish();
+
+//        Intent refresh = new Intent(this, MainActivity.class);
+//        startActivity(refresh);
+//        finish();
     }
 
     @Override
