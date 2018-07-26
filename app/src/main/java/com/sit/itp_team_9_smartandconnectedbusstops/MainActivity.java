@@ -826,14 +826,17 @@ public class MainActivity extends AppCompatActivity
                             navigateCardList = (ArrayList<? extends Card>) transitCardList;
                             List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
-                            if (sortBySpinner.equals(context.getResources().getString(R.string.leastTime))){
+                            if (sortBySpinner.getSelectedItem().toString().equals(context.getResources().getString(R.string.leastTime))){
+                                Log.i(TAG, "shortest time");
                                 Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                            }else if (sortBySpinner.equals(context.getResources().getString(R.string.leastDistance))){
+                            }else if (sortBySpinner.getSelectedItem().toString().equals(context.getResources().getString(R.string.leastDistance))){
+                                Log.i(TAG, "shortest distance");
                                 Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                                 //transitCardList = (ArrayList<? super Card>) castToNavigate;
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                             }else{
+                                Log.i(TAG,"shortest walking distance");
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                             }
@@ -2518,13 +2521,16 @@ public class MainActivity extends AppCompatActivity
                         List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
                         if (spinnerSelectedItem.equals(context.getResources().getString(R.string.leastTime))){
+                            Log.i(TAG, "shortest time");
                             Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                         }else if (spinnerSelectedItem.equals(context.getResources().getString(R.string.leastDistance))){
+                            Log.i(TAG, "shortest distance");
                             Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                             //transitCardList = (ArrayList<? super Card>) castToNavigate;
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                         }else{
+                            Log.i(TAG, "shortest walking distance");
                             Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                         }

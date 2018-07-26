@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -598,16 +597,19 @@ public class NavigateTransitCard extends Card {
                                         //get departure and arrival stations
                                         for (TrainStation trainStationInList : allTrainStationsInLine) {
                                             if (trainStationInList.getStationName().equalsIgnoreCase(
-                                                    departureStation)){
+                                                    departureStation)
+                                                    || trainStationInList.getStationNameChinese()
+                                                    .equalsIgnoreCase(departureStation)){
                                                 departureTrainStation = trainStationInList;
                                                 Log.i(TAG, "found departure train station");
                                             }
                                             if (trainStationInList.getStationName().equalsIgnoreCase(
-                                                    arrivalStation)){
+                                                    arrivalStation)
+                                                    || trainStationInList.getStationNameChinese()
+                                                    .equalsIgnoreCase(arrivalStation)){
                                                 arrivalTrainStation = trainStationInList;
                                                 Log.i(TAG, "found arrival train station");
                                             }
-                                            //TODO LRT loops
                                         }
                                         if (departureTrainStation != null && arrivalTrainStation != null ){
                                             //if both stations found
@@ -987,7 +989,7 @@ public class NavigateTransitCard extends Card {
                 stationName = stationName.replace(" (EW18)","");
                 break;
         }
-        stationName = stationName.replaceAll(" MRT Station.*$","");
+        stationName = stationName.replaceAll(MainActivity.context.getResources().getString(R.string.mrt_station)+".*$","").trim();
         Log.i(TAG, "stationNameRegex "+stationName);
 
         return stationName;
@@ -1084,7 +1086,7 @@ public class NavigateTransitCard extends Card {
                 Log.i(TAG,"originalTime " + timeString);
                 //if time also contains min, get the minutes
                 String removeHours = timeString.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hours),"").trim();
-                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hours));
+                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hour));
                 String removeHour = removeHours.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hour),"").trim();
                 Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
                 String removeMins = removeHour.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$","").trim();

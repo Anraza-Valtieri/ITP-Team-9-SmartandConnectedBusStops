@@ -94,6 +94,7 @@
     <string name="language">Language Preferences</string>
     <string name="appguide">App Guide</string>
     <string name="about">About</string>
+    <string name="mrt_station">MRT Station</string>
 
     <string name="displayfares">Displaying Fares for:</string>
     <string name="sortby">Sort By:</string>
