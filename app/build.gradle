@@ -16,7 +16,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName '1.9'
+        versionName '2.0'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         versionNameSuffix ' Beta'
@@ -30,6 +30,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
             proguardFiles fileTree('proguard').asList().toArray()
             signingConfig signingConfigs.config
+            proguardFile '/Users/jerahmeel/GitHub/ITPTeam9SmartandConnectedBusStops/proguard-rules.txt'
         }
     }
     compileOptions {

@@ -1083,9 +1083,9 @@ public class NavigateTransitCard extends Card {
             if (timeString.contains(MainActivity.context.getResources().getString(R.string.minute))){
                 Log.i(TAG,"originalTime " + timeString);
                 //if time also contains min, get the minutes
-                String removeHours = timeString.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hour),"").trim();
-                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hour));
-                String removeHour = removeHours.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hours),"").trim();
+                String removeHours = timeString.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hours),"").trim();
+                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hours));
+                String removeHour = removeHours.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hour),"").trim();
                 Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
                 String removeMins = removeHour.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$","").trim();
                 int minutes = Integer.parseInt(removeMins.replaceAll(MainActivity.context.getResources().getString(R.string.minute)+".*$","").trim());

@@ -53,13 +53,21 @@ public class AboutActivity extends AppCompatActivity {
             PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
             String version = pInfo.versionName;
             mVersion.setText(version);
+            mVersion.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere-changelog/"));
+                    getApplicationContext().startActivity(browserIntent);
+                }
+            });
+
             if(BuildConfig.DEBUG) {
                 prefs = getSharedPreferences("com.sit.item_team_9_smartandconnectedbusstops", MODE_PRIVATE);
                 prefs.edit().putBoolean("firstrun", true).commit();
 //                sendNotification();
 
                 Intent intent = new Intent(this, ActionReceiver.class);
-                intent.putExtra("action", "update");
+                intent.putExtra("action", "default");
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -69,7 +77,7 @@ public class AboutActivity extends AppCompatActivity {
                 NotificationCompat.Builder groupBuilder = new NotificationCompat.Builder(this, "1")
                         .setSmallIcon(R.drawable.ic_stat_ic_notification)
                         .setLargeIcon(rawBitMap)
-                        .setContentTitle("Developer test, update!")
+                        .setContentTitle("Developer demo reset!")
                         .setContentText("You can now restart the app")
                         .setGroupSummary(true)
                         .setGroup("TRANSITTHERE")
@@ -80,7 +88,7 @@ public class AboutActivity extends AppCompatActivity {
                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "1")
                         .setSmallIcon(R.drawable.ic_stat_ic_notification)
                         .setLargeIcon(rawBitMap)
-                        .setContentTitle("Developer test, update!")
+                        .setContentTitle("Developer demo reset!")
                         .setContentText("You can now restart the app")
                         .setAutoCancel(true)
                         .setGroup("TRANSITTHERE")

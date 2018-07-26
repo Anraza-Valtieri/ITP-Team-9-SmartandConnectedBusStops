@@ -67,8 +67,10 @@
 
         <TextView
             android:id="@+id/duration1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="marquee"
+            android:maxWidth="65dp"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
             android:paddingEnd="8dp"
@@ -117,8 +119,10 @@
 
         <TextView
             android:id="@+id/duration2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="marquee"
+            android:maxWidth="65dp"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
             android:paddingEnd="8dp"

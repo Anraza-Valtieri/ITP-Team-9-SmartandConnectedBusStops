@@ -873,7 +873,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                         breakdown_bar_layout.removeAllViewsInLayout();
                         breakdown_bar_layout.setVisibility(VISIBLE);
-                        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+                        /*@SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
                             @Override
                             protected Object doInBackground(Object[] objects) {
                                 LinkedList<View> listToAdd = new LinkedList<>();
@@ -909,8 +909,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 }
                             }
                         };
-                        asyncTask.execute();
-                        /*for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
+                        asyncTask.execute();*/
+                        for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
                             String breakdownBarPartActualTime = (String) cardsTransit.getTimeTaken().get(i).get(0);
                             float breakdownBarPartWeight = (Float) cardsTransit.getTimeTaken().get(i).get(1);
                             int breakdownBarPartColor = (Integer) cardsTransit.getTimeTaken().get(i).get(2);
@@ -926,7 +926,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             breakdownBarPartTime.setText(breakdownBarPartActualTime);
                             to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
                             breakdown_bar_layout.addView(to_add_breakdown);
-                        }*/
+                        }
                     }else{
                         //No routes available
                         this.totalTime.setText(R.string.transit_error);
@@ -951,6 +951,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
                     if (cardsTransit.isFavorite())
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
+
+                    card.setNeedsUpdate(false);
                     break;
                 case NAVIGATE_WALKING_CARD:
                     NavigateWalkingCard cardsWalking = (NavigateWalkingCard)card;

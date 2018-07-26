@@ -37,7 +37,6 @@
                 android:backgroundTint="@android:color/white"
                 android:elevation="4dp"
                 android:padding="0dp"
-                android:theme="@android:style/Widget.Material.Light.EditText"
                 app:layout_constraintEnd_toStartOf="@+id/switchButton"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -98,7 +97,6 @@
                 android:backgroundTint="@android:color/white"
                 android:elevation="4dp"
                 android:padding="0dp"
-                android:theme="@android:style/Widget.Material.Light.EditText"
                 app:layout_constraintEnd_toStartOf="@+id/searchButton"
                 app:layout_constraintHorizontal_bias="0.625"
                 app:layout_constraintStart_toStartOf="parent"
@@ -114,6 +112,7 @@
                     android:layout_marginTop="8dp"
                     android:background="@android:color/transparent"
                     android:dropDownWidth="match_parent"
+                    android:ellipsize="end"
                     android:hint="@string/destination"
                     android:imeOptions="actionSearch"
                     android:inputType="text|textPostalAddress"

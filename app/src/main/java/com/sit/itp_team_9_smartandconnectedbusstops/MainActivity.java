@@ -786,7 +786,7 @@ public class MainActivity extends AppCompatActivity
                     Bundle bundle = new Bundle();
                     bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
-                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Favorite Tab");
                     mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
                     if (adapter != null)
@@ -837,22 +837,6 @@ public class MainActivity extends AppCompatActivity
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                             }
-
-                            /*switch (sortBySpinner.getSelectedItem().toString()) {
-                                case leastTime:
-                                    Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                                case leastDistance:
-                                    Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
-                                    //transitCardList = (ArrayList<? super Card>) castToNavigate;
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                                case leastWalking:
-                                    Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                            }*/
                         }
 
                     @Override
@@ -996,7 +980,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,"query: "+query);
                         hideKeyboard();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "4");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Button");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1008,7 +992,7 @@ public class MainActivity extends AppCompatActivity
                 });
 
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Navigate Tab");
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1049,9 +1033,9 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(runnable, 3000);
                 }
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Nearby Tab");
-                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Nearby Tab");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             }
             return true;
@@ -1254,7 +1238,7 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
 
         Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Attempt");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1277,7 +1261,7 @@ public class MainActivity extends AppCompatActivity
                     if(result != null) {
                         startingPointTextView.setText(result.get(0));
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1285,7 +1269,7 @@ public class MainActivity extends AppCompatActivity
                     else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FAILED");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1404,43 +1388,43 @@ public class MainActivity extends AppCompatActivity
                 title.setGravity(Gravity.CENTER);
                 title.setTypeface(Typeface.DEFAULT_BOLD);
                 title.setPadding(8,16,8,0);
-                progressDialog = new ProgressDialog(getApplicationContext());
-                progressDialog.setMessage("Loading..");
                 mBuilder.setCustomTitle(title);
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
-                        saveSelectedItem(option);
-
                         switch (option) {
                             case 0:
                                 //English
                                 setLocale("en");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 1:
                                 //chinese
                                 setLocale("zh");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 2:
                                 //malay
                                 setLocale("ms");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 3:
                                 //tamil
                                 setLocale("ta");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             default:
                                 break;
                         }
-
+                        saveSelectedItem(option);
                         // dismiss alert dialog when language selected
                         dialog.dismiss();
                     }
@@ -1521,6 +1505,10 @@ public class MainActivity extends AppCompatActivity
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
         sharedPrefEditor.commit();
+
+        Intent refresh = new Intent(this, MainActivity.class);
+        startActivity(refresh);
+        finish();
     }
 
     @Override
@@ -2316,14 +2304,34 @@ public class MainActivity extends AppCompatActivity
                 String endPlaceId = deconcat[1];
                 String routeid = deconcat[2];
                 String fareType = deconcat[3];
+                String queryLanguage;
+                SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                String language = prefs.getString("My_Lang", "");
+                Log.i(TAG,"LANGUAGE?"+language);
+                switch (language){
+                    case "ms":
+                        queryLanguage = "ms";
+                        break;
+                    case "ta":
+                        queryLanguage = "ta";
+                        break;
+                    case "zh":
+                        queryLanguage = "zh-CN";
+                        break;
+                    default:
+                        queryLanguage = "en";
+                        break;
+                }
                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
                         + startPlaceId + "&destination=place_id:"
                         + endPlaceId
                         + "&mode=transit"
+                        +"&language=" + queryLanguage
                         + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                 List<String> directionsQuery = new ArrayList<>();
                 directionsQuery.add(query);
                 Log.i(TAG, directionsQuery.toString());
+
                 JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
                 List<GoogleRoutesData> result;
                 try {
