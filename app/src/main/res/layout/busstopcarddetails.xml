@@ -65,12 +65,11 @@
         app:layout_constraintEnd_toStartOf="@+id/buscard2"
         app:layout_constraintTop_toTopOf="@+id/operator">
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/duration1"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:ellipsize="end"
-            android:maxWidth="120dp"
+            android:gravity="center_vertical"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
             android:paddingEnd="8dp"
@@ -81,13 +80,17 @@
             android:text="@string/_4_min"
             android:textAlignment="center"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="100sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/wheel1"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_conversion_absoluteHeight="20dp"
             tools:layout_conversion_absoluteWidth="30dp"
-            tools:text="Arriving" />
+            tools:text="12 நிமிடங்கள்" />
 
         <ImageView
             android:id="@+id/wheel1"
@@ -117,11 +120,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/buscard1">
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/duration2"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:ellipsize="marquee"
+            android:gravity="center_vertical"
+            android:maxEms="6"
             android:maxWidth="90dp"
             android:minWidth="60dp"
             android:paddingBottom="1dp"
@@ -133,13 +138,17 @@
             android:text="@string/_4_min"
             android:textAlignment="center"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="100sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/wheel2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_conversion_absoluteHeight="20dp"
             tools:layout_conversion_absoluteWidth="30dp"
-            tools:text="36 mins" />
+            tools:text="12 நிமிடங்கள்" />
 
         <ImageView
             android:id="@+id/wheel2"
@@ -168,7 +177,7 @@
         app:layout_constraintStart_toEndOf="@+id/buscard2"
         app:layout_constraintTop_toTopOf="@+id/buscard2">
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/duration3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -181,6 +190,10 @@
             android:text="@string/_4_min"
             android:textColor="@android:color/white"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="100sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/wheel3"
             app:layout_constraintStart_toStartOf="parent"
