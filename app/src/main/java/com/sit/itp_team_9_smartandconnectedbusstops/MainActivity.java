@@ -354,7 +354,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        setTheme(R.style.AppTheme_NoActionBar);
 //        setContentView(R.layout.loadingscreen);
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -1514,8 +1513,8 @@ public class MainActivity extends AppCompatActivity
             tvDestination = toolbarNavigate.findViewById(R.id.textViewDestination);
             tvDisplayFares.setText(R.string.displayfares);
             tvSortBy.setText(R.string.sortby);
-            tvStartingPoint.setText(R.string.starting_point);
-            tvDestination.setText(R.string.destination);
+            tvStartingPoint.setHint(R.string.starting_point);
+            tvDestination.setHint(R.string.destination);
         }
     }
 
