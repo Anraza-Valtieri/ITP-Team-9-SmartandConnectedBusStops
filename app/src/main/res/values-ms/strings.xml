@@ -99,5 +99,6 @@
     <string name="data_sources">Sumber data</string>
     <string name="slight_delay">Sedikit kelewatan</string>
     <string name="mrt_station">MRT Station</string>
+    <string name="RestartToChangeLang">Mulakan semula diperlukan</string>
 
 </resources>

@@ -164,6 +164,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity
     private View navHeader;
     private LinearLayout navheaderbanner;
     private ActionBarDrawerToggle toggle;
+    private DrawerLayout drawer;
 
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
@@ -457,7 +459,7 @@ public class MainActivity extends AppCompatActivity
 
         userData = new UserData();
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -786,7 +788,7 @@ public class MainActivity extends AppCompatActivity
                     Bundle bundle = new Bundle();
                     bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
-                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Favorite Tab");
                     mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
                     if (adapter != null)
@@ -983,7 +985,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(TAG,"query: "+query);
                         hideKeyboard();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "4");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Button");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -995,7 +997,7 @@ public class MainActivity extends AppCompatActivity
                 });
 
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Navigate Tab");
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1036,9 +1038,9 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(runnable, 3000);
                 }
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Nearby Tab");
-                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Nearby Tab");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             }
             return true;
@@ -1241,7 +1243,7 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
 
         Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Attempt");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1264,7 +1266,7 @@ public class MainActivity extends AppCompatActivity
                     if(result != null) {
                         startingPointTextView.setText(result.get(0));
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1272,7 +1274,7 @@ public class MainActivity extends AppCompatActivity
                     else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FAILED");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1287,7 +1289,7 @@ public class MainActivity extends AppCompatActivity
                     if(result != null) {
                         destinationTextView.setText(result.get(0));
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1295,7 +1297,7 @@ public class MainActivity extends AppCompatActivity
                     else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
                         Bundle bundle = new Bundle();
-                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
                         bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
                         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
                         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -1310,7 +1312,7 @@ public class MainActivity extends AppCompatActivity
         if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }else{
-            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            drawer = findViewById(R.id.drawer_layout);
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
             } else {
@@ -1391,43 +1393,43 @@ public class MainActivity extends AppCompatActivity
                 title.setGravity(Gravity.CENTER);
                 title.setTypeface(Typeface.DEFAULT_BOLD);
                 title.setPadding(8,16,8,0);
-                progressDialog = new ProgressDialog(getApplicationContext());
-                progressDialog.setMessage("Loading..");
                 mBuilder.setCustomTitle(title);
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
-                        saveSelectedItem(option);
-
                         switch (option) {
                             case 0:
                                 //English
                                 setLocale("en");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 1:
                                 //chinese
                                 setLocale("zh");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 2:
                                 //malay
                                 setLocale("ms");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 3:
                                 //tamil
                                 setLocale("ta");
 //                                progressDialog.show();
-                                recreate();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             default:
                                 break;
                         }
-
+                        saveSelectedItem(option);
                         // dismiss alert dialog when language selected
                         dialog.dismiss();
                     }
@@ -1465,7 +1467,6 @@ public class MainActivity extends AppCompatActivity
             default:
                     break;
         }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -1481,6 +1482,40 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
         editor.putString("My_Lang", lang);
         editor.apply();
+
+        if(bottomNav != null) {
+            bottomNav.getMenu().findItem(R.id.action_nav).setTitle(R.string.directions);
+            bottomNav.getMenu().findItem(R.id.action_fav).setTitle(R.string.favorites);
+            bottomNav.getMenu().findItem(R.id.action_nearby).setTitle(R.string.nearby);
+        }
+        if(drawer != null){
+            MenuItem langPref, appGuide, aboutApp, dataSource, feedback;
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            Menu menu = navigationView.getMenu();
+            langPref = menu.findItem(R.id.nav_language_preferences);
+            appGuide = menu.findItem(R.id.nav_app_guide);
+            aboutApp = menu.findItem(R.id.nav_about_app);
+            dataSource = menu.findItem(R.id.nav_datasources);
+            feedback = menu.findItem(R.id.nav_feedback);
+
+            langPref.setTitle(R.string.language);
+            appGuide.setTitle(R.string.appguide);
+            aboutApp.setTitle(R.string.about_app);
+            dataSource.setTitle(R.string.data_sources);
+            feedback.setTitle(R.string.feedback);
+        }
+
+        if(toolbarNavigate != null){
+            TextView tvDisplayFares, tvSortBy, tvStartingPoint, tvDestination;
+            tvDisplayFares = toolbarNavigate.findViewById(R.id.tvDisplayFares);
+            tvSortBy = toolbarNavigate.findViewById(R.id.tvSortBy);
+            tvStartingPoint = toolbarNavigate.findViewById(R.id.textViewStartingPoint);
+            tvDestination = toolbarNavigate.findViewById(R.id.textViewDestination);
+            tvDisplayFares.setText(R.string.displayfares);
+            tvSortBy.setText(R.string.sortby);
+            tvStartingPoint.setText(R.string.starting_point);
+            tvDestination.setText(R.string.destination);
+        }
     }
 
     // load language saved in shared preferences
@@ -1507,7 +1542,12 @@ public class MainActivity extends AppCompatActivity
         }
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
-        sharedPrefEditor.commit();
+        sharedPrefEditor.apply();
+
+
+//        Intent refresh = new Intent(this, MainActivity.class);
+//        startActivity(refresh);
+//        finish();
     }
 
     @Override
@@ -2303,14 +2343,34 @@ public class MainActivity extends AppCompatActivity
                 String endPlaceId = deconcat[1];
                 String routeid = deconcat[2];
                 String fareType = deconcat[3];
+                String queryLanguage;
+                SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                String language = prefs.getString("My_Lang", "");
+                Log.i(TAG,"LANGUAGE?"+language);
+                switch (language){
+                    case "ms":
+                        queryLanguage = "ms";
+                        break;
+                    case "ta":
+                        queryLanguage = "ta";
+                        break;
+                    case "zh":
+                        queryLanguage = "zh-CN";
+                        break;
+                    default:
+                        queryLanguage = "en";
+                        break;
+                }
                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
                         + startPlaceId + "&destination=place_id:"
                         + endPlaceId
                         + "&mode=transit"
+                        +"&language=" + queryLanguage
                         + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                 List<String> directionsQuery = new ArrayList<>();
                 directionsQuery.add(query);
                 Log.i(TAG, directionsQuery.toString());
+
                 JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
                 List<GoogleRoutesData> result;
                 try {
