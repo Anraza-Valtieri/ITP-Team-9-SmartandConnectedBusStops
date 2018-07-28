@@ -1,5 +1,7 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -593,7 +595,8 @@ public class NavigateTransitCard extends Card {
                                         TrainStation departureTrainStation = null, arrivalTrainStation = null;
                                         String departureStation = cleanUpStationName(routeSteps.get(i).getDepartureStop());
                                         String arrivalStation = cleanUpStationName(routeSteps.get(i).getArrivalStop());
-
+                                        Log.i(TAG,"departureStation "+departureStation);
+                                        Log.i(TAG,"arrivalStation "+arrivalStation);
                                         //get departure and arrival stations
                                         for (TrainStation trainStationInList : allTrainStationsInLine) {
                                             if (trainStationInList.getStationName().equalsIgnoreCase(
@@ -989,7 +992,102 @@ public class NavigateTransitCard extends Card {
                 stationName = stationName.replace(" (EW18)","");
                 break;
         }
+        //if chinese used to query
+        SharedPreferences prefs = MainActivity.context.getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        Log.i(TAG,"language? "+language);
+        if (language.equals("zh")){
+            Log.i(TAG, "chinese??");
+            stationName = stationName.replaceAll("地鐵.*$","").trim();
+            stationName = stationName.replaceAll("輕軌站.*$","").trim();
+            stationName = stationName.replaceAll("轻轨站.*$","").trim();
+
+            //convert station names returned in traditional chinese to simplified chinese
+            switch(stationName) {
+                //EWL
+                case("樟宜機場"):
+                    stationName = "樟宜机场";
+                    break;
+                case("景萬岸"):
+                    stationName = "景万岸";
+                    break;
+                case("勞明達"):
+                    stationName = "劳明达";
+                    break;
+                case("中峇魯"):
+                    stationName = "中峇鲁";
+                    break;
+                case("紅山"):
+                    stationName = "红山";
+                    break;
+                case("聯邦"):
+                    stationName = "联邦";
+                    break;
+                case("波那維斯達"):
+                    stationName = "波那维斯达";
+                    break;
+                case("裕廊東"):
+                    stationName = "裕廊东";
+                    break;
+                //DTL
+                case("海灣舫"):
+                    stationName = "海湾舫";
+                    break;
+                case("寶門廊"):
+                    stationName = "宝门廊";
+                    break;
+                case("陳嘉庚"):
+                    stationName = "陈嘉庚";
+                    break;
+                case("凱秀"):
+                    stationName = "凯秀";
+                    break;
+                case("武吉班讓"):
+                    stationName = "武吉班让";
+                    break;
+                //NSL
+                case("烏節"):
+                    stationName = "乌节";
+                    break;
+                case("諾維娜"):
+                    stationName = "诺维娜";
+                    break;
+                case("宏茂橋"):
+                    stationName = "宏茂桥";
+                    break;
+                case("義順"):
+                    stationName = "义顺";
+                    break;
+                case("克蘭芝"):
+                    stationName = "克兰芝";
+                    break;
+                //CCL
+                case("尼誥大道"):
+                    stationName = "尼诰大道";
+                    break;
+                case("體育場"):
+                    stationName = "体育场";
+                    break;
+                case("達科達"):
+                    stationName = "达科达";
+                    break;
+                case("直落布蘭雅"):
+                    stationName = "直落布兰雅";
+                    break;
+                //NEL
+                case("後港"):
+                    stationName = "后港";
+                    break;
+                case("文慶"):
+                    stationName = "文庆";
+                    break;
+                case("花拉公園"):
+                    stationName = "花拉公园";
+                    break;
+            }
+        }
         stationName = stationName.replaceAll(MainActivity.context.getResources().getString(R.string.mrt_station)+".*$","").trim();
+        stationName = stationName.replaceAll("MRT Station.*$","").trim(); //some stations in english regardless of language in query
         Log.i(TAG, "stationNameRegex "+stationName);
 
         return stationName;
