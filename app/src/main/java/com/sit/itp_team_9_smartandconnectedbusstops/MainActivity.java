@@ -149,6 +149,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixPar
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONTwitterParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Rendering.CustomClusterRenderer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
@@ -337,7 +338,7 @@ public class MainActivity extends AppCompatActivity
     String mrtLine;
     //Twitter username of Mrt updates
     final static String ScreenName = "SMRT_Singapore";
-    List<String> twitterList = new ArrayList<String>();
+    List<String> twitterList = new ArrayList<>();
     // Weather
     private SGWeather sgWeather;
     TextView location;
@@ -1543,26 +1544,11 @@ public class MainActivity extends AppCompatActivity
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
         sharedPrefEditor.apply();
-
-
-//        Intent refresh = new Intent(this, MainActivity.class);
-//        startActivity(refresh);
-//        finish();
     }
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
-        /*if(allBusStops.containsKey(poi.name)) {
-            String id = allBusStops.get(poi.name).getBusStopCode();
-            BusStopCards card = getBusStopData(id);
-            singleCardList.clear();
-            singleCardList.add(card);
-            updateAdapterList(singleCardList);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        }else{
-            Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
-        }*/
     }
 
     @Override
@@ -1626,46 +1612,20 @@ public class MainActivity extends AppCompatActivity
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
-//        mClusterManager = new ClusterManager<>(this, mMap);
-//        mClusterManager.setAnimation(false);
-//        mClusterManager.getMarkerCollection().getMarkers();
-//        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
-//                mClusterManager));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraMoveListener(this);
-//        mMap.setOnMarkerClickListener(mClusterManager);
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-//                if (marker == user_marker) {
-//                    return true;
-//                }
-                SelectMarker(marker.getSnippet());
-                return true;
-            }
+        mMap.setOnMarkerClickListener(marker -> {
+            SelectMarker(marker.getSnippet());
+            return true;
         });
 
-//        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
-
-
-//        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
-
 //
-        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                downloadTweets();
-                return null;
-            }
-        };
-        asyncTask.execute();
+        downloadTweets();
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
             PrepareLTAData();
@@ -1697,7 +1657,6 @@ public class MainActivity extends AppCompatActivity
     }
     @Override
     public void onCameraMove() {
-//        layer.animate().alpha(0).setDuration(1000);
         addItemsToMap(markerMap);
     }
 
@@ -1733,6 +1692,13 @@ public class MainActivity extends AppCompatActivity
         return favRoute;
     }
 
+    public List<String> getTwitterList() {
+        return twitterList;
+    }
+
+    public void setTwitterList(List<String> twitterList) {
+        this.twitterList = twitterList;
+    }
 
     private void addItemsToMap(HashMap<String, MapMarkers> items) {
         if(this.mMap != null) {
@@ -1979,30 +1945,7 @@ public class MainActivity extends AppCompatActivity
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
-//                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-//                    mClusterManager.addItem(infoWindowItem);
-//                    markerMap.put(value.getDescription(), infoWindowItem);
                     markerMap.put(id, infoWindowItem);
-//                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-//                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-////                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
-//                            /*BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-//                            if(card != null) {
-//                                card.setType(Card.BUS_STOP_CARD);
-//                                singleCardList.clear();
-//                                singleCardList.add(card);
-//                                updateAdapterList(singleCardList);
-//                                SelectMarker(card.getBusStopID());
-//                            }*/
-////                            SelectMarker(mapMarkers.getSnippet());
-//                            return true;
-////                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-//                        } else {
-//                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-//                        }
-//                        return false;
-//                    });
-//                    }
                 }
 
                 return null;
@@ -2010,9 +1953,6 @@ public class MainActivity extends AppCompatActivity
         };
         asyncTask.execute();
 
-
-//        lookUpNearbyBusStops();
-//        handler.postDelayed(runnable2, 5000);
     }
 
     /**
@@ -2882,7 +2822,7 @@ public class MainActivity extends AppCompatActivity
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         if (networkInfo != null && networkInfo.isConnected()) {
-            new JSONTwitterParser().execute(ScreenName);
+            new JSONTwitterParser(this).execute(ScreenName);
         } else {
             Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
         }
@@ -2891,131 +2831,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCameraIdle() {
 
-    }
-
-    public class JSONTwitterParser extends AsyncTask<String, Void , String>{
-        final static String CONSUMER_KEY = "nW88XLuFSI9DEfHOX2tpleHbR";
-        final static String CONSUMER_SECRET = "hCg3QClZ1iLR13D3IeMvebESKmakIelp4vwFUICuj6HAfNNCer";
-        final static String TwitterTokenURL = "https://api.twitter.com/oauth2/token";
-        final static String TwitterStreamURL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(String... screenNames) {
-            String result = null;
-
-            if (screenNames.length > 0) {
-                result = getTwitterStream(screenNames[0]);
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-//            Log.e("result",result);
-
-            try {
-                JSONArray jsonArray_data = new JSONArray(result);
-                for (int i=0; i<jsonArray_data.length();i++){
-
-                    JSONObject jsonObject = jsonArray_data.getJSONObject(i);
-                    twitterList.add(jsonObject.getString("text"));
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-
-        // convert a JSON authentication object into an Authenticated object
-        private Authenticated jsonToAuthenticated(String rawAuthorization) {
-            Authenticated auth = null;
-            if (rawAuthorization != null && rawAuthorization.length() > 0) {
-                try {
-                    Gson gson = new Gson();
-                    auth = gson.fromJson(rawAuthorization, Authenticated.class);
-                } catch (IllegalStateException ex) {
-                    // just eat the exception
-                }
-            }
-            return auth;
-        }
-
-        private String getResponseBody(HttpRequestBase request) {
-            StringBuilder sb = new StringBuilder();
-            try {
-
-                DefaultHttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
-                HttpResponse response = httpClient.execute(request);
-                int statusCode = response.getStatusLine().getStatusCode();
-                String reason = response.getStatusLine().getReasonPhrase();
-
-                if (statusCode == 200) {
-
-                    HttpEntity entity = response.getEntity();
-                    InputStream inputStream = entity.getContent();
-
-                    BufferedReader bReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
-                    String line = null;
-                    while ((line = bReader.readLine()) != null) {
-                        sb.append(line);
-                    }
-                } else {
-                    sb.append(reason);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            }  catch (IOException ex2) {
-            }
-            return sb.toString();
-        }
-
-        private String getTwitterStream(String screenName) {
-            String results = null;
-
-            //Encode consumer key and secret
-            try {
-                // URL encode the consumer key and secret
-                String urlApiKey = URLEncoder.encode(CONSUMER_KEY, "UTF-8");
-                String urlApiSecret = URLEncoder.encode(CONSUMER_SECRET, "UTF-8");
-
-                // Concatenate the encoded consumer key, a colon character, and the
-                // encoded consumer secret
-                String combined = urlApiKey + ":" + urlApiSecret;
-
-                // Base64 encode the string
-                String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
-
-                //Obtain a bearer token
-                HttpPost httpPost = new HttpPost(TwitterTokenURL);
-                httpPost.setHeader("Authorization", "Basic " + base64Encoded);
-                httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-                httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
-                String rawAuthorization = getResponseBody(httpPost);
-                Authenticated auth = jsonToAuthenticated(rawAuthorization);
-
-                // Applications should verify that the value associated with the
-                // token_type key of the returned object is bearer
-                if (auth != null && auth.token_type.equals("bearer")) {
-
-                    //Authenticate API requests with bearer token
-                    HttpGet httpGet = new HttpGet(TwitterStreamURL + screenName);
-
-                    // construct a normal HTTPS request and include an Authorization
-                    // header with the value of Bearer <>
-                    httpGet.setHeader("Authorization", "Bearer " + auth.access_token);
-                    httpGet.setHeader("Content-Type", "application/json");
-                    // update the results with the body of the response
-                    results = getResponseBody(httpGet);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            } catch (IllegalStateException ex1) {
-            }
-            return results;
-        }
     }
 
     void SelectMarker(String id){
