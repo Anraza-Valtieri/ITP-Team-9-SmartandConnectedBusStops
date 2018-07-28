@@ -362,8 +362,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void Refresh(){
 //        Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
-//        doAutoRefresh();
-//        updateUI();
     }
 
     public void clearPolylines(){
@@ -428,7 +426,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
                 }
                 updateCardData(busStopCards);
-                notifyItemRangeChanged(0, mCard.size());
+//                notifyItemRangeChanged(0, mCard.size());
                 //updateCardData(mCard);
                 doAutoRefresh();
             }
@@ -481,6 +479,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     return null;
                 }
             }.execute();
+            notifyItemRangeChanged(0, mCard.size());
+//            notifyDataSetChanged();
 //            Log.d(TAG, "processFinishFromLTA: END looking at "+mCard.size());
         }
     }
