@@ -347,6 +347,7 @@ public class MainActivity extends AppCompatActivity
     TextView psi25;
     TextView psi10;
     TextView uv;
+    TextView currentWeather;
 
     private boolean umbrellaBring = false;
 
@@ -359,10 +360,7 @@ public class MainActivity extends AppCompatActivity
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         super.onCreate(savedInstanceState);
-        String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
-                .getString("My_Lang", "en");
-        setLocale(language);
-
+        loadLocale();
 
         sDefSystemLang = this.getResources().getConfiguration().locale.getDisplayName();
         Log.d(TAG, "onCreate: "+sDefSystemLang);
@@ -392,6 +390,7 @@ public class MainActivity extends AppCompatActivity
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
+        currentWeather = navHeader.findViewById(R.id.currentWeather);
         loadingScreen = findViewById(R.id.splashscreen);
         // Toolbar :: Transparent
 //        toolbar.setBackgroundColor(Color.TRANSPARENT);
@@ -478,7 +477,7 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-
+                            handler.postDelayed(() -> currentWeather.setText(R.string.current_weather), 500);
                             handler.postDelayed(() -> location.setText( sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+getString(R.string.degree)),500);
@@ -1489,7 +1488,7 @@ public class MainActivity extends AppCompatActivity
             bottomNav.getMenu().findItem(R.id.action_nearby).setTitle(R.string.nearby);
         }
         if(drawer != null){
-            MenuItem langPref, appGuide, aboutApp, dataSource, feedback;
+            MenuItem langPref, appGuide, aboutApp, dataSource, feedback, settingTitle, helpTitle, aboutTitle;
             NavigationView navigationView = findViewById(R.id.nav_view);
             Menu menu = navigationView.getMenu();
             langPref = menu.findItem(R.id.nav_language_preferences);
@@ -1497,12 +1496,18 @@ public class MainActivity extends AppCompatActivity
             aboutApp = menu.findItem(R.id.nav_about_app);
             dataSource = menu.findItem(R.id.nav_datasources);
             feedback = menu.findItem(R.id.nav_feedback);
+            settingTitle = menu.findItem(R.id.settingTitle);
+            helpTitle = menu.findItem(R.id.helpTitle);
+            aboutTitle = menu.findItem(R.id.aboutTitle);
 
             langPref.setTitle(R.string.language);
             appGuide.setTitle(R.string.appguide);
             aboutApp.setTitle(R.string.about_app);
             dataSource.setTitle(R.string.data_sources);
             feedback.setTitle(R.string.feedback);
+            settingTitle.setTitle(R.string.action_settings);
+            helpTitle.setTitle(R.string.action_help);
+            aboutTitle.setTitle(R.string.about);
         }
 
         if(toolbarNavigate != null){
@@ -1516,6 +1521,8 @@ public class MainActivity extends AppCompatActivity
             tvStartingPoint.setHint(R.string.starting_point);
             tvDestination.setHint(R.string.destination);
         }
+        if(bottomNav!=null)
+            bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
     }
 
     // load language saved in shared preferences

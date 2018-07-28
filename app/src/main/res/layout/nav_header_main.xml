@@ -87,7 +87,7 @@
             tools:text="UV Index: 10" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/currentWeather"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -101,8 +101,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            app:layout_constraintStart_toStartOf="@+id/textView"
-            app:layout_constraintTop_toBottomOf="@+id/textView"
+            app:layout_constraintStart_toStartOf="@+id/currentWeather"
+            app:layout_constraintTop_toBottomOf="@+id/currentWeather"
             tools:text="Pasir Ris" />
     </android.support.constraint.ConstraintLayout>
 
