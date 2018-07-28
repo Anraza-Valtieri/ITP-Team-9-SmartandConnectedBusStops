@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         super.onCreate(savedInstanceState);
-        loadLocale();
+
 
         sDefSystemLang = this.getResources().getConfiguration().locale.getDisplayName();
         Log.d(TAG, "onCreate: "+sDefSystemLang);
@@ -1632,6 +1632,7 @@ public class MainActivity extends AppCompatActivity
 
 //
         downloadTweets();
+        loadLocale();
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
             PrepareLTAData();

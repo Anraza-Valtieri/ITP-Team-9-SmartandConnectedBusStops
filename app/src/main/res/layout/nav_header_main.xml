@@ -16,19 +16,23 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvTemperature"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toStartOf="@+id/tvWeather"
             app:layout_constraintTop_toBottomOf="@+id/tvWeather"
             tools:text="25.4C" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvWeather"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -38,6 +42,10 @@
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -58,49 +66,69 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/product_logo_144dp_round" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvPSI25"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toStartOf="@+id/tvTemperature"
             app:layout_constraintTop_toBottomOf="@+id/tvTemperature"
             tools:text="PM2.5: 29" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvPSI10"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toEndOf="@+id/tvPSI25"
             app:layout_constraintTop_toTopOf="@+id/tvPSI25"
             tools:text="PM10: 10" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvUV"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toStartOf="@+id/tvPSI25"
             app:layout_constraintTop_toBottomOf="@+id/tvPSI25"
             tools:text="UV Index: 10" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/currentWeather"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="@string/current_weather"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/tvLocation"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text=""
+            app:autoSizeMaxTextSize="120sp"
+            app:autoSizeMinTextSize="7sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintStart_toStartOf="@+id/currentWeather"
             app:layout_constraintTop_toBottomOf="@+id/currentWeather"
             tools:text="Pasir Ris" />
