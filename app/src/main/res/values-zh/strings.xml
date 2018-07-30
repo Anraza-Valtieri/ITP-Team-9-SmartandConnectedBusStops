@@ -81,6 +81,7 @@
     <string name="km">公里</string>
     <string name="m">米</string>
     <string name="walk">步行</string>
+    <string name="feedback">意见</string>
     <string name="chooselanguage">选择您首选的语言</string>
     <string name="suggestedroute">* 建议路线 *</string>
     <string name="publictransport">公共交通</string>
@@ -89,14 +90,14 @@
     <string name="showers">阵雨</string>
     <string name="lightshowers">阵雨</string>
     <string name="cloudy">多云</string>
-    <string name="slightdelay">稍有延迟</string>
-    <string name="refreshingdata">正在刷新...</string>
-    <string name="leastTime">最短的时间</string>
-    <string name="leastDistance">最短的路程</string>
-    <string name="leastWalking">较少步行</string>
-    <string name="datasources">数据来源</string>
-    <string name="aboutapp">关于应用程序</string>
-    <string name="appguide">应用指南</string>
-    <string name="help">援助</string>
-    <string name="feedback">反馈</string>
+    <string name="appguide">指南</string>
+    <string name="leastTime">少时间</string>
+    <string name="leastDistance">少路程</string>
+    <string name="leastWalking">少步行</string>
+    <string name="action_help">帮助</string>
+    <string name="about_app">关于</string>
+    <string name="data_sources">资料来源</string>
+    <string name="slight_delay">稍微延迟</string>
+    <string name="mrt_station">地铁站</string>
+    <string name="RestartToChangeLang">需要重启</string>
 </resources>

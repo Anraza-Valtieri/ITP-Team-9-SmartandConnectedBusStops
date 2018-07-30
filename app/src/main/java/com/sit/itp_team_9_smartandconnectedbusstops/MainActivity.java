@@ -7,6 +7,10 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -20,11 +24,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -46,6 +53,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -140,6 +149,7 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixPar
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONTwitterParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Rendering.CustomClusterRenderer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
@@ -155,6 +165,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -172,6 +183,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.haveNetworkConnection;
 import static com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils.showNoNetworkDialog;
@@ -221,6 +233,7 @@ public class MainActivity extends AppCompatActivity
     private View navHeader;
     private LinearLayout navheaderbanner;
     private ActionBarDrawerToggle toggle;
+    private DrawerLayout drawer;
 
     // Bottom sheet
     protected BottomSheetBehavior bottomSheetBehavior;
@@ -294,6 +307,7 @@ public class MainActivity extends AppCompatActivity
 
     //Progress
     private ProgressBar progressBar;
+    private ProgressDialog progressDialog;
 
     //Navigate
     boolean optionMode = true;
@@ -324,7 +338,7 @@ public class MainActivity extends AppCompatActivity
     String mrtLine;
     //Twitter username of Mrt updates
     final static String ScreenName = "SMRT_Singapore";
-    List<String> twitterList = new ArrayList<String>();
+    List<String> twitterList = new ArrayList<>();
     // Weather
     private SGWeather sgWeather;
     TextView location;
@@ -333,6 +347,7 @@ public class MainActivity extends AppCompatActivity
     TextView psi25;
     TextView psi10;
     TextView uv;
+    TextView currentWeather;
 
     private boolean umbrellaBring = false;
 
@@ -340,15 +355,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        setTheme(R.style.AppTheme_NoActionBar);
 //        setContentView(R.layout.loadingscreen);
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         super.onCreate(savedInstanceState);
-        String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
-                .getString("My_Lang", "en");
-        setLocale(language);
 
 
         sDefSystemLang = this.getResources().getConfiguration().locale.getDisplayName();
@@ -379,6 +390,7 @@ public class MainActivity extends AppCompatActivity
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
+        currentWeather = navHeader.findViewById(R.id.currentWeather);
         loadingScreen = findViewById(R.id.splashscreen);
         // Toolbar :: Transparent
 //        toolbar.setBackgroundColor(Color.TRANSPARENT);
@@ -439,14 +451,14 @@ public class MainActivity extends AppCompatActivity
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-        db.disableNetwork();
+//        db.disableNetwork();
 
         Intent startServiceIntent = new Intent(this, NetworkSchedulerService.class);
         startService(startServiceIntent);
 
         userData = new UserData();
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -465,7 +477,7 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-
+                            handler.postDelayed(() -> currentWeather.setText(R.string.current_weather), 500);
                             handler.postDelayed(() -> location.setText( sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+getString(R.string.degree)),500);
@@ -548,7 +560,13 @@ public class MainActivity extends AppCompatActivity
         autoCompleteFilter = new AutocompleteFilter.Builder().setCountry("SG").build();
         mPlaceAutoCompleteAdapter = new PlaceAutoCompleteAdapter(MainActivity.this, mGeoDataClient, LAT_LNG_BOUNDS, autoCompleteFilter);
 
-        downloadTweets();
+//        downloadTweets();
+        if(progressDialog != null && progressDialog.isShowing())
+            progressDialog.hide();
+
+        mFirebaseAnalytics.setUserProperty("device_Man", android.os.Build.MANUFACTURER);
+        mFirebaseAnalytics.setUserProperty("device_Name", android.os.Build.MODEL);
+        mFirebaseAnalytics.setUserProperty("device_OS", android.os.Build.VERSION.RELEASE);
 
     }
 
@@ -657,7 +675,8 @@ public class MainActivity extends AppCompatActivity
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
 //                        Objects.requireNonNull(getSupportActionBar()).show();
                         if(bottomNav.getSelectedItemId() == R.id.action_nav && !getSupportActionBar().isShowing())
@@ -665,14 +684,15 @@ public class MainActivity extends AppCompatActivity
                         if(bottomNav.getSelectedItemId() != R.id.action_nav && !getSupportActionBar().isShowing())
                             showActionBar(toolbar);
                         layer.setVisibility(View.GONE);
-                        fab.show();
+//                        fab.show();
                     } else if (BottomSheetBehavior.STATE_EXPANDED == newState) {
                         if(toolbarNavigate.isShown())
                             hideActionBar(toolbarNavigate);
                         if(toolbar.isShown())
                             hideActionBar(toolbar);
 //                        Objects.requireNonNull(getSupportActionBar()).hide();
-                        fab.hide();
+                        if(fab.isShown())
+                            fab.hide();
                     } else if (BottomSheetBehavior.STATE_HIDDEN == newState){
                         if(singleCardList.size() <= 0) {
                             if (bottomNav.getSelectedItemId() == R.id.action_nearby)
@@ -690,7 +710,8 @@ public class MainActivity extends AppCompatActivity
                 public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                     layer.setVisibility(View.VISIBLE);
                     layer.setAlpha(slideOffset);
-                    fab.hide();
+                    if(fab.isShown())
+                        fab.hide();
 //                    fab.setSize(1-(int)slideOffset);
                 }
             });
@@ -766,7 +787,7 @@ public class MainActivity extends AppCompatActivity
                     Bundle bundle = new Bundle();
                     bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
                     bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Favorite Tab");
-                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                    bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Favorite Tab");
                     mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
                     if (adapter != null)
@@ -806,36 +827,20 @@ public class MainActivity extends AppCompatActivity
                             navigateCardList = (ArrayList<? extends Card>) transitCardList;
                             List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
-                            if(sortBySpinner.getSelectedItem().equals(MainActivity.context.getResources().getString(R.string.leastTime))) {
+                            if (sortBySpinner.getSelectedItem().toString().equals(context.getResources().getString(R.string.leastTime))){
+                                Log.i(TAG, "shortest time");
                                 Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                            }
-                            else if(sortBySpinner.getSelectedItem().equals(MainActivity.context.getResources().getString(R.string.leastDistance))) {
+                            }else if (sortBySpinner.getSelectedItem().toString().equals(context.getResources().getString(R.string.leastDistance))){
+                                Log.i(TAG, "shortest distance");
                                 Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                                 //transitCardList = (ArrayList<? super Card>) castToNavigate;
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                            }
-                            else if(sortBySpinner.getSelectedItem().equals(MainActivity.context.getResources().getString(R.string.leastWalking))){
+                            }else{
+                                Log.i(TAG,"shortest walking distance");
                                 Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                                 updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                             }
-
-
-                            /*switch (sortBySpinner.getSelectedItem().toString()) {
-                                case "Shortest Time":
-                                    Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                                case "Shortest Distance":
-                                    Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
-                                    //transitCardList = (ArrayList<? super Card>) castToNavigate;
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                                case "Least Walking":
-                                    Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
-                                    updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                    break;
-                            }*/
                         }
 
                     @Override
@@ -879,15 +884,40 @@ public class MainActivity extends AppCompatActivity
                                     mode = "walking";
                                     optionMode = false;
                                 }
+                                String queryLanguage;
+                                SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                                String language = prefs.getString("My_Lang", "");
+                                Log.i(TAG,"LANGUAGE?"+language);
+                                switch (language){
+                                    case "ms":
+                                        queryLanguage = "ms";
+                                        break;
+                                    case "ta":
+                                        queryLanguage = "ta";
+                                        break;
+                                    case "zh":
+                                        queryLanguage = "zh-CN";
+                                        break;
+                                    default:
+                                        queryLanguage = "en";
+                                        break;
+                                }
                                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                         + startingPointTextView.getText().toString() + "&destination="
                                         + destinationTextView.getText().toString()
                                         + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                        +"&language=" + queryLanguage
                                         + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                                 //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
                                 Log.i(TAG,query);
                                 hideKeyboard();
                                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+                                Bundle bundle = new Bundle();
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
+                                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Keyboard");
+                                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                                 lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                             }else{
@@ -926,14 +956,38 @@ public class MainActivity extends AppCompatActivity
                             mode = "walking";
                             optionMode = false;
                         }
+                        String queryLanguage;
+                        SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                        String language = prefs.getString("My_Lang", "");
+                        Log.i(TAG,"LANGUAGE?"+language);
+                        switch (language){
+                            case "ms":
+                                queryLanguage = "ms";
+                                break;
+                            case "ta":
+                                queryLanguage = "ta";
+                                break;
+                            case "zh":
+                                queryLanguage = "zh-CN";
+                                break;
+                            default:
+                                queryLanguage = "en";
+                                break;
+                        }
                          query = "https://maps.googleapis.com/maps/api/directions/json?origin="
                                 + startingPointTextView.getText().toString() + "&destination="
                                 + destinationTextView.getText().toString()
-                                + "&mode=" + mode //+ "&departure_time=1529577013" //for testing
+                                + "&mode=" + mode
+                                +"&language=" + queryLanguage
                                 + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                         //lookUpRoutes("https://maps.googleapis.com/maps/api/directions/json?origin=ClarkeQuay&destination=DhobyGhautMRT&mode=transit&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM");
-                        Log.i(TAG,query);
+                        Log.i(TAG,"query: "+query);
                         hideKeyboard();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "4");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Route Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success Button");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
                         lookUpRoutes(query, fareTypesSpinner.getSelectedItem().toString(), sortBySpinner.getSelectedItem().toString());
 
                     }else{
@@ -942,7 +996,7 @@ public class MainActivity extends AppCompatActivity
                 });
 
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "3");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Navigate Tab");
                 bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -983,9 +1037,9 @@ public class MainActivity extends AppCompatActivity
                     handler.postDelayed(runnable, 3000);
                 }
                 Bundle bundle = new Bundle();
-                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "1");
+                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
                 bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Nearby Tab");
-                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "navigate_bar");
+                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Nearby Tab");
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
             }
             return true;
@@ -1187,6 +1241,12 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something!");
 
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Attempt");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+
         try {
             startActivityForResult(intent, requestCode);
         }
@@ -1202,10 +1262,22 @@ public class MainActivity extends AppCompatActivity
             case 100:
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         startingPointTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "5");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "FAILED");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
 
@@ -1213,10 +1285,22 @@ public class MainActivity extends AppCompatActivity
 
                 if(result_code == RESULT_OK && i != null) {
                     ArrayList<String> result = i.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if(result != null)
+                    if(result != null) {
                         destinationTextView.setText(result.get(0));
-                    else
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Sorry! Google returned no data", Toast.LENGTH_LONG).show();
+                        Bundle bundle = new Bundle();
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "6");
+                        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "Voice Search");
+                        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "Success");
+                        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+                    }
                 }
                 break;
         }
@@ -1227,7 +1311,7 @@ public class MainActivity extends AppCompatActivity
         if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }else{
-            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            drawer = findViewById(R.id.drawer_layout);
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
             } else {
@@ -1308,37 +1392,43 @@ public class MainActivity extends AppCompatActivity
                 title.setGravity(Gravity.CENTER);
                 title.setTypeface(Typeface.DEFAULT_BOLD);
                 title.setPadding(8,16,8,0);
-
                 mBuilder.setCustomTitle(title);
                 mBuilder.setSingleChoiceItems(listItems, getSelectedItem(), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int option) {
-                        saveSelectedItem(option);
                         switch (option) {
                             case 0:
                                 //English
                                 setLocale("en");
-                                recreate();
+//                                progressDialog.show();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 1:
                                 //chinese
                                 setLocale("zh");
-                                recreate();
+//                                progressDialog.show();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 2:
                                 //malay
                                 setLocale("ms");
-                                recreate();
+//                                progressDialog.show();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             case 3:
                                 //tamil
                                 setLocale("ta");
-                                recreate();
+//                                progressDialog.show();
+//                                progressDialog.show();
+//                                recreate();
                                 break;
                             default:
                                 break;
                         }
-
+                        saveSelectedItem(option);
                         // dismiss alert dialog when language selected
                         dialog.dismiss();
                     }
@@ -1360,7 +1450,9 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case R.id.nav_about_app:
-
+                if(BuildConfig.DEBUG) {
+                    sendNotification();
+                }
                 intent = new Intent(context, AboutActivity.class);
                 startActivity(intent);
                 break;
@@ -1374,7 +1466,6 @@ public class MainActivity extends AppCompatActivity
             default:
                     break;
         }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -1390,6 +1481,48 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
         editor.putString("My_Lang", lang);
         editor.apply();
+
+        if(bottomNav != null) {
+            bottomNav.getMenu().findItem(R.id.action_nav).setTitle(R.string.directions);
+            bottomNav.getMenu().findItem(R.id.action_fav).setTitle(R.string.favorites);
+            bottomNav.getMenu().findItem(R.id.action_nearby).setTitle(R.string.nearby);
+        }
+        if(drawer != null){
+            MenuItem langPref, appGuide, aboutApp, dataSource, feedback, settingTitle, helpTitle, aboutTitle;
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            Menu menu = navigationView.getMenu();
+            langPref = menu.findItem(R.id.nav_language_preferences);
+            appGuide = menu.findItem(R.id.nav_app_guide);
+            aboutApp = menu.findItem(R.id.nav_about_app);
+            dataSource = menu.findItem(R.id.nav_datasources);
+            feedback = menu.findItem(R.id.nav_feedback);
+            settingTitle = menu.findItem(R.id.settingTitle);
+            helpTitle = menu.findItem(R.id.helpTitle);
+            aboutTitle = menu.findItem(R.id.aboutTitle);
+
+            langPref.setTitle(R.string.language);
+            appGuide.setTitle(R.string.appguide);
+            aboutApp.setTitle(R.string.about_app);
+            dataSource.setTitle(R.string.data_sources);
+            feedback.setTitle(R.string.feedback);
+            settingTitle.setTitle(R.string.action_settings);
+            helpTitle.setTitle(R.string.action_help);
+            aboutTitle.setTitle(R.string.about);
+        }
+
+        if(toolbarNavigate != null){
+            TextView tvDisplayFares, tvSortBy, tvStartingPoint, tvDestination;
+            tvDisplayFares = toolbarNavigate.findViewById(R.id.tvDisplayFares);
+            tvSortBy = toolbarNavigate.findViewById(R.id.tvSortBy);
+            tvStartingPoint = toolbarNavigate.findViewById(R.id.textViewStartingPoint);
+            tvDestination = toolbarNavigate.findViewById(R.id.textViewDestination);
+            tvDisplayFares.setText(R.string.displayfares);
+            tvSortBy.setText(R.string.sortby);
+            tvStartingPoint.setHint(R.string.starting_point);
+            tvDestination.setHint(R.string.destination);
+        }
+        if(bottomNav!=null)
+            bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
     }
 
     // load language saved in shared preferences
@@ -1416,22 +1549,12 @@ public class MainActivity extends AppCompatActivity
         }
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
-        sharedPrefEditor.commit();
+        sharedPrefEditor.apply();
     }
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
-        /*if(allBusStops.containsKey(poi.name)) {
-            String id = allBusStops.get(poi.name).getBusStopCode();
-            BusStopCards card = getBusStopData(id);
-            singleCardList.clear();
-            singleCardList.add(card);
-            updateAdapterList(singleCardList);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        }else{
-            Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
-        }*/
     }
 
     @Override
@@ -1495,37 +1618,21 @@ public class MainActivity extends AppCompatActivity
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
-//        mClusterManager = new ClusterManager<>(this, mMap);
-//        mClusterManager.setAnimation(false);
-//        mClusterManager.getMarkerCollection().getMarkers();
-//        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
-//                mClusterManager));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraMoveListener(this);
-//        mMap.setOnMarkerClickListener(mClusterManager);
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-//                if (marker == user_marker) {
-//                    return true;
-//                }
-                SelectMarker(marker.getSnippet());
-                return true;
-            }
+        mMap.setOnMarkerClickListener(marker -> {
+            SelectMarker(marker.getSnippet());
+            return true;
         });
 
-//        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
-
-
-//        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
-
+//
+        downloadTweets();
+        loadLocale();
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
             PrepareLTAData();
@@ -1557,7 +1664,6 @@ public class MainActivity extends AppCompatActivity
     }
     @Override
     public void onCameraMove() {
-//        layer.animate().alpha(0).setDuration(1000);
         addItemsToMap(markerMap);
     }
 
@@ -1593,14 +1699,29 @@ public class MainActivity extends AppCompatActivity
         return favRoute;
     }
 
+    public List<String> getTwitterList() {
+        return twitterList;
+    }
+
+    public void setTwitterList(List<String> twitterList) {
+        this.twitterList = twitterList;
+    }
 
     private void addItemsToMap(HashMap<String, MapMarkers> items) {
         if(this.mMap != null) {
+            //This is the current user-viewable region of the map
+            LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
+            if(mCurrentLocation != null) {
+                if (bounds.contains(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()))) {
+                    if (fab.isShown())
+                        fab.hide();
+                } else {
+                    if (!fab.isShown())
+                        fab.show();
+                }
+            }
 
             if(mMap.getCameraPosition().zoom > 15.0f) {
-                //This is the current user-viewable region of the map
-                LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
-
                 //Loop through all the items that are available to be placed on the map
                 for (Map.Entry<String, MapMarkers> entry : items.entrySet()) {
                     String key = entry.getKey();
@@ -1831,30 +1952,7 @@ public class MainActivity extends AppCompatActivity
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
-//                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-//                    mClusterManager.addItem(infoWindowItem);
-//                    markerMap.put(value.getDescription(), infoWindowItem);
                     markerMap.put(id, infoWindowItem);
-//                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-//                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-////                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
-//                            /*BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-//                            if(card != null) {
-//                                card.setType(Card.BUS_STOP_CARD);
-//                                singleCardList.clear();
-//                                singleCardList.add(card);
-//                                updateAdapterList(singleCardList);
-//                                SelectMarker(card.getBusStopID());
-//                            }*/
-////                            SelectMarker(mapMarkers.getSnippet());
-//                            return true;
-////                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-//                        } else {
-//                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-//                        }
-//                        return false;
-//                    });
-//                    }
                 }
 
                 return null;
@@ -1862,9 +1960,6 @@ public class MainActivity extends AppCompatActivity
         };
         asyncTask.execute();
 
-
-        lookUpNearbyBusStops();
-//        handler.postDelayed(runnable2, 5000);
     }
 
     /**
@@ -2195,14 +2290,34 @@ public class MainActivity extends AppCompatActivity
                 String endPlaceId = deconcat[1];
                 String routeid = deconcat[2];
                 String fareType = deconcat[3];
+                String queryLanguage;
+                SharedPreferences prefs = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                String language = prefs.getString("My_Lang", "");
+                Log.i(TAG,"LANGUAGE?"+language);
+                switch (language){
+                    case "ms":
+                        queryLanguage = "ms";
+                        break;
+                    case "ta":
+                        queryLanguage = "ta";
+                        break;
+                    case "zh":
+                        queryLanguage = "zh-CN";
+                        break;
+                    default:
+                        queryLanguage = "en";
+                        break;
+                }
                 String query = "https://maps.googleapis.com/maps/api/directions/json?origin=place_id:"
                         + startPlaceId + "&destination=place_id:"
                         + endPlaceId
                         + "&mode=transit"
+                        +"&language=" + queryLanguage
                         + "&alternatives=true&key=AIzaSyBhE8bUHClkv4jt5FBpz2VfqE8MJeN5IaM";
                 List<String> directionsQuery = new ArrayList<>();
                 directionsQuery.add(query);
                 Log.i(TAG, directionsQuery.toString());
+
                 JSONGoogleDirectionsParser directionsParser = new JSONGoogleDirectionsParser(MainActivity.this, directionsQuery);
                 List<GoogleRoutesData> result;
                 try {
@@ -2215,7 +2330,7 @@ public class MainActivity extends AppCompatActivity
                         umbrellaBring = true;
                     }
                     if (getDistanceMatrix(result.get(Integer.parseInt(routeid))) == "bus_congest" || getDistanceMatrix(result.get(Integer.parseInt(routeid)))=="mrt_fault") {
-                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, "Slight delay", umbrellaBring);
+                        NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(Integer.parseInt(routeid)), fareType, context.getResources().getString(R.string.slight_delay), umbrellaBring);
                         if (favRoute != null && favRoute.size() > 0 && favRoute.contains(card1.getRouteID()))
                             card1.setFavorite(true);
                         else
@@ -2344,7 +2459,9 @@ public class MainActivity extends AppCompatActivity
                     if (getWeatherData(result.get(0))){
                         umbrellaBring = true;
                     }
-                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, MainActivity.context.getResources().getString(R.string.suggestedroute), umbrellaBring);
+
+                    NavigateTransitCard card = NavigateTransitCard.getRouteData(result.get(0), fareTypes, context.getResources().getString(R.string.suggestedroute), umbrellaBring);
+                    
                     card.setType(card.NAVIGATE_TRANSIT_CARD);
                     transitCardList.add(card);
                     suggestedList.add(card.getRouteID());
@@ -2357,7 +2474,9 @@ public class MainActivity extends AppCompatActivity
                             umbrellaBring = true;
                         }
                         if (getDistanceMatrix(result.get(i)) == "bus_congest" || getDistanceMatrix(result.get(i))=="mrt_fault") {
-                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, MainActivity.context.getResources().getString(R.string.slightdelay), umbrellaBring);//<-if change words, change at CardAdapter also for text colour
+                            
+                            NavigateTransitCard card1 = NavigateTransitCard.getRouteData(result.get(i), fareTypes, context.getResources().getString(R.string.slight_delay), umbrellaBring);//<-if change words, change at CardAdapter also for text colour
+                            
                             if(!suggestedList.contains(card1.getRouteID())) {
                                 card1.setType(card1.NAVIGATE_TRANSIT_CARD);
                                 transitCardList.add(card1);
@@ -2388,35 +2507,20 @@ public class MainActivity extends AppCompatActivity
                         navigateCardList = (ArrayList<? extends Card>) transitCardList;
                         List<NavigateTransitCard> castToNavigate = (List<NavigateTransitCard>) navigateCardList;
 
-                        if(spinnerSelectedItem.equals(MainActivity.context.getResources().getString(R.string.leastTime))) {
+                        if (spinnerSelectedItem.equals(context.getResources().getString(R.string.leastTime))){
+                            Log.i(TAG, "shortest time");
                             Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                        }
-                        else if(spinnerSelectedItem.equals(MainActivity.context.getResources().getString(R.string.leastDistance))) {
+                        }else if (spinnerSelectedItem.equals(context.getResources().getString(R.string.leastDistance))){
+                            Log.i(TAG, "shortest distance");
                             Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
                             //transitCardList = (ArrayList<? super Card>) castToNavigate;
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                        }
-                        else if(spinnerSelectedItem.equals(MainActivity.context.getResources().getString(R.string.leastWalking))) {
+                        }else{
+                            Log.i(TAG, "shortest walking distance");
                             Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
                             updateAdapterList((ArrayList<? extends Card>) castToNavigate);
                         }
-
-                        /*switch (spinnerSelectedItem) {
-                            case MainActivity.context.getResources().getString(R.string.leastTime):
-                                Collections.sort(castToNavigate, NavigateTransitCard.timeComparator);
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
-                            case "Shortest Distance":
-                                Collections.sort(castToNavigate, NavigateTransitCard.distanceComparator);
-                                //transitCardList = (ArrayList<? super Card>) castToNavigate;
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
-                            case "Least Walking":
-                                Collections.sort(castToNavigate, NavigateTransitCard.walkingDistanceComparator);
-                                updateAdapterList((ArrayList<? extends Card>) castToNavigate);
-                                break;
-                        }*/
 
                         //updateAdapterList((ArrayList<? extends Card>) transitCardList);
                         // Build the map.
@@ -2729,7 +2833,7 @@ public class MainActivity extends AppCompatActivity
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         if (networkInfo != null && networkInfo.isConnected()) {
-            new JSONTwitterParser().execute(ScreenName);
+            new JSONTwitterParser(this).execute(ScreenName);
         } else {
             Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
         }
@@ -2738,131 +2842,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCameraIdle() {
 
-    }
-
-    public class JSONTwitterParser extends AsyncTask<String, Void , String>{
-        final static String CONSUMER_KEY = "nW88XLuFSI9DEfHOX2tpleHbR";
-        final static String CONSUMER_SECRET = "hCg3QClZ1iLR13D3IeMvebESKmakIelp4vwFUICuj6HAfNNCer";
-        final static String TwitterTokenURL = "https://api.twitter.com/oauth2/token";
-        final static String TwitterStreamURL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(String... screenNames) {
-            String result = null;
-
-            if (screenNames.length > 0) {
-                result = getTwitterStream(screenNames[0]);
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-//            Log.e("result",result);
-
-            try {
-                JSONArray jsonArray_data = new JSONArray(result);
-                for (int i=0; i<jsonArray_data.length();i++){
-
-                    JSONObject jsonObject = jsonArray_data.getJSONObject(i);
-                    twitterList.add(jsonObject.getString("text"));
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-
-        // convert a JSON authentication object into an Authenticated object
-        private Authenticated jsonToAuthenticated(String rawAuthorization) {
-            Authenticated auth = null;
-            if (rawAuthorization != null && rawAuthorization.length() > 0) {
-                try {
-                    Gson gson = new Gson();
-                    auth = gson.fromJson(rawAuthorization, Authenticated.class);
-                } catch (IllegalStateException ex) {
-                    // just eat the exception
-                }
-            }
-            return auth;
-        }
-
-        private String getResponseBody(HttpRequestBase request) {
-            StringBuilder sb = new StringBuilder();
-            try {
-
-                DefaultHttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
-                HttpResponse response = httpClient.execute(request);
-                int statusCode = response.getStatusLine().getStatusCode();
-                String reason = response.getStatusLine().getReasonPhrase();
-
-                if (statusCode == 200) {
-
-                    HttpEntity entity = response.getEntity();
-                    InputStream inputStream = entity.getContent();
-
-                    BufferedReader bReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
-                    String line = null;
-                    while ((line = bReader.readLine()) != null) {
-                        sb.append(line);
-                    }
-                } else {
-                    sb.append(reason);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            }  catch (IOException ex2) {
-            }
-            return sb.toString();
-        }
-
-        private String getTwitterStream(String screenName) {
-            String results = null;
-
-            //Encode consumer key and secret
-            try {
-                // URL encode the consumer key and secret
-                String urlApiKey = URLEncoder.encode(CONSUMER_KEY, "UTF-8");
-                String urlApiSecret = URLEncoder.encode(CONSUMER_SECRET, "UTF-8");
-
-                // Concatenate the encoded consumer key, a colon character, and the
-                // encoded consumer secret
-                String combined = urlApiKey + ":" + urlApiSecret;
-
-                // Base64 encode the string
-                String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
-
-                //Obtain a bearer token
-                HttpPost httpPost = new HttpPost(TwitterTokenURL);
-                httpPost.setHeader("Authorization", "Basic " + base64Encoded);
-                httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-                httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
-                String rawAuthorization = getResponseBody(httpPost);
-                Authenticated auth = jsonToAuthenticated(rawAuthorization);
-
-                // Applications should verify that the value associated with the
-                // token_type key of the returned object is bearer
-                if (auth != null && auth.token_type.equals("bearer")) {
-
-                    //Authenticate API requests with bearer token
-                    HttpGet httpGet = new HttpGet(TwitterStreamURL + screenName);
-
-                    // construct a normal HTTPS request and include an Authorization
-                    // header with the value of Bearer <>
-                    httpGet.setHeader("Authorization", "Bearer " + auth.access_token);
-                    httpGet.setHeader("Content-Type", "application/json");
-                    // update the results with the body of the response
-                    results = getResponseBody(httpGet);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            } catch (IllegalStateException ex1) {
-            }
-            return results;
-        }
     }
 
     void SelectMarker(String id){
@@ -2887,5 +2866,82 @@ public class MainActivity extends AppCompatActivity
                 updateAdapterList(singleCardList);
             }
         }
+    }
+
+    private void sendNotification() {
+        Intent intent = new Intent(this, ActionReceiver.class);
+        Log.d(TAG, "sendNotification: Called!");
+
+        try{
+            String title = "Hey developer!";
+            String message = "Tutorials are re-enabled. You may now restart the application.";
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            if(title.contains("update") || title.contains("Update")) {
+                intent.putExtra("action", "action1");
+                pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+            if (title.contains("feedback") || title.contains("Feedback")) {
+                intent.putExtra("action", "action2");
+                pendingIntent = PendingIntent.getBroadcast(this, 0 /* Request code */, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+
+            Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Bitmap rawBitMap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+            NotificationCompat.Builder groupBuilder = new NotificationCompat.Builder(this, "1")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setGroupSummary(true)
+                    .setGroup("TRANSITTHERE")
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
+                    .setContentIntent(pendingIntent);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "1")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setLargeIcon(rawBitMap)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setAutoCancel(true)
+                    .setGroup("TRANSITTHERE")
+                    .setSound(defaultSoundUri)
+                    .setWhen(System.currentTimeMillis())
+                    .setStyle(new NotificationCompat.BigTextStyle())
+                    .setContentIntent(pendingIntent);
+
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action1")){
+                notificationBuilder.addAction(R.drawable.ic_update_black_24dp, "Update",pendingIntent);
+            }
+            if(intent.hasExtra("action") && intent.getStringExtra("action").equals("action2")){
+                notificationBuilder.addAction(R.drawable.ic_feedback_black_24dp, "Feedback",pendingIntent);
+            }
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                NotificationChannel channel = new NotificationChannel("1", "Debug", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("For Debugging");
+                channel.enableLights(true);
+                channel.setLightColor(Color.BLUE);
+                notificationManager.createNotificationChannel(channel);
+            }
+            notificationManager.notify(0 /* ID of notification */, groupBuilder.build());
+            notificationManager.notify(getID() /* ID of notification */, notificationBuilder.build());
+            Log.d(TAG, "sendNotification: Built");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception: " + e.getMessage());
+        }
+    }
+
+    private final static AtomicInteger c = new AtomicInteger(1);
+    private static int getID(){
+        return c.incrementAndGet();
     }
 }
