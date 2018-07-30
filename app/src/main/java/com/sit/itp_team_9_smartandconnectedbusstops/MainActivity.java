@@ -745,7 +745,7 @@ public class MainActivity extends AppCompatActivity
                 if (!isPooling()) {
                     setPooling(true);
                     singleCardList.clear();
-                    handler.postDelayed(runnable, 3000);
+                    handler.postDelayed(runnable, 1000);
                     hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
@@ -1012,7 +1012,7 @@ public class MainActivity extends AppCompatActivity
                     }else
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(runnable, 3000);
+                    handler.postDelayed(runnable, 1000);
                 }
                 Bundle bundle = new Bundle();
                 bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
@@ -1096,10 +1096,22 @@ public class MainActivity extends AppCompatActivity
 //                        bottomNav.setSelectedItemId(R.id.action_fav);
                         bottomNav.setVisibility(View.VISIBLE);
 
-                        if(favBusStopID != null && favBusStopID.size() >0 || favRoute != null && favRoute.size() > 0)
-                            bottomNav.setSelectedItemId(R.id.action_fav);
-                        else
-                            bottomNav.setSelectedItemId(R.id.action_nearby);
+                        if(favBusStopID != null && favBusStopID.size() >0 || favRoute != null && favRoute.size() > 0) {
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bottomNav.setSelectedItemId(R.id.action_fav);
+                                }
+                            }, 1000);
+                        }
+                        else {
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bottomNav.setSelectedItemId(R.id.action_nearby);
+                                }
+                            }, 1000);
+                        }
 
 
                         Geocoder gc = new Geocoder(getApplicationContext());
@@ -1423,7 +1435,7 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 break;
             case R.id.nav_feedback:
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere/feedback"));
                 startActivity(browserIntent);
                 break;
 
