@@ -25,11 +25,11 @@ public class ActionReceiver extends BroadcastReceiver {
     }
 
     private void updateApp(){
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/open?id=1wgvp6lIvjLnC8sOza4nYgrL6n_mea2Sj"));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere/beta"));
         mContext.startActivity(browserIntent);
     }
     private void goToFeedback(){
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere/feedback"));
         mContext.startActivity(browserIntent);
     }
     private void goDefault(){

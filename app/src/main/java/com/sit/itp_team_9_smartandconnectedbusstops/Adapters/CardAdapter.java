@@ -705,7 +705,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         assert inflater != null;
                         View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) itemView.getRootView(), false);
                         TextView direction = to_add.findViewById(R.id.noBusText);
-                        direction.setText(R.string.no_bus_service_available_at_this_time);
+                        direction.setText(MainActivity.context.getResources().getString(
+                                R.string.no_bus_service_available_at_this_time));
                         options_layout.addView(to_add);
                     }
                     if (cards.isFavorite())

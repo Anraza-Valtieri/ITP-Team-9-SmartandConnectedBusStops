@@ -56,7 +56,7 @@ public class AboutActivity extends AppCompatActivity {
             mVersion.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere-changelog/"));
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere/home"));
                     getApplicationContext().startActivity(browserIntent);
                 }
             });
