@@ -991,6 +991,9 @@ public class NavigateTransitCard extends Card {
             case "Redhill (EW18)":
                 stationName = stationName.replace(" (EW18)","");
                 break;
+            case "Tai Seng (CC11)":
+                stationName = stationName.replace(" (CC11)","");
+                break;
         }
         //if chinese used to query
         SharedPreferences prefs = MainActivity.context.getSharedPreferences("Settings", Activity.MODE_PRIVATE);
@@ -1083,6 +1086,49 @@ public class NavigateTransitCard extends Card {
                     break;
                 case("花拉公園"):
                     stationName = "花拉公园";
+                    break;
+            }
+        }else if(language.equals("ms")){
+            stationName = stationName.replaceAll("^Stesen MRT ","").trim();
+        }else if (language.equals("ta")){
+            switch (stationName){
+                //EWL
+                case("ரெட்ஹில்"):
+                    stationName = "Redhill";
+                    break;
+                case("குவீன்ஸ்டவுன்"):
+                    stationName = "Queenstown";
+                    break;
+                case("காமன்வெல்த்"):
+                    stationName = "Commonwealth";
+                    break;
+                case("புவன விஸ்தா"):
+                    stationName = "Buona Vista";
+                    break;
+                case("சீனத் தோட்டம் தொடருந்து நிலையம்"):
+                    stationName = "Chinese Garden";
+                    break;
+                case("ஏரிக்கரை"):
+                    stationName = "Lakeside";
+                    break;
+                case("பூன் லே"):
+                    stationName = "Boon Lay";
+                    break;
+                case("பயனியர் தொடருந்து நிலையம்"):
+                    stationName = "Pioneer";
+                    break;
+                case("சீமெய் தொடருந்து நிலையம்"):
+                    stationName = "Simei";
+                    break;
+                case("பாசிர் ரிஸ் தொடருந்து நிலையம்"):
+                    stationName = "Pasir Ris";
+                    break;
+                //NSL
+                case("யீஷூன் ரயில் நிலையம்"):
+                    stationName = "Yishun";
+                    break;
+                case("கிராஞ்சி ரயில் நிலையம்"):
+                    stationName = "Kranji";
                     break;
             }
         }
