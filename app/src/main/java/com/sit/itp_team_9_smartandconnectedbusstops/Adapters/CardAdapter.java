@@ -362,8 +362,6 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     public void Refresh(){
 //        Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
-//        doAutoRefresh();
-//        updateUI();
     }
 
     public void clearPolylines(){
@@ -428,7 +426,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
                 }
                 updateCardData(busStopCards);
-                notifyItemRangeChanged(0, mCard.size());
+//                notifyItemRangeChanged(0, mCard.size());
                 //updateCardData(mCard);
                 doAutoRefresh();
             }
@@ -481,6 +479,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     return null;
                 }
             }.execute();
+            notifyItemRangeChanged(0, mCard.size());
+//            notifyDataSetChanged();
 //            Log.d(TAG, "processFinishFromLTA: END looking at "+mCard.size());
         }
     }
@@ -628,14 +628,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             TextView direction = to_add.findViewById(R.id.direction);
                             TextView duration = to_add.findViewById(R.id.duration1);
                             TextView duration2 = to_add.findViewById(R.id.duration2);
-                            TextView duration3 = to_add.findViewById(R.id.duration3);
                             ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
                             ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
-                            ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
 
                             ImageView wheel1 = to_add.findViewById(R.id.wheel1);
                             ImageView wheel2 = to_add.findViewById(R.id.wheel2);
-                            ImageView wheel3 = to_add.findViewById(R.id.wheel3);
 
                             busID.setText(busNo);
                             switch (value.get(13)) {
@@ -707,6 +704,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         options_layout.removeAllViewsInLayout();
                         assert inflater != null;
                         View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) itemView.getRootView(), false);
+                        TextView direction = to_add.findViewById(R.id.noBusText);
+                        direction.setText(MainActivity.context.getResources().getString(
+                                R.string.no_bus_service_available_at_this_time));
                         options_layout.addView(to_add);
                     }
                     if (cards.isFavorite())

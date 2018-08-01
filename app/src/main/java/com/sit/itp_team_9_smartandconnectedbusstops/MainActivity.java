@@ -7,7 +7,6 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -23,7 +22,6 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -54,7 +52,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -64,7 +61,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -123,15 +119,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.gson.Gson;
 import com.google.maps.android.PolyUtil;
-import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.view.ClusterRenderer;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.CardAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.Adapters.PlaceAutoCompleteAdapter;
 import com.sit.itp_team_9_smartandconnectedbusstops.BusRoutes.JSONLTABusRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.JSONGoogleResponseRoute;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnBusCardClick;
 import com.sit.itp_team_9_smartandconnectedbusstops.Interfaces.OnFavoriteClick;
-import com.sit.itp_team_9_smartandconnectedbusstops.Model.Authenticated;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.BusStopCards;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.Card;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.DistanceData;
@@ -147,31 +140,17 @@ import com.sit.itp_team_9_smartandconnectedbusstops.Model.SGWeather;
 import com.sit.itp_team_9_smartandconnectedbusstops.Model.UserData;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONDistanceMatrixParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONGoogleDirectionsParser;
-import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusStopParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONLTABusTimingParser;
-import com.sit.itp_team_9_smartandconnectedbusstops.Rendering.CustomClusterRenderer;
+import com.sit.itp_team_9_smartandconnectedbusstops.Parser.JSONTwitterParser;
 import com.sit.itp_team_9_smartandconnectedbusstops.Services.NetworkSchedulerService;
 import com.sit.itp_team_9_smartandconnectedbusstops.Utils.Utils;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -337,7 +316,7 @@ public class MainActivity extends AppCompatActivity
     String mrtLine;
     //Twitter username of Mrt updates
     final static String ScreenName = "SMRT_Singapore";
-    List<String> twitterList = new ArrayList<String>();
+    List<String> twitterList = new ArrayList<>();
     // Weather
     private SGWeather sgWeather;
     TextView location;
@@ -346,6 +325,7 @@ public class MainActivity extends AppCompatActivity
     TextView psi25;
     TextView psi10;
     TextView uv;
+    TextView currentWeather;
 
     private boolean umbrellaBring = false;
 
@@ -353,15 +333,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        setTheme(R.style.AppTheme_NoActionBar);
 //        setContentView(R.layout.loadingscreen);
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         super.onCreate(savedInstanceState);
-        String language = getSharedPreferences(SETTING, Activity.MODE_PRIVATE)
-                .getString("My_Lang", "en");
-        setLocale(language);
 
 
         sDefSystemLang = this.getResources().getConfiguration().locale.getDisplayName();
@@ -392,6 +368,7 @@ public class MainActivity extends AppCompatActivity
         psi25 = navHeader.findViewById(R.id.tvPSI25);
         psi10 = navHeader.findViewById(R.id.tvPSI10);
         uv = navHeader.findViewById(R.id.tvUV);
+        currentWeather = navHeader.findViewById(R.id.currentWeather);
         loadingScreen = findViewById(R.id.splashscreen);
         // Toolbar :: Transparent
 //        toolbar.setBackgroundColor(Color.TRANSPARENT);
@@ -478,7 +455,7 @@ public class MainActivity extends AppCompatActivity
                         // Respond when the drawer is opened
                         if(sgWeather != null && mCurrentLocation != null) {
                             sgWeather.updateLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-
+                            handler.postDelayed(() -> currentWeather.setText(R.string.current_weather), 500);
                             handler.postDelayed(() -> location.setText( sgWeather.getmLocation()),500);
                             handler.postDelayed(() -> weather.setText(sgWeather.getmWeatherForecast()),500);
                             handler.postDelayed(() -> temperature.setText(sgWeather.getmTemperature()+getString(R.string.degree)),500);
@@ -768,7 +745,7 @@ public class MainActivity extends AppCompatActivity
                 if (!isPooling()) {
                     setPooling(true);
                     singleCardList.clear();
-                    handler.postDelayed(runnable, 3000);
+                    handler.postDelayed(runnable, 1000);
                     hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
@@ -1035,7 +1012,7 @@ public class MainActivity extends AppCompatActivity
                     }else
                         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     recyclerView.scrollToPosition(0);
-                    handler.postDelayed(runnable, 3000);
+                    handler.postDelayed(runnable, 1000);
                 }
                 Bundle bundle = new Bundle();
                 bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "2");
@@ -1119,10 +1096,22 @@ public class MainActivity extends AppCompatActivity
 //                        bottomNav.setSelectedItemId(R.id.action_fav);
                         bottomNav.setVisibility(View.VISIBLE);
 
-                        if(favBusStopID != null && favBusStopID.size() >0 || favRoute != null && favRoute.size() > 0)
-                            bottomNav.setSelectedItemId(R.id.action_fav);
-                        else
-                            bottomNav.setSelectedItemId(R.id.action_nearby);
+                        if(favBusStopID != null && favBusStopID.size() >0 || favRoute != null && favRoute.size() > 0) {
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bottomNav.setSelectedItemId(R.id.action_fav);
+                                }
+                            }, 1000);
+                        }
+                        else {
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bottomNav.setSelectedItemId(R.id.action_nearby);
+                                }
+                            }, 1000);
+                        }
 
 
                         Geocoder gc = new Geocoder(getApplicationContext());
@@ -1446,7 +1435,7 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 break;
             case R.id.nav_feedback:
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://goo.gl/forms/EgthF6mMFOLt6vci1"));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/transitthere/feedback"));
                 startActivity(browserIntent);
                 break;
 
@@ -1489,7 +1478,7 @@ public class MainActivity extends AppCompatActivity
             bottomNav.getMenu().findItem(R.id.action_nearby).setTitle(R.string.nearby);
         }
         if(drawer != null){
-            MenuItem langPref, appGuide, aboutApp, dataSource, feedback;
+            MenuItem langPref, appGuide, aboutApp, dataSource, feedback, settingTitle, helpTitle, aboutTitle;
             NavigationView navigationView = findViewById(R.id.nav_view);
             Menu menu = navigationView.getMenu();
             langPref = menu.findItem(R.id.nav_language_preferences);
@@ -1497,12 +1486,18 @@ public class MainActivity extends AppCompatActivity
             aboutApp = menu.findItem(R.id.nav_about_app);
             dataSource = menu.findItem(R.id.nav_datasources);
             feedback = menu.findItem(R.id.nav_feedback);
+            settingTitle = menu.findItem(R.id.settingTitle);
+            helpTitle = menu.findItem(R.id.helpTitle);
+            aboutTitle = menu.findItem(R.id.aboutTitle);
 
             langPref.setTitle(R.string.language);
             appGuide.setTitle(R.string.appguide);
             aboutApp.setTitle(R.string.about_app);
             dataSource.setTitle(R.string.data_sources);
             feedback.setTitle(R.string.feedback);
+            settingTitle.setTitle(R.string.action_settings);
+            helpTitle.setTitle(R.string.action_help);
+            aboutTitle.setTitle(R.string.about);
         }
 
         if(toolbarNavigate != null){
@@ -1513,9 +1508,11 @@ public class MainActivity extends AppCompatActivity
             tvDestination = toolbarNavigate.findViewById(R.id.textViewDestination);
             tvDisplayFares.setText(R.string.displayfares);
             tvSortBy.setText(R.string.sortby);
-            tvStartingPoint.setText(R.string.starting_point);
-            tvDestination.setText(R.string.destination);
+            tvStartingPoint.setHint(R.string.starting_point);
+            tvDestination.setHint(R.string.destination);
         }
+        if(bottomNav!=null)
+            bottomNav.setSelectedItemId(bottomNav.getSelectedItemId());
     }
 
     // load language saved in shared preferences
@@ -1543,26 +1540,11 @@ public class MainActivity extends AppCompatActivity
         sharedPrefEditor = sharedPreference.edit();
         sharedPrefEditor.putInt(SELECTED_ITEM, item);
         sharedPrefEditor.apply();
-
-
-//        Intent refresh = new Intent(this, MainActivity.class);
-//        startActivity(refresh);
-//        finish();
     }
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
         Log.d(TAG, "processFinishFromLTA: Looking up "+poi.name);
-        /*if(allBusStops.containsKey(poi.name)) {
-            String id = allBusStops.get(poi.name).getBusStopCode();
-            BusStopCards card = getBusStopData(id);
-            singleCardList.clear();
-            singleCardList.add(card);
-            updateAdapterList(singleCardList);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        }else{
-            Log.e(TAG, "processFinishFromLTA: ERROR Missing data from LTA? : "+poi.name);
-        }*/
     }
 
     @Override
@@ -1626,46 +1608,21 @@ public class MainActivity extends AppCompatActivity
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
-//        mClusterManager = new ClusterManager<>(this, mMap);
-//        mClusterManager.setAnimation(false);
-//        mClusterManager.getMarkerCollection().getMarkers();
-//        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap,
-//                mClusterManager));
 
         mMap.setOnPoiClickListener(this);
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraMoveListener(this);
-//        mMap.setOnMarkerClickListener(mClusterManager);
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-//                if (marker == user_marker) {
-//                    return true;
-//                }
-                SelectMarker(marker.getSnippet());
-                return true;
-            }
+        mMap.setOnMarkerClickListener(marker -> {
+            SelectMarker(marker.getSnippet());
+            return true;
         });
 
-//        LatLngBounds SINGAPORE_BOUNDS = new LatLngBounds(new LatLng(1.22989115, 104.12058673),new LatLng(1.48525137, 103.57401691));
-
-
-//        mMap.setLatLngBoundsForCameraTarget(SINGAPORE_BOUNDS);
-
 //
-        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                downloadTweets();
-                return null;
-            }
-        };
-        asyncTask.execute();
+        downloadTweets();
+        loadLocale();
         prepareBottomSheet();
         if(haveNetworkConnection(this)) {
             PrepareLTAData();
@@ -1697,7 +1654,6 @@ public class MainActivity extends AppCompatActivity
     }
     @Override
     public void onCameraMove() {
-//        layer.animate().alpha(0).setDuration(1000);
         addItemsToMap(markerMap);
     }
 
@@ -1733,6 +1689,13 @@ public class MainActivity extends AppCompatActivity
         return favRoute;
     }
 
+    public List<String> getTwitterList() {
+        return twitterList;
+    }
+
+    public void setTwitterList(List<String> twitterList) {
+        this.twitterList = twitterList;
+    }
 
     private void addItemsToMap(HashMap<String, MapMarkers> items) {
         if(this.mMap != null) {
@@ -1979,30 +1942,7 @@ public class MainActivity extends AppCompatActivity
 
                     MapMarkers infoWindowItem = new MapMarkers(Double.parseDouble(value.getBusStopLat()),
                             Double.parseDouble(value.getBusStopLong()), value.getDescription(), id);
-//                    if (!mClusterManager.getClusterMarkerCollection().getMarkers().contains(infoWindowItem)) {
-//                    mClusterManager.addItem(infoWindowItem);
-//                    markerMap.put(value.getDescription(), infoWindowItem);
                     markerMap.put(id, infoWindowItem);
-//                    mClusterManager.setOnClusterItemClickListener(mapMarkers -> {
-//                        if (allBusStops.containsKey(mapMarkers.getSnippet())) {
-////                            Log.d(TAG, "FillBusData: Get Bus stop Data for "+mapMarkers.getTitle()+" "+mapMarkers.getSnippet());
-//                            /*BusStopCards card = getBusStopData(mapMarkers.getSnippet());
-//                            if(card != null) {
-//                                card.setType(Card.BUS_STOP_CARD);
-//                                singleCardList.clear();
-//                                singleCardList.add(card);
-//                                updateAdapterList(singleCardList);
-//                                SelectMarker(card.getBusStopID());
-//                            }*/
-////                            SelectMarker(mapMarkers.getSnippet());
-//                            return true;
-////                            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-//                        } else {
-//                            Log.e(TAG, "FillBusData: ERROR Missing data from LTA? : " + mapMarkers.getTitle());
-//                        }
-//                        return false;
-//                    });
-//                    }
                 }
 
                 return null;
@@ -2010,9 +1950,6 @@ public class MainActivity extends AppCompatActivity
         };
         asyncTask.execute();
 
-
-//        lookUpNearbyBusStops();
-//        handler.postDelayed(runnable2, 5000);
     }
 
     /**
@@ -2882,7 +2819,7 @@ public class MainActivity extends AppCompatActivity
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         if (networkInfo != null && networkInfo.isConnected()) {
-            new JSONTwitterParser().execute(ScreenName);
+            new JSONTwitterParser(this).execute(ScreenName);
         } else {
             Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
         }
@@ -2891,131 +2828,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCameraIdle() {
 
-    }
-
-    public class JSONTwitterParser extends AsyncTask<String, Void , String>{
-        final static String CONSUMER_KEY = "nW88XLuFSI9DEfHOX2tpleHbR";
-        final static String CONSUMER_SECRET = "hCg3QClZ1iLR13D3IeMvebESKmakIelp4vwFUICuj6HAfNNCer";
-        final static String TwitterTokenURL = "https://api.twitter.com/oauth2/token";
-        final static String TwitterStreamURL = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=";
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(String... screenNames) {
-            String result = null;
-
-            if (screenNames.length > 0) {
-                result = getTwitterStream(screenNames[0]);
-            }
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-//            Log.e("result",result);
-
-            try {
-                JSONArray jsonArray_data = new JSONArray(result);
-                for (int i=0; i<jsonArray_data.length();i++){
-
-                    JSONObject jsonObject = jsonArray_data.getJSONObject(i);
-                    twitterList.add(jsonObject.getString("text"));
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-
-        // convert a JSON authentication object into an Authenticated object
-        private Authenticated jsonToAuthenticated(String rawAuthorization) {
-            Authenticated auth = null;
-            if (rawAuthorization != null && rawAuthorization.length() > 0) {
-                try {
-                    Gson gson = new Gson();
-                    auth = gson.fromJson(rawAuthorization, Authenticated.class);
-                } catch (IllegalStateException ex) {
-                    // just eat the exception
-                }
-            }
-            return auth;
-        }
-
-        private String getResponseBody(HttpRequestBase request) {
-            StringBuilder sb = new StringBuilder();
-            try {
-
-                DefaultHttpClient httpClient = new DefaultHttpClient(new BasicHttpParams());
-                HttpResponse response = httpClient.execute(request);
-                int statusCode = response.getStatusLine().getStatusCode();
-                String reason = response.getStatusLine().getReasonPhrase();
-
-                if (statusCode == 200) {
-
-                    HttpEntity entity = response.getEntity();
-                    InputStream inputStream = entity.getContent();
-
-                    BufferedReader bReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
-                    String line = null;
-                    while ((line = bReader.readLine()) != null) {
-                        sb.append(line);
-                    }
-                } else {
-                    sb.append(reason);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            }  catch (IOException ex2) {
-            }
-            return sb.toString();
-        }
-
-        private String getTwitterStream(String screenName) {
-            String results = null;
-
-            //Encode consumer key and secret
-            try {
-                // URL encode the consumer key and secret
-                String urlApiKey = URLEncoder.encode(CONSUMER_KEY, "UTF-8");
-                String urlApiSecret = URLEncoder.encode(CONSUMER_SECRET, "UTF-8");
-
-                // Concatenate the encoded consumer key, a colon character, and the
-                // encoded consumer secret
-                String combined = urlApiKey + ":" + urlApiSecret;
-
-                // Base64 encode the string
-                String base64Encoded = Base64.encodeToString(combined.getBytes(), Base64.NO_WRAP);
-
-                //Obtain a bearer token
-                HttpPost httpPost = new HttpPost(TwitterTokenURL);
-                httpPost.setHeader("Authorization", "Basic " + base64Encoded);
-                httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-                httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
-                String rawAuthorization = getResponseBody(httpPost);
-                Authenticated auth = jsonToAuthenticated(rawAuthorization);
-
-                // Applications should verify that the value associated with the
-                // token_type key of the returned object is bearer
-                if (auth != null && auth.token_type.equals("bearer")) {
-
-                    //Authenticate API requests with bearer token
-                    HttpGet httpGet = new HttpGet(TwitterStreamURL + screenName);
-
-                    // construct a normal HTTPS request and include an Authorization
-                    // header with the value of Bearer <>
-                    httpGet.setHeader("Authorization", "Bearer " + auth.access_token);
-                    httpGet.setHeader("Content-Type", "application/json");
-                    // update the results with the body of the response
-                    results = getResponseBody(httpGet);
-                }
-            } catch (UnsupportedEncodingException ex) {
-            } catch (IllegalStateException ex1) {
-            }
-            return results;
-        }
     }
 
     void SelectMarker(String id){
