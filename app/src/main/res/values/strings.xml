@@ -6,6 +6,10 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+    <string name="action_help">Help</string>
+    <string name="feedback">Feedback</string>
+    <string name="about_app">About App</string>
+    <string name="data_sources">Data Sources</string>
 
     <string name="title_activity_maps">Current Place Details</string>
     <string name="default_info_title">Default Location</string>
@@ -20,6 +24,7 @@
     <string name="stops">stops</string>
     <string name="publictransport">Public Transport</string>
     <string name="walking">Walking</string>
+    <string name="slight_delay">Slight delay</string>
 
     <string name="student">Student</string>
     <string name="adult">Adult</string>
@@ -80,7 +85,7 @@
     <string name="modal">Modal bottom sheet</string>
     <string name="_4_min">X min</string>
     <string name="no_bus_service_available_at_this_time">No bus service available at this time</string>
-    <string name="favorites">Favorites</string>
+    <string name="favorites">Favourites</string>
     <string name="nearby">Nearby</string>
     <string name="directions">Directions</string>
     <string name="current_weather">Current Weather</string>r
@@ -89,6 +94,7 @@
     <string name="language">Language Preferences</string>
     <string name="appguide">App Guide</string>
     <string name="about">About</string>
+    <string name="mrt_station">MRT Station</string>
 
     <string name="displayfares">Displaying Fares for:</string>
     <string name="sortby">Sort By:</string>
@@ -230,5 +236,7 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
-    <string name="feedback">Feedback</string>
+    <string name="RestartToChangeLang">Restart required.</string>
+
+
 </resources>

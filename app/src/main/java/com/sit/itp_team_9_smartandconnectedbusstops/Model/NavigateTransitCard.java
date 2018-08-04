@@ -1,5 +1,7 @@
 package com.sit.itp_team_9_smartandconnectedbusstops.Model;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -31,7 +33,7 @@ public class NavigateTransitCard extends Card {
     private final static int DTL_COLOR = Color.argb(255,1, 87, 155);
     private final static int EWL_COLOR = Color.argb(255,24, 158, 74);
     private final static int NSL_COLOR = Color.argb(255,211, 47, 47);
-    private final static int WALKING_COLOR = Color.argb(255,120, 120, 120);
+    public final static int WALKING_COLOR = Color.argb(255,120, 120, 120);
     private final static int LRT_COLOR = Color.argb(255,158, 158, 158);
     private final static int BUS_COLOR = Color.argb(255,0, 0, 0);
 
@@ -389,15 +391,21 @@ public class NavigateTransitCard extends Card {
                                         //Log.i(TAG,"busStopIDCode "+busStopIDCode);
                                         String busStopName = entry.getValue();
                                         //Log.i(TAG,"busStopName "+busStopName);
-                                        if (routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
+                                        if (busStopName != null && routeSteps.get(i).getDepartureStop() != null
+                                                && routeSteps.get(i).getDepartureStop().equalsIgnoreCase(busStopName)){
                                             //departureBusStopCode = busStopIDCode;
                                             departureBusStopCodeList.add(busStopIDCode);
                                             Log.i(TAG,"departure code list "+ departureBusStopCodeList);
+                                        }else{
+                                            departureBusStopCodeList.add("UNKNOWN");
                                         }
-                                        if (routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
+                                        if (busStopName != null && routeSteps.get(i).getDepartureStop() != null
+                                                && routeSteps.get(i).getArrivalStop().equalsIgnoreCase(busStopName)){
                                             //arrivalBusStopCode = busStopIDCode;
                                             arrivalBusStopCodeList.add(busStopIDCode);
                                             Log.i(TAG,"arrival code list"+ arrivalBusStopCodeList);
+                                        }else{
+                                            arrivalBusStopCodeList.add("UNKNOWN");
                                         }
                                     }
                                     //bus route
@@ -416,8 +424,8 @@ public class NavigateTransitCard extends Card {
                                             for (int j = 0; j < busMapValue.size(); j++) {
                                                 //loop through the bus service's bus stops (going through the bus route)
                                                 for (String potentialArrivalBusStopCode : arrivalBusStopCodeList) {
-                                                    Log.i(TAG, "arrival codes: "
-                                                            + " " + potentialArrivalBusStopCode);
+                                                    //Log.i(TAG, "arrival codes: "
+                                                    //        + " " + potentialArrivalBusStopCode);
                                                     if (busMapValue.get(j).getBusStopCode()
                                                             .equals(potentialArrivalBusStopCode)) {
                                                         Log.i(TAG, "ONLY NEED ARRIVAL");
@@ -440,7 +448,7 @@ public class NavigateTransitCard extends Card {
                                                     }
                                                 }
                                                 for (String potentialDepartureBusStopCode : departureBusStopCodeList) {
-                                                    Log.i(TAG,"no arrival");
+                                                    //Log.i(TAG,"no arrival");
                                                     //only departureBusStopCode found
                                                     if (busMapValue.get(j).getBusStopCode()
                                                             .equals(potentialDepartureBusStopCode)){
@@ -587,20 +595,24 @@ public class NavigateTransitCard extends Card {
                                         TrainStation departureTrainStation = null, arrivalTrainStation = null;
                                         String departureStation = cleanUpStationName(routeSteps.get(i).getDepartureStop());
                                         String arrivalStation = cleanUpStationName(routeSteps.get(i).getArrivalStop());
-
+                                        Log.i(TAG,"departureStation "+departureStation);
+                                        Log.i(TAG,"arrivalStation "+arrivalStation);
                                         //get departure and arrival stations
                                         for (TrainStation trainStationInList : allTrainStationsInLine) {
                                             if (trainStationInList.getStationName().equalsIgnoreCase(
-                                                    departureStation)){
+                                                    departureStation)
+                                                    || trainStationInList.getStationNameChinese()
+                                                    .equalsIgnoreCase(departureStation)){
                                                 departureTrainStation = trainStationInList;
                                                 Log.i(TAG, "found departure train station");
                                             }
                                             if (trainStationInList.getStationName().equalsIgnoreCase(
-                                                    arrivalStation)){
+                                                    arrivalStation)
+                                                    || trainStationInList.getStationNameChinese()
+                                                    .equalsIgnoreCase(arrivalStation)){
                                                 arrivalTrainStation = trainStationInList;
                                                 Log.i(TAG, "found arrival train station");
                                             }
-                                            //TODO LRT loops
                                         }
                                         if (departureTrainStation != null && arrivalTrainStation != null ){
                                             //if both stations found
@@ -879,8 +891,8 @@ public class NavigateTransitCard extends Card {
                 //fare calculation
                 double transitDistance = 0.0;
                 for(int i=0; i<listOfTransitModeAndDistances.size(); i++) {
-
-                    transitDistance += Double.valueOf(listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", ""));
+                    String transitModeAndDistance = listOfTransitModeAndDistances.get(i).getDistance().replaceAll("[^.0-9]+", "");
+                    transitDistance += Double.valueOf(transitModeAndDistance.replaceAll(".$", ""));
                 }
 
                 FareDetails fareDetails = new FareDetails();
@@ -979,8 +991,149 @@ public class NavigateTransitCard extends Card {
             case "Redhill (EW18)":
                 stationName = stationName.replace(" (EW18)","");
                 break;
+            case "Tai Seng (CC11)":
+                stationName = stationName.replace(" (CC11)","");
+                break;
         }
-        stationName = stationName.replaceAll(" MRT Station.*$","");
+        //if chinese used to query
+        SharedPreferences prefs = MainActivity.context.getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+        String language = prefs.getString("My_Lang", "");
+        Log.i(TAG,"language? "+language);
+        if (language.equals("zh")){
+            Log.i(TAG, "chinese??");
+            stationName = stationName.replaceAll("地鐵.*$","").trim();
+            stationName = stationName.replaceAll("輕軌站.*$","").trim();
+            stationName = stationName.replaceAll("轻轨站.*$","").trim();
+
+            //convert station names returned in traditional chinese to simplified chinese
+            switch(stationName) {
+                //EWL
+                case("樟宜機場"):
+                    stationName = "樟宜机场";
+                    break;
+                case("景萬岸"):
+                    stationName = "景万岸";
+                    break;
+                case("勞明達"):
+                    stationName = "劳明达";
+                    break;
+                case("中峇魯"):
+                    stationName = "中峇鲁";
+                    break;
+                case("紅山"):
+                    stationName = "红山";
+                    break;
+                case("聯邦"):
+                    stationName = "联邦";
+                    break;
+                case("波那維斯達"):
+                    stationName = "波那维斯达";
+                    break;
+                case("裕廊東"):
+                    stationName = "裕廊东";
+                    break;
+                //DTL
+                case("海灣舫"):
+                    stationName = "海湾舫";
+                    break;
+                case("寶門廊"):
+                    stationName = "宝门廊";
+                    break;
+                case("陳嘉庚"):
+                    stationName = "陈嘉庚";
+                    break;
+                case("凱秀"):
+                    stationName = "凯秀";
+                    break;
+                case("武吉班讓"):
+                    stationName = "武吉班让";
+                    break;
+                //NSL
+                case("烏節"):
+                    stationName = "乌节";
+                    break;
+                case("諾維娜"):
+                    stationName = "诺维娜";
+                    break;
+                case("宏茂橋"):
+                    stationName = "宏茂桥";
+                    break;
+                case("義順"):
+                    stationName = "义顺";
+                    break;
+                case("克蘭芝"):
+                    stationName = "克兰芝";
+                    break;
+                //CCL
+                case("尼誥大道"):
+                    stationName = "尼诰大道";
+                    break;
+                case("體育場"):
+                    stationName = "体育场";
+                    break;
+                case("達科達"):
+                    stationName = "达科达";
+                    break;
+                case("直落布蘭雅"):
+                    stationName = "直落布兰雅";
+                    break;
+                //NEL
+                case("後港"):
+                    stationName = "后港";
+                    break;
+                case("文慶"):
+                    stationName = "文庆";
+                    break;
+                case("花拉公園"):
+                    stationName = "花拉公园";
+                    break;
+            }
+        }else if(language.equals("ms")){
+            stationName = stationName.replaceAll("^Stesen MRT ","").trim();
+        }else if (language.equals("ta")){
+            switch (stationName){
+                //EWL
+                case("ரெட்ஹில்"):
+                    stationName = "Redhill";
+                    break;
+                case("குவீன்ஸ்டவுன்"):
+                    stationName = "Queenstown";
+                    break;
+                case("காமன்வெல்த்"):
+                    stationName = "Commonwealth";
+                    break;
+                case("புவன விஸ்தா"):
+                    stationName = "Buona Vista";
+                    break;
+                case("சீனத் தோட்டம் தொடருந்து நிலையம்"):
+                    stationName = "Chinese Garden";
+                    break;
+                case("ஏரிக்கரை"):
+                    stationName = "Lakeside";
+                    break;
+                case("பூன் லே"):
+                    stationName = "Boon Lay";
+                    break;
+                case("பயனியர் தொடருந்து நிலையம்"):
+                    stationName = "Pioneer";
+                    break;
+                case("சீமெய் தொடருந்து நிலையம்"):
+                    stationName = "Simei";
+                    break;
+                case("பாசிர் ரிஸ் தொடருந்து நிலையம்"):
+                    stationName = "Pasir Ris";
+                    break;
+                //NSL
+                case("யீஷூன் ரயில் நிலையம்"):
+                    stationName = "Yishun";
+                    break;
+                case("கிராஞ்சி ரயில் நிலையம்"):
+                    stationName = "Kranji";
+                    break;
+            }
+        }
+        stationName = stationName.replaceAll(MainActivity.context.getResources().getString(R.string.mrt_station)+".*$","").trim();
+        stationName = stationName.replaceAll("MRT Station.*$","").trim(); //some stations in english regardless of language in query
         Log.i(TAG, "stationNameRegex "+stationName);
 
         return stationName;
@@ -1049,14 +1202,15 @@ public class NavigateTransitCard extends Card {
 
     private static Float convertDistanceToKm(String distanceString){
         float distanceInKm;
-        if (distanceString.contains(" m")){
+        if (distanceString.contains(MainActivity.context.getResources().getString(R.string.m))){
             //convert m to km
             Float walkingDistanceInMetres = Float.parseFloat(distanceString.replaceAll("[^0-9]",""));
             distanceInKm = walkingDistanceInMetres / 1000;
         }else{
             //already in kilometres
             //removes anything that is not a . or number
-            distanceInKm = Float.parseFloat(distanceString.replaceAll("[^.0-9]",""));
+            String distanceClean = distanceString.replaceAll("[^.0-9]","");
+            distanceInKm = Float.parseFloat(distanceClean.replaceAll("[.]$",""));
         }
 
         Log.i(TAG, "distanceInKm"+ distanceInKm);
@@ -1065,27 +1219,28 @@ public class NavigateTransitCard extends Card {
 
     private static int convertTimeToMinutes(String timeString){
         int totalTimeInMinutes, timeFromHoursAndMinutes = 0;
-        if (timeString.contains(" hour")){
+        if (timeString.contains(MainActivity.context.getResources().getString(R.string.hour))){
             int timeFromMinutes = 0;
 
             //convert hour to minutes
-            int hours = Integer.parseInt(timeString.replaceAll(" hour.*$",""));
+            int hours = Integer.parseInt(timeString.replaceAll(" "+MainActivity.context.getResources().getString(R.string.hour)+".*$",""));
             int timeFromHours = hours * 60;
 
-            if (timeString.contains(" min")){
+            if (timeString.contains(MainActivity.context.getResources().getString(R.string.minute))){
                 Log.i(TAG,"originalTime " + timeString);
                 //if time also contains min, get the minutes
-                String removeHours = timeString.replaceFirst(".*hours ","");
-                String removeHour = removeHours.replaceFirst(".*hour ","");
+                String removeHours = timeString.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hours),"").trim();
+                Log.i(TAG, "WHAT LANGUAGE?: "+MainActivity.context.getResources().getString(R.string.hour));
+                String removeHour = removeHours.replaceFirst(".*"+MainActivity.context.getResources().getString(R.string.hour),"").trim();
                 Log.i(TAG,"removeHours " + removeHours + " " + removeHour);
-                String removeMins = removeHour.replaceAll(" mins.*$","");
-                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+                String removeMins = removeHour.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$","").trim();
+                int minutes = Integer.parseInt(removeMins.replaceAll(MainActivity.context.getResources().getString(R.string.minute)+".*$","").trim());
                 timeFromMinutes = minutes;
             }
             totalTimeInMinutes = timeFromHours + timeFromMinutes;
         }else {
             //already in min
-            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(" min.*$", ""));
+            totalTimeInMinutes = Integer.parseInt(timeString.replaceAll(MainActivity.context.getResources().getString(R.string.minutes)+".*$", "").trim());
         }
 
         //totalTimeInMinutes = timeFromHoursAndMinutes +  timeFromMinutes;

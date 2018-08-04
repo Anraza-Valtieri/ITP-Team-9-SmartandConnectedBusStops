@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <item android:title="@string/action_settings">
+    <item android:title="@string/action_settings" android:id="@+id/settingTitle">
         <menu>
             <item
                 android:id="@+id/nav_language_preferences"
@@ -11,7 +11,7 @@
                 android:title="@string/language" />
         </menu>
     </item>
-    <item android:title="Help">
+    <item android:title="@string/action_help" android:id="@+id/helpTitle">
         <menu>
             <item
                 android:id="@+id/nav_app_guide"
@@ -19,16 +19,16 @@
                 android:title="@string/appguide" />
         </menu>
     </item>
-    <item android:title="@string/about">
+    <item android:title="@string/about" android:id="@+id/aboutTitle">
         <menu>
             <item
                 android:id="@+id/nav_about_app"
                 android:icon="@drawable/ic_info_outline_black_24dp"
-                android:title="About App" />
+                android:title="@string/about_app" />
             <item
                 android:id="@+id/nav_datasources"
                 android:icon="@drawable/ic_wifi_tethering_black_24dp"
-                android:title="Data Sources" />
+                android:title="@string/data_sources" />
             <item
                 android:id="@+id/nav_feedback"
                 android:icon="@drawable/ic_feedback_black_24dp"

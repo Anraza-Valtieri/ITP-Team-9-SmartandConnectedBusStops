@@ -64,6 +64,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.view.View.INVISIBLE;
@@ -155,7 +156,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                        BottomSheetBehavior bottomSheet, RecyclerView rv) {
 //        this.mApplications = mApplications;
         mContext = context;
-        this.mCard = card;
+        mCard = card;
         this.mMap = mMap;
         this.bottomSheet = bottomSheet;
         this.recyclerView = rv;
@@ -276,43 +277,21 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     public void onClick(View v) {
                         List<LatLng> points = (transitCard.getPolyLines()); // list of latlng
 
-                        PolylineOptions options = new PolylineOptions()
-                                .jointType(JointType.ROUND)
-                                .startCap(new SquareCap())
-                                .endCap(new SquareCap())
-                                .geodesic(true);
                         if(points != null) {
                             listLatLng.clear();
-//                            if (oldLine1 != null && oldLine2 != null) {
-                                clearPolylines();
-//                            }
-//                        PolylineOptions options = new PolylineOptions().width(10).color(Color.CYAN).geodesic(true);
+                            clearPolylines();
                             for (int z = 0; z < points.size(); z++) {
                                 LatLng point = points.get(z);
-                                options.add(point);
                                 listLatLng.add(point);
 
                             }
-//                            options.color(Color.BLACK);
-//                            options.width(16);
-//                            options.zIndex(1);
-//                            Polyline line1 = mMap.addPolyline(options);
-//
-//                            options.color(Color.CYAN);
-//                            options.width(10);
-//                            options.zIndex(2);
-//                            Polyline line2 = mMap.addPolyline(options);
-//
-//
-//                            oldLine1 = line1;
-//                            oldLine2 = line2;
                             bottomSheet.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
                             LatLngBounds.Builder builder = new LatLngBounds.Builder();
                             builder.include(listLatLng.get(listLatLng.size()-1));
                             builder.include(listLatLng.get(0));
                             LatLngBounds bounds = builder.build();
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 150));
                             startAnim();
                         }else{
                             Toast.makeText(mContext, "Strangely there is no Route lines from Google.", Toast.LENGTH_LONG);
@@ -362,7 +341,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
     }
 
     public void addAllCard(ArrayList<? extends Card> card){
-        this.mCard.addAll(card);
+        mCard.addAll(card);
         Refresh();
 //        Log.d(TAG, "addAllCard: called adds "+mCard.size());
     }
@@ -376,15 +355,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
     public void Clear(){
 //        Log.d(TAG, "Clear: called "+mCard.size());
-        this.mCard.clear();
+        mCard.clear();
         Refresh();
     }
 
     public void Refresh(){
 //        Log.d(TAG, "Refresh: called");
         notifyDataSetChanged();
-//        doAutoRefresh();
-//        updateUI();
     }
 
     public void clearPolylines(){
@@ -441,8 +418,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         ((BusStopCards) mCard.get(i)).setMajorUpdate(true);
                         mCard.get(i).setNeedsUpdate(false);
                         busStopCards.add((BusStopCards) mCard.get(i));
-                    }
-                    else {
+                    } else {
                         if(mCard.get(i).isNeedsUpdate())
                             mCard.get(i).setNeedsUpdate(true);
                         else
@@ -450,7 +426,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     }
                 }
                 updateCardData(busStopCards);
-                notifyItemRangeChanged(0, mCard.size());
+//                notifyItemRangeChanged(0, mCard.size());
                 //updateCardData(mCard);
                 doAutoRefresh();
             }
@@ -503,6 +479,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                     return null;
                 }
             }.execute();
+            notifyItemRangeChanged(0, mCard.size());
+//            notifyDataSetChanged();
 //            Log.d(TAG, "processFinishFromLTA: END looking at "+mCard.size());
         }
     }
@@ -599,7 +577,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
 
         private void setItem(Card card){
-            switch (this.cardType) {
+            switch (card.getType()) {
                 case BUS_STOP_CARD:
                     BusStopCards cards = (BusStopCards)card;
                     cards.setType(Card.BUS_STOP_CARD);
@@ -650,14 +628,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             TextView direction = to_add.findViewById(R.id.direction);
                             TextView duration = to_add.findViewById(R.id.duration1);
                             TextView duration2 = to_add.findViewById(R.id.duration2);
-                            TextView duration3 = to_add.findViewById(R.id.duration3);
                             ConstraintLayout card1 = to_add.findViewById(R.id.buscard1);
                             ConstraintLayout card2 = to_add.findViewById(R.id.buscard2);
-                            ConstraintLayout card3 = to_add.findViewById(R.id.buscard3);
 
                             ImageView wheel1 = to_add.findViewById(R.id.wheel1);
                             ImageView wheel2 = to_add.findViewById(R.id.wheel2);
-                            ImageView wheel3 = to_add.findViewById(R.id.wheel3);
 
                             busID.setText(busNo);
                             switch (value.get(13)) {
@@ -729,6 +704,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         options_layout.removeAllViewsInLayout();
                         assert inflater != null;
                         View to_add = inflater.inflate(R.layout.busstopcarddetailsnobus, (ViewGroup) itemView.getRootView(), false);
+                        TextView direction = to_add.findViewById(R.id.noBusText);
+                        direction.setText(MainActivity.context.getResources().getString(
+                                R.string.no_bus_service_available_at_this_time));
                         options_layout.addView(to_add);
                     }
                     if (cards.isFavorite())
@@ -740,14 +718,17 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                 case NAVIGATE_TRANSIT_CARD:
                     NavigateTransitCard cardsTransit = (NavigateTransitCard)card;
                     cardsTransit.setType(Card.NAVIGATE_TRANSIT_CARD);
+
+                    String totalTimeText;
                     if (cardsTransit.getError() == null || cardsTransit.getError().isEmpty()){
                         this.totalTime.setText(cardsTransit.getTotalTime());
                         this.totalDistance.setText(cardsTransit.getTotalDistance());
+
                         this.cost.setText(cardsTransit.getCost());
                         this.condition.setText(cardsTransit.getCondition());
 
-                        //traffic condition
-                        if(cardsTransit.getCondition()=="Slight delay"){
+                        //traffic condition slight delay
+                        if(cardsTransit.getCondition()==MainActivity.context.getResources().getString(R.string.slight_delay)){
                            this.condition.setTextColor(Color.RED);
                         }
                         else{
@@ -769,12 +750,16 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         else
                             this.favTransit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+                        this.favTransit.setVisibility(VISIBLE);
+
                         //Creates layout for transit stations
                         final View transitCardView = itemView.findViewById(R.id.transitcard);
                         LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
                         transit_layout.setOrientation(LinearLayout.VERTICAL);
 
                         transit_layout.removeAllViewsInLayout();
+
+                        transit_layout.setVisibility(VISIBLE);
                         for (Map.Entry<String, List<Object>> entry : cardsTransit.getTransitStations().entrySet()) {
                             String key = entry.getKey();
                             //List<Integer> stationImageStationColor = entry.getValue();
@@ -788,12 +773,15 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                             LayoutInflater inflater2 = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                             assert inflater2 != null;
-                            if (stationImage.equals(R.drawable.ic_baseline_directions_walk_24px)){
+                            if (stationColor.equals(NavigateTransitCard.WALKING_COLOR)){
                                 //walking layout
                                 View to_add_navigate = inflater2.inflate(R.layout.navigate_transit_card_transit_walking,
                                         (ViewGroup) itemView.getRootView(), false);
                                 //TextView textViewWalking = to_add_navigate.findViewById(R.id.textViewWalking);
                                 ExpandableListView listViewDetailedWalking = to_add_navigate.findViewById(R.id.listViewDetailedWalking);
+
+                                /*String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
+                                        " ( " + translateTime(timeTakenForEachWaypoint) + ")";*/
 
                                 String walkingInstructions = mContext.getResources().getString(R.string.walk) +" "+ key +
                                         " ( " + timeTakenForEachWaypoint + ")";
@@ -841,6 +829,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                 //For in between stops (expandable list adapter and listeners)
                                 List<String> inBetweenStopsHeader = new ArrayList<>();
+                                /*String inBetweenStopsHeaderString = translateTime(timeTakenForEachWaypoint)
+                                        + " (" + numInBetweenStops + " "
+                                        + mContext.getString(R.string.stops) +  ")";*/
                                 String inBetweenStopsHeaderString = timeTakenForEachWaypoint
                                         + " (" + numInBetweenStops + " "
                                         + mContext.getString(R.string.stops) +  ")";
@@ -881,7 +872,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                         breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
 
                         breakdown_bar_layout.removeAllViewsInLayout();
-                        @SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
+                        breakdown_bar_layout.setVisibility(VISIBLE);
+                        /*@SuppressLint("StaticFieldLeak") AsyncTask asyncTask = new AsyncTask() {
                             @Override
                             protected Object doInBackground(Object[] objects) {
                                 LinkedList<View> listToAdd = new LinkedList<>();
@@ -898,6 +890,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
 
                                     Log.i(TAG, "breakdownBarPartWeight: " + breakdownBarPartWeight);
                                     breakdownBarPart.setBackgroundColor(breakdownBarPartColor);
+                                    //breakdownBarPartTime.setText(translateTime(breakdownBarPartActualTime));
                                     breakdownBarPartTime.setText(breakdownBarPartActualTime);
                                     to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
 //                                    breakdown_bar_layout.addView(to_add_breakdown);
@@ -916,8 +909,8 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                                 }
                             }
                         };
-                        asyncTask.execute();
-                        /*for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
+                        asyncTask.execute();*/
+                        for (int i=0; i < cardsTransit.getTimeTaken().size();i++) {
                             String breakdownBarPartActualTime = (String) cardsTransit.getTimeTaken().get(i).get(0);
                             float breakdownBarPartWeight = (Float) cardsTransit.getTimeTaken().get(i).get(1);
                             int breakdownBarPartColor = (Integer) cardsTransit.getTimeTaken().get(i).get(2);
@@ -933,14 +926,33 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
                             breakdownBarPartTime.setText(breakdownBarPartActualTime);
                             to_add_breakdown.setLayoutParams(new LinearLayout.LayoutParams(110, LinearLayout.LayoutParams.MATCH_PARENT, breakdownBarPartWeight));
                             breakdown_bar_layout.addView(to_add_breakdown);
-                        }*/
+                        }
                     }else{
                         //No routes available
-                        this.totalDistance.setPadding(300,0,300,0);
-                        this.totalDistance.setText(R.string.transit_error);
+                        this.totalTime.setText(R.string.transit_error);
+                        this.totalDistance.setText("");
+                        this.cost.setText("");
+                        this.condition.setText("");
+
+                        this.favTransit.setVisibility(View.GONE);
+
+                        //Creates layout for transit stations
+                        final View transitCardView = itemView.findViewById(R.id.transitcard);
+                        LinearLayout transit_layout = transitCardView.findViewById(R.id.linearLayoutTransitStops);
+                        transit_layout.setOrientation(LinearLayout.VERTICAL);
+                        transit_layout.removeAllViewsInLayout();
+                        transit_layout.setVisibility(View.GONE);
+
+                        LinearLayout breakdown_bar_layout = transitCardView.findViewById(R.id.linearLayoutBreakdownBar);
+                        breakdown_bar_layout.setOrientation(LinearLayout.HORIZONTAL);
+
+                        breakdown_bar_layout.removeAllViewsInLayout();
+                        breakdown_bar_layout.setVisibility(View.GONE);
                     }
                     if (cardsTransit.isFavorite())
                         favTransit.setImageResource(R.drawable.ic_favorite_red);
+
+                    card.setNeedsUpdate(false);
                     break;
                 case NAVIGATE_WALKING_CARD:
                     NavigateWalkingCard cardsWalking = (NavigateWalkingCard)card;
@@ -986,4 +998,36 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> im
             }
         }
     }
+
+    /*private String translateTime(String originalTime){
+        String translatedTime;
+        if(originalTime.contains("hour")){
+            int hours = Integer.parseInt(originalTime
+                    .replaceAll(" hour.*$",""));
+            if (originalTime.contains("minute")){
+                //both hour and minute
+                String removeHours = originalTime.replaceFirst(".*hours ","");
+                String removeHour = removeHours.replaceFirst(".*hour ","");
+                String removeMins = removeHour.replaceAll(" mins.*$","");
+                int minutes = Integer.parseInt(removeMins.replaceAll(" min.*$",""));
+
+                translatedTime = String.format(Locale.getDefault(), "%d "+
+                                MainActivity.context.getResources().getString(R.string.hour) + "%d"
+                                +MainActivity.context.getResources().getString(R.string.minutes)
+                        ,hours,minutes);
+            }else {
+                //only hour
+                translatedTime = String.format(Locale.getDefault(), "%d " +
+                        MainActivity.context.getResources().getString(R.string.hour), hours);
+            }
+
+        }else{
+            //only minutes
+            int minutes = Integer.parseInt(originalTime
+                    .replaceAll(" min.*$",""));
+            translatedTime = String.format(Locale.getDefault(), "%d "
+                    +MainActivity.context.getResources().getString(R.string.minutes),minutes);
+        }
+        return translatedTime;
+    }*/
 }
