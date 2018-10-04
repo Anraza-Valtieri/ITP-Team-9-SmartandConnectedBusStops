@@ -143,6 +143,17 @@ public class JSONGoogleDirectionsParser extends AsyncTask<Void, String, List<Goo
                                                     .getJSONObject("departure_stop").optString("name"));
                                             steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
                                                     .getJSONObject("arrival_stop").optString("name"));
+
+                                            if(steps.getBusNum() == "")
+                                            steps.setBusNum(stepsObject.getJSONObject("transit_details")
+                                                    .getJSONObject("line").optString("name"));
+                                            if(steps.getDepartureStop() == "")
+                                            steps.setDepartureStop(stepsObject.getJSONObject("transit_details")
+                                                    .getJSONObject("departure_stop").optString("name"));
+
+                                            if(steps.getArrivalStop() == "")
+                                            steps.setArrivalStop(stepsObject.getJSONObject("transit_details")
+                                                    .getJSONObject("arrival_stop").optString("name"));
                                             //Double newBusDistance = entry.getTotalBusDistance() + Double.valueOf(steps.getDistance());
                                             //entry.setTotalBusDistance(newBusDistance);
                                         }

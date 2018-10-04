@@ -745,7 +745,7 @@ public class MainActivity extends AppCompatActivity
                 if (!isPooling()) {
                     setPooling(true);
                     singleCardList.clear();
-                    handler.postDelayed(runnable, 1000);
+                    handler.postDelayed(runnable, 3000);
                     hideKeyboard();
 //                if (adapter != null)
 //                    setFavBusStopID(adapter.getFavBusStopID());
@@ -2316,6 +2316,9 @@ public class MainActivity extends AppCompatActivity
                         return;
                     }
 
+                    if(Integer.parseInt(routeid) >= result.size())
+                        return;
+
                     if (getWeatherData(result.get(Integer.parseInt(routeid)))){
                         umbrellaBring = true;
                     }
@@ -2584,7 +2587,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
                 else if (type == "mrt"){
-                    List<String> twitterServiceList = new ArrayList<String>();
+                    /*List<String> twitterServiceList = new ArrayList<String>();
 
                     switch(train) {
                         case("East West Line"):
@@ -2633,7 +2636,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     else{
                         pass = "";
-                    }
+                    }*/
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -2815,14 +2818,14 @@ public class MainActivity extends AppCompatActivity
 
     // download twitter timeline after first checking to see if there is a network connection
     public void downloadTweets() {
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-        if (networkInfo != null && networkInfo.isConnected()) {
-            new JSONTwitterParser(this).execute(ScreenName);
-        } else {
-            Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
-        }
+//        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+//        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+//
+//        if (networkInfo != null && networkInfo.isConnected()) {
+//            new JSONTwitterParser(this).execute(ScreenName);
+//        } else {
+//            Toast.makeText(getApplicationContext(),"Please check your internet connection",Toast.LENGTH_SHORT).show();
+//        }
     }
 
     @Override
